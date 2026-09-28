@@ -154,14 +154,38 @@ class TestReaction:
         assert len(r.products) == 1
         assert len(r.modifiers) == 1
 
-    def test_subtype_updates_with_participants(self):
-        """Subtype is assigned at construction; adding participants afterwards
-        does not retroactively change it — this is the current design."""
+    def test_subtype_follows_participants(self):
+        """Subtype describes the reaction as it currently is, including
+        participants added after construction (e.g. by model fixes)."""
         r = self._make(rdef.reaction_types.CATALYSIS)
         assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
         r.add_substrate(ec.Species("X", "protein", "cytoplasm"))
-        # subtype stays as-is (participants are added post-construction)
-        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITHOUT_MODIFIER
+        r.add_modifier(ec.Species("E", "protein_active", "cytoplasm"))
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITH_MODIFIER
+        r.substrates.clear()
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITH_MODIFIER
+
+    def test_sbo_follows_participants(self):
+        """Translocation with a transporter is active transport, without passive."""
+        r = self._make(rdef.reaction_types.TRANSLOCATION)
+        assert r.reaction_type_sbo == 658  # SBO:0000658 — passive transport
+        r.add_modifier(ec.Species("T", "protein_active", "cytoplasm"))
+        assert r.reaction_type_sbo == 657  # SBO:0000657 — active transport
+
+    def test_subtype_is_read_only(self):
+        r = self._make(rdef.reaction_types.CATALYSIS)
+        with pytest.raises(AttributeError):
+            r.reaction_subtype = "something"
+
+    def test_every_subtype_has_sbo_terms(self):
+        """Every subtype has both SBO terms configured (else they'd be None)."""
+        configured = pss_export_config.reaction_subtype_to_SBO
+        missing = [s for s in rdef.ALL_REACTION_SUBTYPES if s not in configured]
+        assert missing == []
+        for subtype in rdef.ALL_REACTION_SUBTYPES:
+            assert int(configured[subtype]["reaction_type_SBO"]) > 0
+            assert int(configured[subtype]["kinetic_law_SBO"]) > 0
 
 
 # ---------------------------------------------------------------------------

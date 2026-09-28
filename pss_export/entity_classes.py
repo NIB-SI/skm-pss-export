@@ -37,13 +37,9 @@ class Reaction:
         self.products = []
         self.modifiers = []
 
-        # Determine the reaction subtype based on its type and mechanism, participants, etc
-        reaction_subtypes.assign_reaction_subtype(self)
-
         # Figure out the roles of the reaction participants based on the reaction type
+        # (the subtype and SBO terms depend on the participants, see properties below)
         participant_roles.assign_roles(self)
-
-        self.set_SBO_term() # set both reaction and kinetic law terms
 
         # settings for preparing reactions
         self.include_conditions = include_conditions
@@ -93,16 +89,30 @@ class Reaction:
                 # current_app.logger.info(f"{edge_type}, {reaction_id}")
                 print(f"Reaction: {edge_type}, {self.reaction_id}")
 
-    def set_SBO_term(self):
-        """ Set the SBO term for the reaction and the kinetic law based on its type. """
+    # The subtype and SBO terms describe the reaction as exported: they are
+    # computed from the current participants (after export settings and model
+    # fixes), as downstream tools generate rate laws from them.
 
-        if self.reaction_subtype in pss_export_config.reaction_subtype_to_SBO:
-            self.reaction_type_sbo = int(pss_export_config.reaction_subtype_to_SBO[self.reaction_subtype]['reaction_type_SBO'])
-            self.kinetic_law_sbo = int(pss_export_config.reaction_subtype_to_SBO[self.reaction_subtype]['kinetic_law_SBO'])
-        else:
-            self.reaction_type_sbo = None
-            self.kinetic_law_sbo = None
-            print(f"Warning: No SBO term found for reaction subtype {self.reaction_subtype}")
+    @property
+    def reaction_subtype(self):
+        """ Subtype based on type, mechanism, effect and current participants. """
+        return reaction_subtypes.classify(self)
+
+    @property
+    def reaction_type_sbo(self):
+        """ SBO term for the reaction (int), or None if not configured. """
+        return self._subtype_SBO_term('reaction_type_SBO')
+
+    @property
+    def kinetic_law_sbo(self):
+        """ SBO term for the kinetic law (int), or None if not configured. """
+        return self._subtype_SBO_term('kinetic_law_SBO')
+
+    def _subtype_SBO_term(self, key):
+        terms = pss_export_config.reaction_subtype_to_SBO.get(self.reaction_subtype)
+        if terms is None:
+            return None
+        return int(terms[key])
 
     def add_substrate(self, substrate):
         self.substrates.append(substrate)
