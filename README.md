@@ -14,14 +14,14 @@ pip install git+https://github.com/NIB-SI/skm-pss-export.git
 Alternatively, clone and install locally:
 ```bash
 git clone https://github.com/NIB-SI/skm-pss-export.git
-cd pss-export
+cd skm-pss-export
 pip install .
 ```
  
 For development (editable install):
 ```bash
 git clone https://github.com/NIB-SI/skm-pss-export.git
-cd pss-export
+cd skm-pss-export
 pip install -e .
 ```
  
@@ -41,16 +41,35 @@ You can pass the connection settings (uri, username, password) to the CLI using 
   --neo4j-password TEXT  Neo4j password.
 ```
 
-Alternatively, you can set these  in an `.env` file in the current directory. The file should contain the following variables:
+Alternatively, set them as environment variables, or in an `.env` file in the current directory, using the following variables:
 ```bash
 MY_NEO4J_URI=bolt://localhost:7687
 MY_NEO4J_USER=neo4j
 MY_NEO4J_PASSWORD=password
 ```
 
+Each setting is taken from the argument if given, otherwise from the environment, otherwise from the `.env` file.
+
 If you used the defaults in the [skm-neo4j](https://github.com/NIB-SI/skm-neo4j) repo, you can use the `.env.example` file as provided. 
 ```bash
 mv .env.example .env
+```
+
+## Python usage
+
+The package handles the database connection itself: it connects only while collecting data, and closes the connection afterwards.
+
+```python
+from pss_export import PSSAdapter
+
+# connection settings as arguments, or from the environment / .env
+adapter = PSSAdapter(neo4j_uri="bolt://localhost:7687",
+                     neo4j_user="neo4j",
+                     neo4j_password="password")
+
+adapter.collect_reactions(access="public")   # connects, queries, closes
+adapter.create_sbml(filename="output.sbml")
+adapter.create_tabularqual(filename="output.xlsx")
 ```
 
 ## CLI usage
@@ -59,7 +78,7 @@ mv .env.example .env
 
 To view the CLI options:
 ```bash
-python pss_adapter_cli.py to-sbml --help
+pss-export to-sbml --help
 ```
 
 Create an SBML file:
@@ -67,7 +86,7 @@ Create an SBML file:
 pss-export to-sbml output.sbml --access public
 ```
 
-Using the model-fixing functions:
+Using the model-fixing functions (needs the optional dependencies: `pip install ".[model-fixing]"`):
 ```bash
 pss-export to-sbml output-model-fixes.sbml \
   --access public \

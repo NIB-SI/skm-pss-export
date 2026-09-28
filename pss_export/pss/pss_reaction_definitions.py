@@ -121,85 +121,85 @@ class reaction_subtypes:
     UNKNOWN = 'unknown'
 
     @staticmethod
-    def assign_reaction_subtype(reaction):
+    def classify(reaction):
         """
-        Assign a subtype to the reaction based on its type, effect, mechanism,
-        and the presence of substrates and modifiers.
+        Return the subtype of the reaction based on its type, effect, mechanism,
+        and the presence of substrates and modifiers (as currently in the reaction).
         """
 
         match reaction.reaction_type:
             case reaction_types.BINDING_OLIGOMERISATION:
                 if reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.BINDING_WITH_MODIFIER
+                    return reaction_subtypes.BINDING_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.BINDING_WITHOUT_MODIFIER
+                    return reaction_subtypes.BINDING_WITHOUT_MODIFIER
 
             case reaction_types.DISSOCIATION:
                 if reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.DISSOCIATION_WITH_MODIFIER
+                    return reaction_subtypes.DISSOCIATION_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.DISSOCIATION_WITHOUT_MODIFIER
+                    return reaction_subtypes.DISSOCIATION_WITHOUT_MODIFIER
 
             case reaction_types.CATALYSIS:
                 if reaction.has_substrates() and reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITH_MODIFIER
+                    return reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITH_MODIFIER
                 elif reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITH_MODIFIER
+                    return reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITH_MODIFIER
                 elif reaction.has_substrates():
-                    reaction.reaction_subtype = reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITHOUT_MODIFIER
+                    return reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITHOUT_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
+                    return reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
 
             case reaction_types.DEGRADATION_SECRETION:
                 if reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.DEGRADATION_WITH_MODIFIER
+                    return reaction_subtypes.DEGRADATION_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.DEGRADATION_WITHOUT_MODIFIER
+                    return reaction_subtypes.DEGRADATION_WITHOUT_MODIFIER
 
             case reaction_types.PROTEIN_DEACTIVATION:
-                reaction.reaction_subtype = reaction_subtypes.PROTEIN_DEACTIVATION_WITH_MODIFIER
+                return reaction_subtypes.PROTEIN_DEACTIVATION_WITH_MODIFIER
 
             case reaction_types.PROTEIN_ACTIVATION:
-                reaction.reaction_subtype = reaction_subtypes.PROTEIN_ACTIVATION_WITH_MODIFIER
+                return reaction_subtypes.PROTEIN_ACTIVATION_WITH_MODIFIER
 
             case reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_ACTIVATION:
                 if reaction.reaction_mechanism == 'transcription':
-                    reaction.reaction_subtype = reaction_subtypes.TRANSCRIPTIONAL_ACTIVATION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSCRIPTIONAL_ACTIVATION_WITH_MODIFIER
                 elif reaction.reaction_mechanism == 'translation':
-                    reaction.reaction_subtype = reaction_subtypes.TRANSLATIONAL_ACTIVATION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSLATIONAL_ACTIVATION_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.TRANSCRIPTIONAL_OR_TRANSLATIONAL_ACTIVATION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSCRIPTIONAL_OR_TRANSLATIONAL_ACTIVATION_WITH_MODIFIER
 
             case reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_REPRESSION:
                 if reaction.reaction_mechanism == 'transcription':
-                    reaction.reaction_subtype = reaction_subtypes.TRANSCRIPTIONAL_REPRESSION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSCRIPTIONAL_REPRESSION_WITH_MODIFIER
                 elif reaction.reaction_mechanism == 'translation':
-                    reaction.reaction_subtype = reaction_subtypes.TRANSLATIONAL_REPRESSION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSLATIONAL_REPRESSION_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.TRANSCRIPTIONAL_OR_TRANSLATIONAL_REPRESSION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSCRIPTIONAL_OR_TRANSLATIONAL_REPRESSION_WITH_MODIFIER
 
             case reaction_types.TRANSLOCATION:
                 if reaction.has_modifiers():
-                    reaction.reaction_subtype = reaction_subtypes.TRANSLOCATION_WITH_MODIFIER
+                    return reaction_subtypes.TRANSLOCATION_WITH_MODIFIER
                 else:
-                    reaction.reaction_subtype = reaction_subtypes.TRANSLOCATION_WITHOUT_MODIFIER
+                    return reaction_subtypes.TRANSLOCATION_WITHOUT_MODIFIER
 
             case reaction_types.UNKNOWN:
                 if reaction.reaction_effect == 'activation':
                     if reaction.has_modifiers():
-                        reaction.reaction_subtype = reaction_subtypes.UNKNOWN_ACTIVATION_WITH_MODIFIER
+                        return reaction_subtypes.UNKNOWN_ACTIVATION_WITH_MODIFIER
                     else:
-                        reaction.reaction_subtype = reaction_subtypes.UNKNOWN_ACTIVATION_WITHOUT_MODIFIER
+                        return reaction_subtypes.UNKNOWN_ACTIVATION_WITHOUT_MODIFIER
                 elif reaction.reaction_effect == 'inhibition':
                     if reaction.has_modifiers():
-                        reaction.reaction_subtype = reaction_subtypes.UNKNOWN_INHIBITION_WITH_MODIFIER
+                        return reaction_subtypes.UNKNOWN_INHIBITION_WITH_MODIFIER
                     else:
-                        reaction.reaction_subtype = reaction_subtypes.UNKNOWN_INHIBITION_WITHOUT_MODIFIER
+                        return reaction_subtypes.UNKNOWN_INHIBITION_WITHOUT_MODIFIER
                 else:
-                   reaction.reaction_subtype = reaction_subtypes.UNKNOWN
+                   return reaction_subtypes.UNKNOWN
 
             case _:
-                reaction.reaction_subtype = reaction_subtypes.UNKNOWN
+                return reaction_subtypes.UNKNOWN
 
 
 ALL_REACTION_SUBTYPES = [

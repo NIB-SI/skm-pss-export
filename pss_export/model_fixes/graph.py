@@ -116,7 +116,7 @@ class GraphVisualizer:
             labels=nx.get_node_attributes(subgraph, 'label'),
             # make the reaction nodes smaller
             node_size=[
-                300 if subgraph.nodes[n].get('type') == 'reaction' else 800
+                400 if subgraph.nodes[n].get('type') == 'reaction' else 900
                 for n in subgraph.nodes()
             ],
             # make the species of interest red, reactions yellow, the rest blue
@@ -136,4 +136,5 @@ class GraphVisualizer:
             ],
             # layout
             pos=nx.nx_agraph.graphviz_layout(subgraph, prog="dot"))
+
         plt.show()

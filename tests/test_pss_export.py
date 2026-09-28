@@ -6,6 +6,8 @@ Covers:
   - Species / Reaction / IDTracker entity classes
   - Reaction subtype and role assignment
   - AnnotationManager reference processing
+  - PSSCollector access levels and nodes_to_ignore
+  - Connection settings and connection lifecycle
 """
 
 import os
@@ -17,6 +19,10 @@ import pss_export.pss.pss_reaction_definitions as rdef
 import pss_export.entity_classes as ec
 from pss_export.pss.config import Config, pss_export_config
 from pss_export.annotations.annotation_manager import AnnotationManager
+from pss_export.pss.collectors import PSSCollector
+from pss_export.graph_db import resolve_connection_settings
+import pss_export.pss.pss_adapter as pss_adapter_module
+from pss_export import PSSAdapter
 
 
 # ---------------------------------------------------------------------------
@@ -148,14 +154,46 @@ class TestReaction:
         assert len(r.products) == 1
         assert len(r.modifiers) == 1
 
-    def test_subtype_updates_with_participants(self):
-        """Subtype is assigned at construction; adding participants afterwards
-        does not retroactively change it — this is the current design."""
+    def test_subtype_follows_participants(self):
+        """Subtype describes the reaction as it currently is, including
+        participants added after construction (e.g. by model fixes)."""
         r = self._make(rdef.reaction_types.CATALYSIS)
         assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
         r.add_substrate(ec.Species("X", "protein", "cytoplasm"))
-        # subtype stays as-is (participants are added post-construction)
-        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITHOUT_MODIFIER
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITHOUT_MODIFIER
+        r.add_modifier(ec.Species("E", "protein_active", "cytoplasm"))
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITH_SUBSTRATE_AND_WITH_MODIFIER
+        r.substrates.clear()
+        assert r.reaction_subtype == rdef.reaction_subtypes.CATALYSIS_WITHOUT_SUBSTRATE_AND_WITH_MODIFIER
+
+    def test_sbo_follows_participants(self):
+        """Translocation with a transporter is active transport, without passive."""
+        r = self._make(rdef.reaction_types.TRANSLOCATION)
+        assert r.reaction_type_sbo == 658  # SBO:0000658 — passive transport
+        r.add_modifier(ec.Species("T", "protein_active", "cytoplasm"))
+        assert r.reaction_type_sbo == 657  # SBO:0000657 — active transport
+
+    def test_dissociation_sbo_with_and_without_modifier(self):
+        """Both variants are SBO:0000180 dissociation (0000015 is the
+        participant role 'substrate', not a process)."""
+        r = self._make(rdef.reaction_types.DISSOCIATION)
+        assert r.reaction_type_sbo == 180
+        r.add_modifier(ec.Species("M", "protein_active", "cytoplasm"))
+        assert r.reaction_type_sbo == 180
+
+    def test_subtype_is_read_only(self):
+        r = self._make(rdef.reaction_types.CATALYSIS)
+        with pytest.raises(AttributeError):
+            r.reaction_subtype = "something"
+
+    def test_every_subtype_has_sbo_terms(self):
+        """Every subtype has both SBO terms configured (else they'd be None)."""
+        configured = pss_export_config.reaction_subtype_to_SBO
+        missing = [s for s in rdef.ALL_REACTION_SUBTYPES if s not in configured]
+        assert missing == []
+        for subtype in rdef.ALL_REACTION_SUBTYPES:
+            assert int(configured[subtype]["reaction_type_SBO"]) > 0
+            assert int(configured[subtype]["kinetic_law_SBO"]) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -273,3 +311,243 @@ class TestAnnotationManager:
     def test_unsupported_format_raises(self, am):
         with pytest.raises(ValueError, match="Unsupported format"):
             am.process_node("nonexistent_format", ["uniprot:P12345"])
+
+# ---------------------------------------------------------------------------
+# PSSCollector access levels
+# ---------------------------------------------------------------------------
+
+class TestCollectorAccess:
+
+    @pytest.mark.parametrize("access, expected", [
+        ("public", "public"),
+        ("restricted", "restricted"),
+        ("all", "restricted"),   # legacy alias
+    ])
+    def test_access_levels(self, access, expected):
+        collector = PSSCollector(None, access=access)
+        assert collector.access == expected
+
+    def test_default_is_public(self):
+        assert PSSCollector(None).access == "public"
+
+    @pytest.mark.parametrize("access", ["Restricted", "private", "", None])
+    def test_invalid_access_raises(self, access):
+        with pytest.raises(ValueError, match="Invalid access"):
+            PSSCollector(None, access=access)
+
+    def test_public_filters_external_links(self):
+        where, args = PSSCollector(None, access="public", nodes_to_ignore=None)._build_where_clause()
+        assert "external_links" in where
+        assert "invented_reason_allowlist" in args
+
+    def test_pathway_filter_selects_whole_reactions(self):
+        """The pathway filter selects reactions (EXISTS on a participant);
+        it must not filter the collected edges (n)."""
+        collector = PSSCollector(None, pathways=["Hormone - Abscisic acid (ABA)"], nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert "EXISTS" in where
+        assert "n." not in where
+        assert args["pathways"] == ["Hormone - Abscisic acid (ABA)"]
+
+    def test_restricted_has_no_external_links_filter(self):
+        where, args = PSSCollector(None, access="restricted", nodes_to_ignore=None)._build_where_clause()
+        assert "external_links" not in where
+        assert "invented_reason_allowlist" not in args
+
+
+# ---------------------------------------------------------------------------
+# PSSCollector nodes_to_ignore
+# ---------------------------------------------------------------------------
+
+class FakeEdge(dict):
+    """Stands in for a neo4j Relationship (type, start/end nodes, properties)."""
+    def __init__(self, type_, start_node, end_node, **props):
+        super().__init__(**props)
+        self.type = type_
+        self.start_node = start_node
+        self.end_node = end_node
+
+
+class FakePath:
+    """Stands in for a neo4j Path p=(r)-[]-(n): end_node is the participant."""
+    def __init__(self, edge, participant):
+        self.relationships = [edge]
+        self.end_node = participant
+
+
+REACTION_NODE = {"name": "rx"}
+
+
+def substrate(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("SUBSTRATE", node, REACTION_NODE,
+                             source_location="cytoplasm", source_form="protein"), node)
+
+
+def product(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("PRODUCT", REACTION_NODE, node,
+                             target_location="cytoplasm", target_form="protein"), node)
+
+
+def modifier(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("ACTIVATES", node, REACTION_NODE,
+                             source_location="cytoplasm", source_form="protein_active"), node)
+
+
+class TestCollectorIgnoreNodes:
+
+    @pytest.fixture
+    def collector(self):
+        return PSSCollector(None, nodes_to_ignore=["SCF"])
+
+    def _build(self, collector, paths, reaction_type=rdef.reaction_types.BINDING_OLIGOMERISATION):
+        return collector._build_reaction("rx00001", {"reaction_type": reaction_type}, paths)
+
+    def test_nodes_to_ignore_not_in_cypher(self, collector):
+        where, args = collector._build_where_clause()
+        assert "nodes_to_ignore" not in where
+        assert "nodes_to_ignore" not in args
+
+    def test_other_substrate_left_keeps_reaction(self, collector):
+        r = self._build(collector, [substrate("A"), substrate("SCF"), product("A|SCF")])
+        assert [s.name for s in r.substrates] == ["A"]
+        assert [p.name for p in r.products] == ["A|SCF"]
+
+    def test_only_substrate_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [substrate("SCF"), product("B")]) is None
+
+    def test_only_product_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [substrate("A"), product("SCF")]) is None
+
+    def test_modifier_ignored_keeps_reaction(self, collector):
+        r = self._build(collector, [substrate("X"), product("Y"), modifier("SCF")],
+                        rdef.reaction_types.CATALYSIS)
+        assert r.modifiers == []
+        assert len(r.substrates) == 1 and len(r.products) == 1
+
+    def test_all_edges_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [modifier("SCF")], rdef.reaction_types.CATALYSIS) is None
+
+    def test_empty_side_by_design_keeps_reaction(self, collector):
+        """Gene substrate is skipped (include_genes=False), so an empty
+        substrate side is not caused by ignoring and must not drop it."""
+        r = self._build(collector, [substrate("GENE"), product("P"), modifier("SCF")],
+                        rdef.reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_ACTIVATION)
+        assert r is not None
+        assert r.substrates == []
+        assert [p.name for p in r.products] == ["P"]
+
+    def test_nothing_ignored(self):
+        collector = PSSCollector(None, nodes_to_ignore=None)
+        r = self._build(collector, [substrate("SCF"), product("B")])
+        assert [s.name for s in r.substrates] == ["SCF"]
+
+
+# ---------------------------------------------------------------------------
+# Connection settings
+# ---------------------------------------------------------------------------
+
+ENV_VARS = ("MY_NEO4J_URI", "MY_NEO4J_USER", "MY_NEO4J_PASSWORD")
+
+
+@pytest.fixture
+def clean_env(monkeypatch, tmp_path):
+    """No connection settings in the environment, and no .env file."""
+    for v in ENV_VARS:
+        monkeypatch.delenv(v, raising=False)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+class TestConnectionSettings:
+
+    def test_arguments(self, clean_env):
+        s = resolve_connection_settings(uri="bolt://a:7687", user="u", pwd="p")
+        assert s == {"uri": "bolt://a:7687", "user": "u", "pwd": "p"}
+
+    def test_empty_strings_are_valid(self, clean_env):
+        s = resolve_connection_settings(uri="bolt://a:7687", user="", pwd="")
+        assert s["user"] == "" and s["pwd"] == ""
+
+    def test_environment(self, clean_env, monkeypatch):
+        monkeypatch.setenv("MY_NEO4J_URI", "bolt://env:7687")
+        monkeypatch.setenv("MY_NEO4J_USER", "env_user")
+        monkeypatch.setenv("MY_NEO4J_PASSWORD", "env_pwd")
+        s = resolve_connection_settings()
+        assert s == {"uri": "bolt://env:7687", "user": "env_user", "pwd": "env_pwd"}
+
+    def test_dotenv_file(self, clean_env):
+        (clean_env / ".env").write_text(
+            "MY_NEO4J_URI=bolt://file:7687\nMY_NEO4J_USER=file_user\nMY_NEO4J_PASSWORD=file_pwd\n")
+        s = resolve_connection_settings()
+        assert s == {"uri": "bolt://file:7687", "user": "file_user", "pwd": "file_pwd"}
+
+    def test_precedence(self, clean_env, monkeypatch):
+        """argument > environment > .env file"""
+        (clean_env / ".env").write_text(
+            "MY_NEO4J_URI=bolt://file:7687\nMY_NEO4J_USER=file_user\nMY_NEO4J_PASSWORD=file_pwd\n")
+        monkeypatch.setenv("MY_NEO4J_USER", "env_user")
+        s = resolve_connection_settings(uri="bolt://arg:7687")
+        assert s == {"uri": "bolt://arg:7687", "user": "env_user", "pwd": "file_pwd"}
+
+    def test_missing_raises(self, clean_env):
+        with pytest.raises(ValueError, match="MY_NEO4J_USER, MY_NEO4J_PASSWORD"):
+            resolve_connection_settings(uri="bolt://a:7687")
+
+    def test_adapter_fails_early_on_missing_settings(self, clean_env):
+        with pytest.raises(ValueError, match="Missing database connection settings"):
+            PSSAdapter()
+
+
+# ---------------------------------------------------------------------------
+# Connection lifecycle
+# ---------------------------------------------------------------------------
+
+class FakeGraphDB:
+    """Records connections; returns no data, or raises on query if asked to."""
+    instances = []
+
+    def __init__(self, uri, user, pwd, fail=False):
+        self.closed = False
+        self.fail = fail
+        FakeGraphDB.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.closed = True
+
+    def run_query(self, query_function, *args):
+        if self.fail:
+            raise RuntimeError("query failed")
+        return []
+
+
+class TestConnectionLifecycle:
+
+    @pytest.fixture(autouse=True)
+    def fake_db(self, monkeypatch):
+        FakeGraphDB.instances = []
+        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
+
+    def _adapter(self):
+        return PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+
+    def test_no_connection_at_construction(self):
+        self._adapter()
+        assert FakeGraphDB.instances == []
+
+    def test_connection_closed_after_collect(self):
+        self._adapter().collect_reactions(nodes_to_ignore=None)
+        assert len(FakeGraphDB.instances) == 1
+        assert FakeGraphDB.instances[0].closed
+
+    def test_connection_closed_on_error(self, monkeypatch):
+        monkeypatch.setattr(pss_adapter_module, "GraphDB",
+                            lambda **kw: FakeGraphDB(**kw, fail=True))
+        with pytest.raises(RuntimeError, match="query failed"):
+            self._adapter().collect_reactions(nodes_to_ignore=None)
+        assert FakeGraphDB.instances[0].closed

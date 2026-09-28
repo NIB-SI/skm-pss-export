@@ -3,7 +3,6 @@
 import click
 import functools
 
-from pss_export import GraphDB
 from pss_export import PSSAdapter
 
 # click option that converts comma separated string into list
@@ -22,9 +21,9 @@ class ConvertStrToList(click.Option):
 
 
 def neo4j_common_params(func):
-    @click.option("--neo4j-uri", default=None, help="Neo4j connection URI.")
-    @click.option("--neo4j-user", default=None, help="Neo4j username.")
-    @click.option("--neo4j-password", default=None, help="Neo4j password.")
+    @click.option("--neo4j-uri", default=None, help="Neo4j connection URI (default: MY_NEO4J_URI from the environment or .env).")
+    @click.option("--neo4j-user", default=None, help="Neo4j username (default: MY_NEO4J_USER from the environment or .env).")
+    @click.option("--neo4j-password", default=None, help="Neo4j password (default: MY_NEO4J_PASSWORD from the environment or .env).")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -53,7 +52,7 @@ def modelfixing_common_params(func):
 
 def reaction_filter_common_params(func):
     @click.option("--reactions", cls=ConvertStrToList, default=None, help="Comma-separated list of reaction IDs to include in export.")
-    @click.option("--access",  default='public', help="Use public access data.")
+    @click.option("--access", default='public', type=click.Choice(['public', 'restricted', 'all']), help="Data access level: 'public' (default) or 'restricted' (all reactions; 'all' is an alias).")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -95,11 +94,10 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
 
     try:
 
-        # connect to PSS in neo4j:
-        graph_db = GraphDB(uri=neo4j_uri, user=neo4j_user, pwd=neo4j_password)
-
-        # build adapter
-        adapter = PSSAdapter(graph_db,
+        # build adapter (connects to PSS in neo4j only while collecting)
+        adapter = PSSAdapter(neo4j_uri=neo4j_uri,
+                    neo4j_user=neo4j_user,
+                    neo4j_password=neo4j_password,
                     model_id=model_id,
                     model_name=model_name,
                     model_description=model_description,
@@ -146,11 +144,10 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
         click.echo(f"  Neo4j URI: {neo4j_uri}")
         click.echo(f"  Output file: {filename}")
 
-    # connect to PSS in neo4j:
-    graph_db = GraphDB(uri=neo4j_uri, user=neo4j_user, pwd=neo4j_password)
-
-    # build adapter
-    adapter = PSSAdapter(graph_db,
+    # build adapter (connects to PSS in neo4j only while collecting)
+    adapter = PSSAdapter(neo4j_uri=neo4j_uri,
+                    neo4j_user=neo4j_user,
+                    neo4j_password=neo4j_password,
                     model_id=model_id,
                     model_name=model_name,
                     model_description=model_description,
@@ -159,7 +156,7 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
     if model_fixes_identify:
         adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
 
-    adapter.create_tabulrqual(filename=filename)
+    adapter.create_tabularqual(filename=filename)
 
     click.echo(f"Wrote spreadsheet to {filename}")
 

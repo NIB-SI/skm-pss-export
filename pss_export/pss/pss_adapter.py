@@ -6,8 +6,8 @@ from .config import pss_export_config, pss_schema_config
 from .collectors import PSSCollector
 
 # internal imports
-from ..model_fixes import ModelFixer
-
+# (ModelFixer is imported in model_fixes(), as it needs optional dependencies)
+from ..graph_db import GraphDB, resolve_connection_settings
 from ..entity_classes import Person
 
 # # SBGN
@@ -16,7 +16,7 @@ from ..entity_classes import Person
 # SBML
 from ..sbml import SBML
 
-from ..boolean import TabluarQqual
+from ..boolean import TabularQual
 
 # # projection for DiNAR
 # from .pss_dinar_translation import pss_dinar_translation
@@ -36,7 +36,10 @@ class PSSAdapter():
         - *JSON (for API)
     '''
 
-    def __init__(self, graph_db,
+    def __init__(self,
+                    neo4j_uri=None,
+                    neo4j_user=None,
+                    neo4j_password=None,
                     model_id=None,
                     model_name=None,
                     model_description=None,
@@ -44,23 +47,29 @@ class PSSAdapter():
         '''
         Constructor for PSSAdapter class.
 
+        The database is only connected to while collecting data
+        (collect_reactions), and the connection is closed afterwards.
+
         Parameters
         ----------
-        graph_db : GraphDB
-            The graph database connection object.
-        include_genes : bool, optional
-            Whether to include gene information in the reactions. Default is False.
-        nodes_to_ignore : list or str, optional
-            Nodes to ignore during export. Can be a list of node names or a single string. Default is 'default', which ignores nodes defined in the configuration.
-        implement_model_fixes : bool, optional
-            Whether to apply model fixes after collecting data. Default is True.
+        neo4j_uri, neo4j_user, neo4j_password : str, optional
+            Database connection settings. Any setting not given is read from
+            the environment (MY_NEO4J_URI, MY_NEO4J_USER, MY_NEO4J_PASSWORD),
+            or from a .env file in the current folder.
+        model_id, model_name, model_description : str, optional
+            Model metadata to use in exports.
+        creator : list of str, optional
+            Model creators, each in the format of:
+            familyName | givenName | organization | email
 
         Returns
         -------
         None
 
         '''
-        self.graph_db = graph_db
+        # raises ValueError now if any setting is missing
+        self.connection_settings = resolve_connection_settings(
+            uri=neo4j_uri, user=neo4j_user, pwd=neo4j_password)
 
         self.reactions = {}
         self.reaction_ids = []
@@ -107,18 +116,21 @@ class PSSAdapter():
 
         print("Collecting reactions and annotations from the database...")
 
-        collector = PSSCollector(self, **kwargs)
+        # connection is only open while collecting
+        with GraphDB(**self.connection_settings) as graph_db:
 
-        # collect reactions
-        self.reactions = collector.collect_reactions()
-        self.reaction_ids = list(self.reactions.keys())
-        print(f"Collected {len(self.reaction_ids)} reactions.")
+            collector = PSSCollector(graph_db, **kwargs)
 
-        # collect node annotations
-        self.node_annotations = collector.collect_node_annotations()
+            # collect reactions
+            self.reactions = collector.collect_reactions()
+            self.reaction_ids = list(self.reactions.keys())
+            print(f"Collected {len(self.reaction_ids)} reactions.")
 
-        # collect reaction pathways (for SBGN)
-        self.reaction_pathways = collector.collect_reaction_pathways()
+            # collect node annotations
+            self.node_annotations = collector.collect_node_annotations()
+
+            # collect reaction pathways (for SBGN)
+            self.reaction_pathways = collector.collect_reaction_pathways(self.reaction_ids)
 
         self.export_datetime = datetime.now().isoformat()
 
@@ -130,6 +142,13 @@ class PSSAdapter():
             1) Fix node 'form' issues by changing input/outputs to active forms.
             2) Add transport reactions for species in multiple compartments.
         '''
+        try:
+            from ..model_fixes import ModelFixer
+        except ImportError as e:
+            raise ImportError(
+                "Model fixing needs optional dependencies: "
+                "pip install 'pss-export[model-fixing]'") from e
+
         ModelFixer(self, apply_fixes=apply_fixes, interactive=interactive).identify_model_fixes()
 
     def create_sbml(self,
@@ -159,10 +178,10 @@ class PSSAdapter():
 
         return sbml.write(filename)
 
-    def create_tabulrqual(self, filename=None):
+    def create_tabularqual(self, filename=None):
         '''  '''
 
-        tabqual = TabluarQqual(self)
+        tabqual = TabularQual(self)
 
         for reaction_id in self.reaction_ids:
             tabqual.add_reaction(self.reactions[reaction_id])
@@ -174,9 +193,9 @@ class PSSAdapter():
         tabqual.create_transitions()
 
         print("-" * 40)
-        print("Number of species in TabluarQqual spreadsheet: ", len(tabqual.species_ids))
-        print("Number of compartments in TabluarQqual spreadsheet: ", len(tabqual.compartment_ids))
-        print("Number of transitions in TabluarQqual spreadsheet: ", len(tabqual.transitions))
+        print("Number of species in TabularQual spreadsheet: ", len(tabqual.species_ids))
+        print("Number of compartments in TabularQual spreadsheet: ", len(tabqual.compartment_ids))
+        print("Number of transitions in TabularQual spreadsheet: ", len(tabqual.transitions))
         print("-" * 40)
 
         return tabqual.write(filename)

@@ -104,8 +104,9 @@ class ReactionFix:
             change_str = f"new_form='{self.new_form}'"
         elif self.new_location:
             change_str = f"new_location='{self.new_location}'"
-
-        return f"ReactionFix(reaction_id='{self.reaction_id}', species_role='{self.species_role}', name='{self.name}', {change_str})"
+        else:
+            change_str = "no change specified"
+        return f"""ReactionFix(reaction_id='{self.reaction_id}', species_role='{self.species_role}', name='{self.name.split("[")[0]}', {change_str})"""
 
 
 class TransportReaction:
@@ -137,8 +138,8 @@ class TransportReaction:
 
     def __repr__(self):
         return (
-            f"TransportReaction(name='{self.name}', form='{self.form}', "
-            f"source_compartment='{self.source_compartment}', target_compartment='{self.target_compartment}')"
+            f"""TransportReaction(name='{self.name.split("[")[0]}', form='{self.form}', """
+            f"""source_compartment='{self.source_compartment}', target_compartment='{self.target_compartment}')"""
         )
 
 class ModelFixer:
@@ -252,7 +253,7 @@ class ModelFixer:
             fixing_func = self._suggest_fixes_form
 
         for node_name, data in problematic_nodes.items():
-            self.console.rule(f"[bold red]Node {node_name}")
+            self.console.rule(f"[bold red]Node {node_name.split('[')[0]}")
             species = data['species']
             subgraph = data['subgraph']
             fixes = fixing_func(node_name, species, subgraph)
@@ -673,7 +674,7 @@ class ModelFixer:
                 ).lower()
             plt.clf()  # close plot once user has made a choice
             if action == 's':
-                console.print(f"   - Skipping node {node_name}")
+                console.print(f"   - Skipping node {node_name.split('[')[0]}")
             elif action == 'q':
                 console.print("Exiting model fixing.")
                 return -1

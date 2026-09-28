@@ -3,24 +3,32 @@ from .config import pss_export_config, pss_schema_config
 
 INVENTED_REASON_ALLOWLIST = ["invented:harmonise-location"]
 
+# accepted access values -> internal access level
+# ('all' is kept as a legacy alias for 'restricted')
+ACCESS_LEVELS = {
+    'public': 'public',
+    'restricted': 'restricted',
+    'all': 'restricted',
+}
+
 
 class PSSCollector:
     """All the logic for deciding which reactions to gather from PSS"""
 
     def __init__(self,
-                 pss_adapter,
+                 graph_db,
                  reactions=None,
-                 access=None,
+                 access='public',
                  pathways=None,
                  include_genes=False,
                  nodes_to_ignore='default'):
 
-        self.pss_adapter = pss_adapter
+        self.graph_db = graph_db
 
-        if access == 'all':
-            self.access = 'all'
-        else:
-            self.access = 'public'
+        if access not in ACCESS_LEVELS:
+            raise ValueError(
+                f"Invalid access '{access}', must be one of: {', '.join(ACCESS_LEVELS)}")
+        self.access = ACCESS_LEVELS[access]
 
         if reactions is not None:
             self.REACTIONS = reactions
@@ -64,6 +72,8 @@ class PSSCollector:
             return [n.strip() for n in nodes_to_ignore]
 
     def _build_where_clause(self):
+        ''' Filters on the reaction (r) only: selected reactions are always
+        collected whole, with all of their edges. '''
         cy_filters = []
         arguments = {}
 
@@ -71,17 +81,21 @@ class PSSCollector:
             arguments['reaction_ids'] = self.REACTIONS
             cy_filters.append("r.reaction_id IN $reaction_ids")
         if self.pathway_filter:
+            # reactions with at least one participant in the pathways
             arguments['pathways'] = self.PATHWAYS
-            cy_filters.append(
-                "size(apoc.coll.intersection(n.all_pathways, $pathways)) > 0")
-        if self.nodes_to_ignore:
-            arguments['nodes_to_ignore'] = self.nodes_to_ignore
-            cy_filters.append("NOT n.name IN $nodes_to_ignore")
+            cy_filters.append('''
+                EXISTS {
+                    MATCH (r)--(m)
+                    WHERE size(apoc.coll.intersection(m.all_pathways, $pathways)) > 0
+                }
+                ''')
+        # (nodes_to_ignore is applied per reaction, see _build_reaction)
         if self.access == 'public':
+            # public = at least one source which is not 'other' or 'invented',
+            #          or an allowlisted 'invented' reason
             cy_filters.append('''
                 (
-                    size([link IN r.external_links WHERE link =~ 'other:.*' | 1]) < size(r.external_links)
-                    OR size([link IN r.external_links WHERE link =~ 'invented:.*' | 1]) < size(r.external_links)
+                    size([link IN r.external_links WHERE NOT (link =~ 'other:.*' OR link =~ 'invented:.*') | 1]) > 0
                     OR size([link IN r.external_links WHERE link IN $invented_reason_allowlist | 1]) > 0
                 )
                 ''')
@@ -104,8 +118,8 @@ class PSSCollector:
 
             cy = f'''
                 MATCH (r:Reaction)
-                OPTIONAL MATCH p=(r)-[]-(n)
                 {where_clause}
+                OPTIONAL MATCH p=(r)-[]-(n)
                 RETURN  r.reaction_id AS reaction_id,
                         r AS reaction,
                         collect(p) AS path
@@ -113,7 +127,7 @@ class PSSCollector:
             result = tx.run(cy, **arguments)
             return list(result)
 
-        reaction_data = self.pss_adapter.graph_db.run_query(
+        reaction_data = self.graph_db.run_query(
             _collect_reactions, where_clause, arguments)
 
         reactions = {}
@@ -129,15 +143,50 @@ class PSSCollector:
 
             reaction_properties = reaction_dict['reaction']
 
-            reaction = Reaction(reaction_id,
-                                reaction_properties['reaction_type'],
-                                reaction_properties,
-                                include_genes=self.include_genes)
-            reaction.add_edges(reaction_paths)
+            reaction = self._build_reaction(
+                reaction_id, reaction_properties, reaction_paths)
+            if reaction is None:
+                continue
 
             reactions[reaction_id] = reaction
 
         return reactions
+
+    def _build_reaction(self, reaction_id, reaction_properties, reaction_paths):
+        ''' Build a Reaction from its paths, leaving out edges to ignored nodes.
+
+        The reaction itself is dropped (returns None) only if ignoring nodes
+        removed all of its edges, all of its substrates, or all of its products. Removed
+        modifiers, or sides which were already empty (e.g. genes not
+        included), never drop the reaction.
+        '''
+
+        def _make(paths):
+            reaction = Reaction(reaction_id,
+                                reaction_properties['reaction_type'],
+                                reaction_properties,
+                                include_genes=self.include_genes)
+            reaction.add_edges(paths)
+            return reaction
+
+        # paths are (r)-[]-(n), so the participant is the end node
+        kept_paths = [p for p in reaction_paths
+                      if p.end_node['name'] not in self.nodes_to_ignore]
+
+        if not kept_paths:
+            print(f"Reaction {reaction_id} dropped: all edges are to ignored nodes")
+            return None
+
+        reaction = _make(kept_paths)
+
+        if len(kept_paths) < len(reaction_paths):
+            full_reaction = _make(reaction_paths)
+            if ((full_reaction.substrates and not reaction.substrates) or
+                    (full_reaction.products and not reaction.products)):
+                print(f"Reaction {reaction_id} dropped: all substrates or products are ignored nodes")
+                return None
+
+        return reaction
 
     def collect_node_annotations(self):
 
@@ -158,11 +207,11 @@ class PSSCollector:
             result = tx.run(cy)
             return [x for x in result]
 
-        node_annotations = self.pss_adapter.graph_db.run_query(
+        node_annotations = self.graph_db.run_query(
             _collect_node_annotations)
         return {d["name"]: dict(d) for d in node_annotations}
 
-    def collect_reaction_pathways(self):
+    def collect_reaction_pathways(self, reaction_ids):
 
         def _collect_reaction_pathways(tx, reaction_ids):
             cy = '''
@@ -173,5 +222,5 @@ class PSSCollector:
             result = tx.run(cy, reaction_ids=reaction_ids)
             return {r["reaction_id"]: r["pathway"] for r in result}
 
-        return self.pss_adapter.graph_db.run_query(
-            _collect_reaction_pathways, self.pss_adapter.reaction_ids)
+        return self.graph_db.run_query(
+            _collect_reaction_pathways, reaction_ids)
