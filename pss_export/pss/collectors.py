@@ -3,6 +3,14 @@ from .config import pss_export_config, pss_schema_config
 
 INVENTED_REASON_ALLOWLIST = ["invented:harmonise-location"]
 
+# accepted access values -> internal access level
+# ('all' is kept as a legacy alias for 'restricted')
+ACCESS_LEVELS = {
+    'public': 'public',
+    'restricted': 'restricted',
+    'all': 'restricted',
+}
+
 
 class PSSCollector:
     """All the logic for deciding which reactions to gather from PSS"""
@@ -10,17 +18,17 @@ class PSSCollector:
     def __init__(self,
                  pss_adapter,
                  reactions=None,
-                 access=None,
+                 access='public',
                  pathways=None,
                  include_genes=False,
                  nodes_to_ignore='default'):
 
         self.pss_adapter = pss_adapter
 
-        if access == 'all':
-            self.access = 'all'
-        else:
-            self.access = 'public'
+        if access not in ACCESS_LEVELS:
+            raise ValueError(
+                f"Invalid access '{access}', must be one of: {', '.join(ACCESS_LEVELS)}")
+        self.access = ACCESS_LEVELS[access]
 
         if reactions is not None:
             self.REACTIONS = reactions

@@ -6,6 +6,7 @@ Covers:
   - Species / Reaction / IDTracker entity classes
   - Reaction subtype and role assignment
   - AnnotationManager reference processing
+  - PSSCollector access levels
 """
 
 import os
@@ -17,6 +18,7 @@ import pss_export.pss.pss_reaction_definitions as rdef
 import pss_export.entity_classes as ec
 from pss_export.pss.config import Config, pss_export_config
 from pss_export.annotations.annotation_manager import AnnotationManager
+from pss_export.pss.collectors import PSSCollector
 
 
 # ---------------------------------------------------------------------------
@@ -273,3 +275,37 @@ class TestAnnotationManager:
     def test_unsupported_format_raises(self, am):
         with pytest.raises(ValueError, match="Unsupported format"):
             am.process_node("nonexistent_format", ["uniprot:P12345"])
+
+# ---------------------------------------------------------------------------
+# PSSCollector access levels
+# ---------------------------------------------------------------------------
+
+class TestCollectorAccess:
+
+    @pytest.mark.parametrize("access, expected", [
+        ("public", "public"),
+        ("restricted", "restricted"),
+        ("all", "restricted"),   # legacy alias
+    ])
+    def test_access_levels(self, access, expected):
+        collector = PSSCollector(None, access=access)
+        assert collector.access == expected
+
+    def test_default_is_public(self):
+        assert PSSCollector(None).access == "public"
+
+    @pytest.mark.parametrize("access", ["Restricted", "private", "", None])
+    def test_invalid_access_raises(self, access):
+        with pytest.raises(ValueError, match="Invalid access"):
+            PSSCollector(None, access=access)
+
+    def test_public_filters_external_links(self):
+        where, args = PSSCollector(None, access="public", nodes_to_ignore=None)._build_where_clause()
+        assert "external_links" in where
+        assert "invented_reason_allowlist" in args
+
+    def test_restricted_has_no_external_links_filter(self):
+        where, args = PSSCollector(None, access="restricted", nodes_to_ignore=None)._build_where_clause()
+        assert "external_links" not in where
+        assert "invented_reason_allowlist" not in args
+

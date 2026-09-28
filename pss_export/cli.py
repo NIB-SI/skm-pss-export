@@ -53,7 +53,7 @@ def modelfixing_common_params(func):
 
 def reaction_filter_common_params(func):
     @click.option("--reactions", cls=ConvertStrToList, default=None, help="Comma-separated list of reaction IDs to include in export.")
-    @click.option("--access",  default='public', help="Use public access data.")
+    @click.option("--access", default='public', type=click.Choice(['public', 'restricted', 'all']), help="Data access level: 'public' (default) or 'restricted' (all reactions; 'all' is an alias).")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
