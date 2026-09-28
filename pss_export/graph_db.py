@@ -53,7 +53,7 @@ class GraphDB:
 
         results = []
         with self.driver.session() as session:
-            query_result = session.read_transaction(query_function, *args)
+            query_result = session.execute_read(query_function, *args)
             # current_app.logger.info(query_result)
 
             for r in query_result:
