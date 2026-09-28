@@ -54,6 +54,9 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/NIB-SI/skm-pss-export"
 
+[project.scripts]
+pss-export = "pss_export.cli:cli"
+
 [tool.setuptools.packages.find]
 include = ["pss_export*"]
 
