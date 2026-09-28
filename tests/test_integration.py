@@ -134,7 +134,7 @@ class TestTabularQualExport:
         Use .xlsx directly for a predictable output path.
         """
         out = tmp_path_factory.mktemp("tabularqual") / "test_export.xlsx"
-        adapter.create_tabulrqual(filename=str(out))
+        adapter.create_tabularqual(filename=str(out))
         return out
 
     def test_file_created(self, tabularqual_file):

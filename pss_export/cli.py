@@ -156,7 +156,7 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
     if model_fixes_identify:
         adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
 
-    adapter.create_tabulrqual(filename=filename)
+    adapter.create_tabularqual(filename=filename)
 
     click.echo(f"Wrote spreadsheet to {filename}")
 

@@ -1,2 +1,2 @@
 
-from .tabularqual_api import TabluarQqual
+from .tabularqual_api import TabularQual

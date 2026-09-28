@@ -35,10 +35,10 @@ class TabularQualAnnotationStrategy:
 annotation_manager.register_export_strategy("tabularqual", TabularQualAnnotationStrategy())
 
 #-------------------------------------
-# TabluarQqual
+# TabularQual
 #-------------------------------------
 
-class TabluarQqual(IDTracker):
+class TabularQual(IDTracker):
 
     def __init__(self, pss_adapter):
         '''
@@ -192,7 +192,7 @@ class TabluarQqual(IDTracker):
 
         self.species_dict[species_id] = tabqual_species
 
-        # print(f"TabluarQqual: species id: {species.name} --> {species_id}", species.compartment, species.form, species.sbo_term)
+        # print(f"TabularQual: species id: {species.name} --> {species_id}", species.compartment, species.form, species.sbo_term)
 
 
         return species_id
@@ -205,42 +205,42 @@ class TabluarQqual(IDTracker):
 
         if reaction.reaction_type == 'unknown':
             # current_app.logger.info(f"{reaction_id}, undefined reaction type")
-            print(f"TabluarQqual: {reaction.reaction_id}, unknown reaction type")
+            print(f"TabularQual: {reaction.reaction_id}, unknown reaction type")
 
         # (1) create reaction object
         if reaction.reaction_id in self.reaction_ids:
-            print(f"TabluarQqual: {reaction.reaction_id}, already exists")
+            print(f"TabularQual: {reaction.reaction_id}, already exists")
             return -1
 
         # (2) substrate glyphs and arcs
         # (substrate)-[consumption]->(reaction)
         for species in reaction.substrates:
-            # print("TabluarQqual: substrate species:", species.name)
+            # print("TabularQual: substrate species:", species.name)
             self.get_tabularqual_species(species)
 
         # (3) product glyphs and arcs
         # (reaction)-[production]->(product)
         for species in reaction.products:
-            # print("TabluarQqual: product species:", species.name)
+            # print("TabularQual: product species:", species.name)
             self.get_tabularqual_species(species)
 
         # (4) modifier glyphs and arcs
         # (modifier)-[modifies]->(reaction)
         for species in reaction.modifiers:
-            # print("TabluarQqual: modifier species:", species.name)
+            # print("TabularQual: modifier species:", species.name)
             self.get_tabularqual_species(species)
 
         rule_constructor = reaction_rule_constructor(reaction)
         if rule_constructor is None:
-            print(f"TabluarQqual: {reaction.reaction_id}, could not construct reaction rule")
+            print(f"TabularQual: {reaction.reaction_id}, could not construct reaction rule")
             return -1
 
         targets, reaction_rule = rule_constructor(reaction)
 
-        # print("TabluarQqual: reaction rule:", reaction.reaction_id, "targets:", targets, "rule:", reaction_rule)
+        # print("TabularQual: reaction rule:", reaction.reaction_id, "targets:", targets, "rule:", reaction_rule)
 
         if reaction_rule is None:
-            print(f"TabluarQqual: {reaction.reaction_id}, no reaction rule generated")
+            print(f"TabularQual: {reaction.reaction_id}, no reaction rule generated")
             return
 
         for target in targets:
@@ -252,7 +252,7 @@ class TabluarQqual(IDTracker):
 
         for species_id, rule_dict in self.rules.items():
 
-            # print("TabluarQqual: creating transition for species:", species_id)
+            # print("TabularQual: creating transition for species:", species_id)
 
             activation_rules = rule_dict["activation"]
             inhibition_rules = rule_dict["inhibition"]

@@ -69,7 +69,7 @@ adapter = PSSAdapter(neo4j_uri="bolt://localhost:7687",
 
 adapter.collect_reactions(access="public")   # connects, queries, closes
 adapter.create_sbml(filename="output.sbml")
-adapter.create_tabulrqual(filename="output.xlsx")
+adapter.create_tabularqual(filename="output.xlsx")
 ```
 
 ## CLI usage

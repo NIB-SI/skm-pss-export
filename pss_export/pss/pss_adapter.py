@@ -16,7 +16,7 @@ from ..entity_classes import Person
 # SBML
 from ..sbml import SBML
 
-from ..boolean import TabluarQqual
+from ..boolean import TabularQual
 
 # # projection for DiNAR
 # from .pss_dinar_translation import pss_dinar_translation
@@ -178,10 +178,10 @@ class PSSAdapter():
 
         return sbml.write(filename)
 
-    def create_tabulrqual(self, filename=None):
+    def create_tabularqual(self, filename=None):
         '''  '''
 
-        tabqual = TabluarQqual(self)
+        tabqual = TabularQual(self)
 
         for reaction_id in self.reaction_ids:
             tabqual.add_reaction(self.reactions[reaction_id])
@@ -193,9 +193,9 @@ class PSSAdapter():
         tabqual.create_transitions()
 
         print("-" * 40)
-        print("Number of species in TabluarQqual spreadsheet: ", len(tabqual.species_ids))
-        print("Number of compartments in TabluarQqual spreadsheet: ", len(tabqual.compartment_ids))
-        print("Number of transitions in TabluarQqual spreadsheet: ", len(tabqual.transitions))
+        print("Number of species in TabularQual spreadsheet: ", len(tabqual.species_ids))
+        print("Number of compartments in TabularQual spreadsheet: ", len(tabqual.compartment_ids))
+        print("Number of transitions in TabularQual spreadsheet: ", len(tabqual.transitions))
         print("-" * 40)
 
         return tabqual.write(filename)
