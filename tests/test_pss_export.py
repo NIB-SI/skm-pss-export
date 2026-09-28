@@ -308,6 +308,15 @@ class TestCollectorAccess:
         assert "external_links" in where
         assert "invented_reason_allowlist" in args
 
+    def test_pathway_filter_selects_whole_reactions(self):
+        """The pathway filter selects reactions (EXISTS on a participant);
+        it must not filter the collected edges (n)."""
+        collector = PSSCollector(None, pathways=["Hormone - Abscisic acid (ABA)"], nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert "EXISTS" in where
+        assert "n." not in where
+        assert args["pathways"] == ["Hormone - Abscisic acid (ABA)"]
+
     def test_restricted_has_no_external_links_filter(self):
         where, args = PSSCollector(None, access="restricted", nodes_to_ignore=None)._build_where_clause()
         assert "external_links" not in where

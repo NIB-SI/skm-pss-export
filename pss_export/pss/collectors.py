@@ -72,6 +72,8 @@ class PSSCollector:
             return [n.strip() for n in nodes_to_ignore]
 
     def _build_where_clause(self):
+        ''' Filters on the reaction (r) only: selected reactions are always
+        collected whole, with all of their edges. '''
         cy_filters = []
         arguments = {}
 
@@ -79,9 +81,14 @@ class PSSCollector:
             arguments['reaction_ids'] = self.REACTIONS
             cy_filters.append("r.reaction_id IN $reaction_ids")
         if self.pathway_filter:
+            # reactions with at least one participant in the pathways
             arguments['pathways'] = self.PATHWAYS
-            cy_filters.append(
-                "size(apoc.coll.intersection(n.all_pathways, $pathways)) > 0")
+            cy_filters.append('''
+                EXISTS {
+                    MATCH (r)--(m)
+                    WHERE size(apoc.coll.intersection(m.all_pathways, $pathways)) > 0
+                }
+                ''')
         # (nodes_to_ignore is applied per reaction, see _build_reaction)
         if self.access == 'public':
             # public = at least one source which is not 'other' or 'invented',
@@ -111,8 +118,8 @@ class PSSCollector:
 
             cy = f'''
                 MATCH (r:Reaction)
-                OPTIONAL MATCH p=(r)-[]-(n)
                 {where_clause}
+                OPTIONAL MATCH p=(r)-[]-(n)
                 RETURN  r.reaction_id AS reaction_id,
                         r AS reaction,
                         collect(p) AS path
