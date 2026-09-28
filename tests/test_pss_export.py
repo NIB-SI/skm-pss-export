@@ -173,6 +173,14 @@ class TestReaction:
         r.add_modifier(ec.Species("T", "protein_active", "cytoplasm"))
         assert r.reaction_type_sbo == 657  # SBO:0000657 — active transport
 
+    def test_dissociation_sbo_with_and_without_modifier(self):
+        """Both variants are SBO:0000180 dissociation (0000015 is the
+        participant role 'substrate', not a process)."""
+        r = self._make(rdef.reaction_types.DISSOCIATION)
+        assert r.reaction_type_sbo == 180
+        r.add_modifier(ec.Species("M", "protein_active", "cytoplasm"))
+        assert r.reaction_type_sbo == 180
+
     def test_subtype_is_read_only(self):
         r = self._make(rdef.reaction_types.CATALYSIS)
         with pytest.raises(AttributeError):

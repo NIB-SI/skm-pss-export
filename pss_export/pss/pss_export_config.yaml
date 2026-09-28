@@ -109,7 +109,7 @@ reaction_subtype_to_SBO:
     reaction_type_SBO: '0000180' # dissociation (non-covalent complex to independent biochemical entities)
     kinetic_law_SBO:   '0000029' # Henri-Michaelis-Menten rate law
   dissociation-without-modifier:
-    reaction_type_SBO: '0000015' # dissociation (non-covalent complex to independent biochemical entities)
+    reaction_type_SBO: '0000180' # dissociation (non-covalent complex to independent biochemical entities)
     kinetic_law_SBO:   '0000029' # Henri-Michaelis-Menten rate law
 
   catalysis-with-substrate-and-with-modifier:
