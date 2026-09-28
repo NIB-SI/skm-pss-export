@@ -309,3 +309,93 @@ class TestCollectorAccess:
         assert "external_links" not in where
         assert "invented_reason_allowlist" not in args
 
+
+# ---------------------------------------------------------------------------
+# PSSCollector nodes_to_ignore
+# ---------------------------------------------------------------------------
+
+class FakeEdge(dict):
+    """Stands in for a neo4j Relationship (type, start/end nodes, properties)."""
+    def __init__(self, type_, start_node, end_node, **props):
+        super().__init__(**props)
+        self.type = type_
+        self.start_node = start_node
+        self.end_node = end_node
+
+
+class FakePath:
+    """Stands in for a neo4j Path p=(r)-[]-(n): end_node is the participant."""
+    def __init__(self, edge, participant):
+        self.relationships = [edge]
+        self.end_node = participant
+
+
+REACTION_NODE = {"name": "rx"}
+
+
+def substrate(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("SUBSTRATE", node, REACTION_NODE,
+                             source_location="cytoplasm", source_form="protein"), node)
+
+
+def product(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("PRODUCT", REACTION_NODE, node,
+                             target_location="cytoplasm", target_form="protein"), node)
+
+
+def modifier(name):
+    node = {"name": name}
+    return FakePath(FakeEdge("ACTIVATES", node, REACTION_NODE,
+                             source_location="cytoplasm", source_form="protein_active"), node)
+
+
+class TestCollectorIgnoreNodes:
+
+    @pytest.fixture
+    def collector(self):
+        return PSSCollector(None, nodes_to_ignore=["SCF"])
+
+    def _build(self, collector, paths, reaction_type=rdef.reaction_types.BINDING_OLIGOMERISATION):
+        return collector._build_reaction("rx00001", {"reaction_type": reaction_type}, paths)
+
+    def test_nodes_to_ignore_not_in_cypher(self, collector):
+        where, args = collector._build_where_clause()
+        assert "nodes_to_ignore" not in where
+        assert "nodes_to_ignore" not in args
+
+    def test_other_substrate_left_keeps_reaction(self, collector):
+        r = self._build(collector, [substrate("A"), substrate("SCF"), product("A|SCF")])
+        assert [s.name for s in r.substrates] == ["A"]
+        assert [p.name for p in r.products] == ["A|SCF"]
+
+    def test_only_substrate_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [substrate("SCF"), product("B")]) is None
+
+    def test_only_product_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [substrate("A"), product("SCF")]) is None
+
+    def test_modifier_ignored_keeps_reaction(self, collector):
+        r = self._build(collector, [substrate("X"), product("Y"), modifier("SCF")],
+                        rdef.reaction_types.CATALYSIS)
+        assert r.modifiers == []
+        assert len(r.substrates) == 1 and len(r.products) == 1
+
+    def test_all_edges_ignored_drops_reaction(self, collector):
+        assert self._build(collector, [modifier("SCF")], rdef.reaction_types.CATALYSIS) is None
+
+    def test_empty_side_by_design_keeps_reaction(self, collector):
+        """Gene substrate is skipped (include_genes=False), so an empty
+        substrate side is not caused by ignoring and must not drop it."""
+        r = self._build(collector, [substrate("GENE"), product("P"), modifier("SCF")],
+                        rdef.reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_ACTIVATION)
+        assert r is not None
+        assert r.substrates == []
+        assert [p.name for p in r.products] == ["P"]
+
+    def test_nothing_ignored(self):
+        collector = PSSCollector(None, nodes_to_ignore=None)
+        r = self._build(collector, [substrate("SCF"), product("B")])
+        assert [s.name for s in r.substrates] == ["SCF"]
+

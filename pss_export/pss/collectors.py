@@ -82,9 +82,7 @@ class PSSCollector:
             arguments['pathways'] = self.PATHWAYS
             cy_filters.append(
                 "size(apoc.coll.intersection(n.all_pathways, $pathways)) > 0")
-        if self.nodes_to_ignore:
-            arguments['nodes_to_ignore'] = self.nodes_to_ignore
-            cy_filters.append("NOT n.name IN $nodes_to_ignore")
+        # (nodes_to_ignore is applied per reaction, see _build_reaction)
         if self.access == 'public':
             # public = at least one source which is not 'other' or 'invented',
             #          or an allowlisted 'invented' reason
@@ -138,15 +136,50 @@ class PSSCollector:
 
             reaction_properties = reaction_dict['reaction']
 
-            reaction = Reaction(reaction_id,
-                                reaction_properties['reaction_type'],
-                                reaction_properties,
-                                include_genes=self.include_genes)
-            reaction.add_edges(reaction_paths)
+            reaction = self._build_reaction(
+                reaction_id, reaction_properties, reaction_paths)
+            if reaction is None:
+                continue
 
             reactions[reaction_id] = reaction
 
         return reactions
+
+    def _build_reaction(self, reaction_id, reaction_properties, reaction_paths):
+        ''' Build a Reaction from its paths, leaving out edges to ignored nodes.
+
+        The reaction itself is dropped (returns None) only if ignoring nodes
+        removed all of its edges, all of its substrates, or all of its products. Removed
+        modifiers, or sides which were already empty (e.g. genes not
+        included), never drop the reaction.
+        '''
+
+        def _make(paths):
+            reaction = Reaction(reaction_id,
+                                reaction_properties['reaction_type'],
+                                reaction_properties,
+                                include_genes=self.include_genes)
+            reaction.add_edges(paths)
+            return reaction
+
+        # paths are (r)-[]-(n), so the participant is the end node
+        kept_paths = [p for p in reaction_paths
+                      if p.end_node['name'] not in self.nodes_to_ignore]
+
+        if not kept_paths:
+            print(f"Reaction {reaction_id} dropped: all edges are to ignored nodes")
+            return None
+
+        reaction = _make(kept_paths)
+
+        if len(kept_paths) < len(reaction_paths):
+            full_reaction = _make(reaction_paths)
+            if ((full_reaction.substrates and not reaction.substrates) or
+                    (full_reaction.products and not reaction.products)):
+                print(f"Reaction {reaction_id} dropped: all substrates or products are ignored nodes")
+                return None
+
+        return reaction
 
     def collect_node_annotations(self):
 

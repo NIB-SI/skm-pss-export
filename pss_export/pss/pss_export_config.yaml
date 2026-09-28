@@ -19,7 +19,6 @@ nodes_to_ignore:
   - CML12|PID
   - PBP1|PID
   - CMI1|ICR1
-  # just for testing:
   - LST8[AT2G22040,AT3G18140]
   - FLS2[AT5G46330]
   - FKBP62[AT3G25230]
