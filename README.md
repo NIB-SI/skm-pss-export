@@ -14,14 +14,14 @@ pip install git+https://github.com/NIB-SI/skm-pss-export.git
 Alternatively, clone and install locally:
 ```bash
 git clone https://github.com/NIB-SI/skm-pss-export.git
-cd pss-export
+cd skm-pss-export
 pip install .
 ```
  
 For development (editable install):
 ```bash
 git clone https://github.com/NIB-SI/skm-pss-export.git
-cd pss-export
+cd skm-pss-export
 pip install -e .
 ```
  
@@ -78,7 +78,7 @@ adapter.create_tabularqual(filename="output.xlsx")
 
 To view the CLI options:
 ```bash
-python pss_adapter_cli.py to-sbml --help
+pss-export to-sbml --help
 ```
 
 Create an SBML file:

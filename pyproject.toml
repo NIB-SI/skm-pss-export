@@ -52,7 +52,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/NIB-SI/pss-export"
+Homepage = "https://github.com/NIB-SI/skm-pss-export"
 
 [tool.setuptools.packages.find]
 include = ["pss_export*"]
