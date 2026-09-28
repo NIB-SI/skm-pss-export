@@ -41,16 +41,35 @@ You can pass the connection settings (uri, username, password) to the CLI using 
   --neo4j-password TEXT  Neo4j password.
 ```
 
-Alternatively, you can set these  in an `.env` file in the current directory. The file should contain the following variables:
+Alternatively, set them as environment variables, or in an `.env` file in the current directory, using the following variables:
 ```bash
 MY_NEO4J_URI=bolt://localhost:7687
 MY_NEO4J_USER=neo4j
 MY_NEO4J_PASSWORD=password
 ```
 
+Each setting is taken from the argument if given, otherwise from the environment, otherwise from the `.env` file.
+
 If you used the defaults in the [skm-neo4j](https://github.com/NIB-SI/skm-neo4j) repo, you can use the `.env.example` file as provided. 
 ```bash
 mv .env.example .env
+```
+
+## Python usage
+
+The package handles the database connection itself: it connects only while collecting data, and closes the connection afterwards.
+
+```python
+from pss_export import PSSAdapter
+
+# connection settings as arguments, or from the environment / .env
+adapter = PSSAdapter(neo4j_uri="bolt://localhost:7687",
+                     neo4j_user="neo4j",
+                     neo4j_password="password")
+
+adapter.collect_reactions(access="public")   # connects, queries, closes
+adapter.create_sbml(filename="output.sbml")
+adapter.create_tabulrqual(filename="output.xlsx")
 ```
 
 ## CLI usage

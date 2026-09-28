@@ -6,7 +6,8 @@ Covers:
   - Species / Reaction / IDTracker entity classes
   - Reaction subtype and role assignment
   - AnnotationManager reference processing
-  - PSSCollector access levels
+  - PSSCollector access levels and nodes_to_ignore
+  - Connection settings and connection lifecycle
 """
 
 import os
@@ -19,6 +20,9 @@ import pss_export.entity_classes as ec
 from pss_export.pss.config import Config, pss_export_config
 from pss_export.annotations.annotation_manager import AnnotationManager
 from pss_export.pss.collectors import PSSCollector
+from pss_export.graph_db import resolve_connection_settings
+import pss_export.pss.pss_adapter as pss_adapter_module
+from pss_export import PSSAdapter
 
 
 # ---------------------------------------------------------------------------
@@ -399,3 +403,110 @@ class TestCollectorIgnoreNodes:
         r = self._build(collector, [substrate("SCF"), product("B")])
         assert [s.name for s in r.substrates] == ["SCF"]
 
+
+# ---------------------------------------------------------------------------
+# Connection settings
+# ---------------------------------------------------------------------------
+
+ENV_VARS = ("MY_NEO4J_URI", "MY_NEO4J_USER", "MY_NEO4J_PASSWORD")
+
+
+@pytest.fixture
+def clean_env(monkeypatch, tmp_path):
+    """No connection settings in the environment, and no .env file."""
+    for v in ENV_VARS:
+        monkeypatch.delenv(v, raising=False)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+class TestConnectionSettings:
+
+    def test_arguments(self, clean_env):
+        s = resolve_connection_settings(uri="bolt://a:7687", user="u", pwd="p")
+        assert s == {"uri": "bolt://a:7687", "user": "u", "pwd": "p"}
+
+    def test_empty_strings_are_valid(self, clean_env):
+        s = resolve_connection_settings(uri="bolt://a:7687", user="", pwd="")
+        assert s["user"] == "" and s["pwd"] == ""
+
+    def test_environment(self, clean_env, monkeypatch):
+        monkeypatch.setenv("MY_NEO4J_URI", "bolt://env:7687")
+        monkeypatch.setenv("MY_NEO4J_USER", "env_user")
+        monkeypatch.setenv("MY_NEO4J_PASSWORD", "env_pwd")
+        s = resolve_connection_settings()
+        assert s == {"uri": "bolt://env:7687", "user": "env_user", "pwd": "env_pwd"}
+
+    def test_dotenv_file(self, clean_env):
+        (clean_env / ".env").write_text(
+            "MY_NEO4J_URI=bolt://file:7687\nMY_NEO4J_USER=file_user\nMY_NEO4J_PASSWORD=file_pwd\n")
+        s = resolve_connection_settings()
+        assert s == {"uri": "bolt://file:7687", "user": "file_user", "pwd": "file_pwd"}
+
+    def test_precedence(self, clean_env, monkeypatch):
+        """argument > environment > .env file"""
+        (clean_env / ".env").write_text(
+            "MY_NEO4J_URI=bolt://file:7687\nMY_NEO4J_USER=file_user\nMY_NEO4J_PASSWORD=file_pwd\n")
+        monkeypatch.setenv("MY_NEO4J_USER", "env_user")
+        s = resolve_connection_settings(uri="bolt://arg:7687")
+        assert s == {"uri": "bolt://arg:7687", "user": "env_user", "pwd": "file_pwd"}
+
+    def test_missing_raises(self, clean_env):
+        with pytest.raises(ValueError, match="MY_NEO4J_USER, MY_NEO4J_PASSWORD"):
+            resolve_connection_settings(uri="bolt://a:7687")
+
+    def test_adapter_fails_early_on_missing_settings(self, clean_env):
+        with pytest.raises(ValueError, match="Missing database connection settings"):
+            PSSAdapter()
+
+
+# ---------------------------------------------------------------------------
+# Connection lifecycle
+# ---------------------------------------------------------------------------
+
+class FakeGraphDB:
+    """Records connections; returns no data, or raises on query if asked to."""
+    instances = []
+
+    def __init__(self, uri, user, pwd, fail=False):
+        self.closed = False
+        self.fail = fail
+        FakeGraphDB.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.closed = True
+
+    def run_query(self, query_function, *args):
+        if self.fail:
+            raise RuntimeError("query failed")
+        return []
+
+
+class TestConnectionLifecycle:
+
+    @pytest.fixture(autouse=True)
+    def fake_db(self, monkeypatch):
+        FakeGraphDB.instances = []
+        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
+
+    def _adapter(self):
+        return PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+
+    def test_no_connection_at_construction(self):
+        self._adapter()
+        assert FakeGraphDB.instances == []
+
+    def test_connection_closed_after_collect(self):
+        self._adapter().collect_reactions(nodes_to_ignore=None)
+        assert len(FakeGraphDB.instances) == 1
+        assert FakeGraphDB.instances[0].closed
+
+    def test_connection_closed_on_error(self, monkeypatch):
+        monkeypatch.setattr(pss_adapter_module, "GraphDB",
+                            lambda **kw: FakeGraphDB(**kw, fail=True))
+        with pytest.raises(RuntimeError, match="query failed"):
+            self._adapter().collect_reactions(nodes_to_ignore=None)
+        assert FakeGraphDB.instances[0].closed

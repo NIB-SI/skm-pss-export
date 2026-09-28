@@ -16,14 +16,14 @@ class PSSCollector:
     """All the logic for deciding which reactions to gather from PSS"""
 
     def __init__(self,
-                 pss_adapter,
+                 graph_db,
                  reactions=None,
                  access='public',
                  pathways=None,
                  include_genes=False,
                  nodes_to_ignore='default'):
 
-        self.pss_adapter = pss_adapter
+        self.graph_db = graph_db
 
         if access not in ACCESS_LEVELS:
             raise ValueError(
@@ -120,7 +120,7 @@ class PSSCollector:
             result = tx.run(cy, **arguments)
             return list(result)
 
-        reaction_data = self.pss_adapter.graph_db.run_query(
+        reaction_data = self.graph_db.run_query(
             _collect_reactions, where_clause, arguments)
 
         reactions = {}
@@ -200,11 +200,11 @@ class PSSCollector:
             result = tx.run(cy)
             return [x for x in result]
 
-        node_annotations = self.pss_adapter.graph_db.run_query(
+        node_annotations = self.graph_db.run_query(
             _collect_node_annotations)
         return {d["name"]: dict(d) for d in node_annotations}
 
-    def collect_reaction_pathways(self):
+    def collect_reaction_pathways(self, reaction_ids):
 
         def _collect_reaction_pathways(tx, reaction_ids):
             cy = '''
@@ -215,5 +215,5 @@ class PSSCollector:
             result = tx.run(cy, reaction_ids=reaction_ids)
             return {r["reaction_id"]: r["pathway"] for r in result}
 
-        return self.pss_adapter.graph_db.run_query(
-            _collect_reaction_pathways, self.pss_adapter.reaction_ids)
+        return self.graph_db.run_query(
+            _collect_reaction_pathways, reaction_ids)

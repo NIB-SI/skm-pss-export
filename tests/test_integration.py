@@ -15,7 +15,6 @@ A small reaction subset is used (ABA pathway) to keep tests fast.
 import os
 import pytest
 
-from pss_export import GraphDB
 from pss_export import PSSAdapter
 
 TEST_PATHWAYS = ["Hormone - Abscisic acid (ABA)"]
@@ -24,34 +23,34 @@ TEST_PATHWAYS = ["Hormone - Abscisic acid (ABA)"]
 # Fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture(scope="session")
-def db():
-    """Connect to Neo4j once per session; skip all tests if unavailable."""
+def make_adapter(**kwargs):
+    """PSSAdapter using connection settings from the environment / .env
+    (falling back to the skm-neo4j defaults)."""
+    return PSSAdapter(
+        neo4j_uri=os.getenv("MY_NEO4J_URI", "bolt://localhost:7687"),
+        neo4j_user=os.getenv("MY_NEO4J_USER", "neo4j"),
+        neo4j_password=os.getenv("MY_NEO4J_PASSWORD", "password"),
+        **kwargs,
+    )
+
+
+def collect_or_skip(adapter, **kwargs):
+    """Collect reactions; skip all tests if the database is unavailable."""
     try:
-        graph_db = GraphDB(
-            uri=os.getenv("MY_NEO4J_URI", "bolt://localhost:7687"),
-            user=os.getenv("MY_NEO4J_USER", "neo4j"),
-            pwd=os.getenv("MY_NEO4J_PASSWORD", "password"),
-        )
-        yield graph_db
-        graph_db.close()
+        adapter.collect_reactions(**kwargs)
     except Exception as e:
         pytest.skip(f"Neo4j unavailable: {e}")
+    return adapter
 
 
 @pytest.fixture(scope="session")
-def adapter(db):
+def adapter():
     """PSSAdapter with a small ABA pathway subset collected once per session."""
-    adapter = PSSAdapter(
-        db,
-        model_id="test_model",
-        model_name="Test Export Model",
-    )
-    adapter.collect_reactions(
+    return collect_or_skip(
+        make_adapter(model_id="test_model", model_name="Test Export Model"),
         access="public",
         pathways=TEST_PATHWAYS,
     )
-    return adapter
 
 
 # ---------------------------------------------------------------------------
@@ -161,12 +160,9 @@ class TestTabularQualExport:
 
 class TestPathwayFilter:
 
-    def test_reaction_subset_smaller_than_full(self, db):
+    def test_reaction_subset_smaller_than_full(self):
         """Filtering by pathway should return fewer reactions than no filter."""
-        full = PSSAdapter(db)
-        full.collect_reactions(access="public")
-
-        subset = PSSAdapter(db)
-        subset.collect_reactions(access="public", pathways=TEST_PATHWAYS)
+        full = collect_or_skip(make_adapter(), access="public")
+        subset = collect_or_skip(make_adapter(), access="public", pathways=TEST_PATHWAYS)
 
         assert len(subset.reaction_ids) < len(full.reaction_ids)

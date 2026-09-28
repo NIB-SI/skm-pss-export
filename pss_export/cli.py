@@ -3,7 +3,6 @@
 import click
 import functools
 
-from pss_export import GraphDB
 from pss_export import PSSAdapter
 
 # click option that converts comma separated string into list
@@ -22,9 +21,9 @@ class ConvertStrToList(click.Option):
 
 
 def neo4j_common_params(func):
-    @click.option("--neo4j-uri", default=None, help="Neo4j connection URI.")
-    @click.option("--neo4j-user", default=None, help="Neo4j username.")
-    @click.option("--neo4j-password", default=None, help="Neo4j password.")
+    @click.option("--neo4j-uri", default=None, help="Neo4j connection URI (default: MY_NEO4J_URI from the environment or .env).")
+    @click.option("--neo4j-user", default=None, help="Neo4j username (default: MY_NEO4J_USER from the environment or .env).")
+    @click.option("--neo4j-password", default=None, help="Neo4j password (default: MY_NEO4J_PASSWORD from the environment or .env).")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -95,11 +94,10 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
 
     try:
 
-        # connect to PSS in neo4j:
-        graph_db = GraphDB(uri=neo4j_uri, user=neo4j_user, pwd=neo4j_password)
-
-        # build adapter
-        adapter = PSSAdapter(graph_db,
+        # build adapter (connects to PSS in neo4j only while collecting)
+        adapter = PSSAdapter(neo4j_uri=neo4j_uri,
+                    neo4j_user=neo4j_user,
+                    neo4j_password=neo4j_password,
                     model_id=model_id,
                     model_name=model_name,
                     model_description=model_description,
@@ -146,11 +144,10 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
         click.echo(f"  Neo4j URI: {neo4j_uri}")
         click.echo(f"  Output file: {filename}")
 
-    # connect to PSS in neo4j:
-    graph_db = GraphDB(uri=neo4j_uri, user=neo4j_user, pwd=neo4j_password)
-
-    # build adapter
-    adapter = PSSAdapter(graph_db,
+    # build adapter (connects to PSS in neo4j only while collecting)
+    adapter = PSSAdapter(neo4j_uri=neo4j_uri,
+                    neo4j_user=neo4j_user,
+                    neo4j_password=neo4j_password,
                     model_id=model_id,
                     model_name=model_name,
                     model_description=model_description,
