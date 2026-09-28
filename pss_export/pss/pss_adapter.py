@@ -6,8 +6,7 @@ from .config import pss_export_config, pss_schema_config
 from .collectors import PSSCollector
 
 # internal imports
-from ..model_fixes import ModelFixer
-
+# (ModelFixer is imported in model_fixes(), as it needs optional dependencies)
 from ..entity_classes import Person
 
 # # SBGN
@@ -130,6 +129,13 @@ class PSSAdapter():
             1) Fix node 'form' issues by changing input/outputs to active forms.
             2) Add transport reactions for species in multiple compartments.
         '''
+        try:
+            from ..model_fixes import ModelFixer
+        except ImportError as e:
+            raise ImportError(
+                "Model fixing needs optional dependencies: "
+                "pip install 'pss-export[model-fixing]'") from e
+
         ModelFixer(self, apply_fixes=apply_fixes, interactive=interactive).identify_model_fixes()
 
     def create_sbml(self,

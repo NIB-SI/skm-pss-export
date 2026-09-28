@@ -67,7 +67,7 @@ Create an SBML file:
 pss-export to-sbml output.sbml --access public
 ```
 
-Using the model-fixing functions:
+Using the model-fixing functions (needs the optional dependencies: `pip install ".[model-fixing]"`):
 ```bash
 pss-export to-sbml output-model-fixes.sbml \
   --access public \
