@@ -86,10 +86,11 @@ class PSSCollector:
             arguments['nodes_to_ignore'] = self.nodes_to_ignore
             cy_filters.append("NOT n.name IN $nodes_to_ignore")
         if self.access == 'public':
+            # public = at least one source which is not 'other' or 'invented',
+            #          or an allowlisted 'invented' reason
             cy_filters.append('''
                 (
-                    size([link IN r.external_links WHERE link =~ 'other:.*' | 1]) < size(r.external_links)
-                    OR size([link IN r.external_links WHERE link =~ 'invented:.*' | 1]) < size(r.external_links)
+                    size([link IN r.external_links WHERE NOT (link =~ 'other:.*' OR link =~ 'invented:.*') | 1]) > 0
                     OR size([link IN r.external_links WHERE link IN $invented_reason_allowlist | 1]) > 0
                 )
                 ''')
