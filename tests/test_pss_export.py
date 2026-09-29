@@ -11,6 +11,7 @@ Covers:
 """
 
 import os
+import re
 import tempfile
 import pytest
 
@@ -209,6 +210,13 @@ class TestIDTracker:
         assert status == 0  # new
         assert "WRKY33" in id_
         assert "nuc" in id_
+
+    @pytest.mark.parametrize("name", ["WRKY33", "12-OH-JA-Ile", "4CL", "6K2"])
+    def test_species_id_is_a_valid_sbml_id(self, name):
+        ''' SBML ids start with a letter or _ (names like 4CL don't) '''
+        id_, _ = ec.IDTracker().get_species_id(ec.Species(name, "protein", "cytoplasm"))
+        assert id_.startswith("s_")
+        assert re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", id_)
 
     def test_same_species_returns_existing_id(self):
         tracker = ec.IDTracker()

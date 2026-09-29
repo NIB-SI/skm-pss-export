@@ -345,7 +345,8 @@ class IDTracker:
         if (id_ := self.species_ids.get((species.name, species.form, compartment))) is not None:
             return id_, 1
 
-        id_ = f"{self.remove_nonalphanum(self.get_display_label(species.name))}"\
+        # "s_": SBML ids can't start with a digit (e.g. 12-OH-JA-Ile, 4CL)
+        id_ = f"s_{self.remove_nonalphanum(self.get_display_label(species.name))}"\
               f"_{pss_export_config.compartment_to_short[compartment]}"\
               f"_{pss_export_config.node_form_to_short[species.form]}"
 
