@@ -559,3 +559,22 @@ class TestConnectionLifecycle:
         with pytest.raises(RuntimeError, match="query failed"):
             self._adapter().collect_reactions(nodes_to_ignore=None)
         assert FakeGraphDB.instances[0].closed
+
+
+class TestModelFixTransport:
+    """Transport reactions added by the model fixes get a Boolean rule."""
+
+    def test_transport_reaction_has_rule(self):
+        pytest.importorskip("matplotlib")
+        from types import SimpleNamespace
+        from pss_export.model_fixes.model_fixes import ModelFixer, TransportReaction
+        from pss_export.boolean.boolean import reaction_rule_constructor
+
+        adapter = SimpleNamespace(reactions={}, additional_reactions=[], include_genes=False)
+        fix = TransportReaction("AREB/ABF[AT1G45249]", "protein_active", "cytoplasm", "nucleus")
+        assert ModelFixer(adapter).apply_model_fixes([fix]) == 1
+
+        reaction = adapter.reactions[adapter.additional_reactions[0]]
+        assert reaction.reaction_type == rdef.reaction_types.TRANSLOCATION
+        assert reaction.reaction_effect == "activation"
+        assert reaction_rule_constructor(reaction) is not None

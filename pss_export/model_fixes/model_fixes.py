@@ -742,7 +742,8 @@ class ModelFixer:
                     reaction_id=reaction_id,
                     reaction_type=reaction_types.TRANSLOCATION,
                     export_notes=fix.fix_type,
-                    reaction_properties={},
+                    # as the translocations in PSS: without it, no Boolean rule is built (boolnet, TabularQual)
+                    reaction_properties={'reaction_effect': 'activation'},
                     include_genes=self.pss_adapter.include_genes
                 )
                 new_reaction.add_substrate(Species(fix.name, fix.form, fix.source_compartment))
