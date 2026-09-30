@@ -65,7 +65,10 @@ from pss_export import PSSAdapter
 # connection settings as arguments, or from the environment / .env
 adapter = PSSAdapter(neo4j_uri="bolt://localhost:7687",
                      neo4j_user="neo4j",
-                     neo4j_password="password")
+                     neo4j_password="password",
+                     # optional model metadata, written into the exports
+                     model_name="PSS", model_version="v3.0.0",
+                     creator=["familyName | givenName | organization | email"])
 
 adapter.collect_reactions(access="public")   # connects, queries, closes
 adapter.create_sbml(filename="output.sbml")
@@ -108,6 +111,23 @@ java -jar  /path..to..jar/SBMLsqueezer-2.2.jar --sbml-in-file output.sbml  --sbm
   - They occur in multiple compartments but lack transport reactions
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
+
+#### SBO terms
+
+The SBO terms are set in `pss_export/pss/pss_export_config.yaml`: per species form (`node_form_to_SBO`),
+reaction type (`reaction_subtype_to_SBO`, with the rate law type used for the optional kinetic laws) and
+participant role (`node_role_to_SBO`). Choices that differ from what a validator expects:
+
+- **Transporter** (the modifier of a translocation): SBO:0000013 *catalyst*. SBO has no transporter
+  participant role; its *transporter* (SBO:0000284) is a physical entity, not a role.
+- **Processes** (species forms `process`, `process_active`): SBO:0000375 *process*. SBML expects species
+  to be material entities (SBO:0000240), but PSS models processes (e.g. ROS production) as species; the
+  term is kept, as it describes them. libSBML warns: `SBO term 'SBO:0000375' on the <species> is not in
+  the appropriate branch` (10713).
+- **RNAs** (species forms `mrna`, `mirna`, `ncrna`, `ta-sirna`): SBO:0000278 *messenger RNA*,
+  SBO:0000316 *microRNA*, SBO:0000334 *non-coding RNA*. These are in SBO's *functional entity* branch
+  only, not under *material entity* (unlike *gene*), so libSBML warns as for processes (10713). This is
+  an open SBO issue: [EBI-BioModels/SBO#5](https://github.com/EBI-BioModels/SBO/issues/5).
 
 ### TabularQual:
 

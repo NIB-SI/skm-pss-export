@@ -1,8 +1,13 @@
+from datetime import datetime
+from html import escape
+
+import libsbml
 from libsbml import (SBMLDocument, writeSBMLToFile, writeSBMLToString,
                     LIBSBML_OPERATION_SUCCESS, OperationReturnValue_toString,
-                    CVTerm, BIOLOGICAL_QUALIFIER, BQB_IS_DESCRIBED_BY)
+                    CVTerm, BIOLOGICAL_QUALIFIER, MODEL_QUALIFIER)
 
 from ..entity_classes import IDTracker, Species, SpeciesType, SpeciesReference, Reaction
+from ..annotations.annotation_manager import annotation_manager
 
 SBML_LEVEL = 3
 SBML_VERSION = 2
@@ -35,18 +40,40 @@ def check(value, message):
     return
 
 #-------------------------------------
+# Annotations
+#-------------------------------------
+
+def to_cvterm(annotation):
+    ''' The RDF CV term (qualifier and identifiers.org url) of an Annotation '''
+    if annotation.namespace == "bqmodel":
+        cv = CVTerm(MODEL_QUALIFIER)
+        cv.setModelQualifierType(libsbml.ModelQualifierType_fromString(annotation.qualifier))
+    else:
+        cv = CVTerm(BIOLOGICAL_QUALIFIER)
+        cv.setBiologicalQualifierType(libsbml.BiolQualifierType_fromString(annotation.qualifier))
+    cv.addResource(annotation.url)
+    return cv
+
+#-------------------------------------
 # SBML
 #-------------------------------------
 
 class SBML(SBMLDocument, IDTracker):
 
-    def __init__(self, pss_adapter, kinetic_laws=True):
+    def __init__(self, pss_adapter, kinetic_laws=False):
         '''
-
-
+        Parameters
+        ----------
+        pss_adapter : PSSAdapter
+            With the reactions collected: its node annotations and model
+            metadata are used.
+        kinetic_laws : bool
+            Give each reaction an (empty) kinetic law with the SBO term of
+            its rate law type.
         '''
 
         self.kinetic_laws = kinetic_laws
+        self.pss_adapter = pss_adapter
 
         SBMLDocument.__init__(self, SBML_LEVEL, SBML_VERSION)
         IDTracker.__init__(self)
@@ -55,6 +82,44 @@ class SBML(SBMLDocument, IDTracker):
         self.sbml_model = self.createModel()
         check(self.sbml_model, 'create model')
         check(self.sbml_model.setId(pss_adapter.model_id), 'set identifier on the Model object')
+        self.add_model_metadata()
+
+    def add_model_metadata(self):
+        ''' Model name, notes (description, version, access, source, export
+        date) and, if there are creators, the model history. '''
+
+        adapter = self.pss_adapter
+        model = self.sbml_model
+
+        check(model.setName(adapter.model_name), 'set model name')
+        check(model.setMetaId(f"metaid_{adapter.model_id}"), 'set model metaid')
+
+        SBML.add_note(model, 'description', adapter.model_description)
+        SBML.add_note(model, 'version', adapter.model_version)
+        SBML.add_note(model, 'access', adapter.access)
+        SBML.add_note(model, 'source', 'https://skm.nib.si')
+        SBML.add_note(model, 'export date', adapter.export_datetime)
+
+        if adapter.creators:
+            history = libsbml.ModelHistory()
+            for person in adapter.creators:
+                creator = libsbml.ModelCreator()
+                if person.family_name:
+                    creator.setFamilyName(person.family_name)
+                if person.given_name:
+                    creator.setGivenName(person.given_name)
+                if person.organization:
+                    creator.setOrganization(person.organization)
+                if person.email:
+                    creator.setEmail(person.email)
+                check(history.addCreator(creator), f'add model creator {person}')
+
+            # libSBML needs a date in W3CDTF (seconds, time zone)
+            export_date = datetime.fromisoformat(adapter.export_datetime or datetime.now().isoformat())
+            date = libsbml.Date(export_date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")[:-2] + ":" + export_date.astimezone().strftime("%z")[-2:])
+            check(history.setCreatedDate(date), 'set model created date')
+            check(history.setModifiedDate(date), 'set model modified date')
+            check(model.setModelHistory(history), 'set model history')
 
     def write(self, filename, replace_markup=True):
         if filename is None:
@@ -101,6 +166,7 @@ class SBML(SBMLDocument, IDTracker):
         else:
             sp = self.sbml_model.createSpecies()
             sp.setId(species_id)
+            sp.setMetaId(f"metaid_{species_id}")
             sp.setName(species.name)
 
             if (SBML_VERSION >= 2) and (SBML_LEVEL == 2):
@@ -119,11 +185,31 @@ class SBML(SBMLDocument, IDTracker):
             sp.setBoundaryCondition(False)
             sp.setConstant(species.constant)
 
+            self.add_species_annotations(sp, species)
+
             self.set_species_id(species, species_id)
             species.set_id(species_id)
             # print(f"SBML: species id: {species.name} --> {species_id}", species.compartment, species.form, species.sbo_term)
 
         return species_id
+
+    def add_species_annotations(self, sp, species):
+        ''' Database links (external links, functional cluster, Arabidopsis
+        genes) as annotations, and description, form and additional
+        information as notes. '''
+
+        annotations, skipped_links = annotation_manager.process_node(
+            self.pss_adapter.species_links(species.name))
+        for skipped in skipped_links:
+            print(f"SBML: warning, skipping or could not parse external link for species {species.name}: {skipped}")
+
+        for annotation in annotations:
+            check(sp.addCVTerm(to_cvterm(annotation)), f"add annotation {annotation.url} to species {species.name}")
+
+        node_annotations = self.pss_adapter.node_annotations.get(species.name, {})
+        SBML.add_note(sp, 'description', node_annotations.get("description"))
+        SBML.add_note(sp, 'species form', species.form)
+        SBML.add_note(sp, 'additional_information', node_annotations.get("additional_information"))
 
     def get_sbml_compartment(self, compartment):
 
@@ -212,19 +298,19 @@ class SBML(SBMLDocument, IDTracker):
 
         if self.kinetic_laws:
             kinetic_law = rxn.createKineticLaw()
-            kinetic_law.setMath(None)
             check(kinetic_law, f'create kinetic law for reaction {reaction.reaction_id}\n')
             if reaction.kinetic_law_sbo:
                 kinetic_law.setSBOTerm(reaction.kinetic_law_sbo)
 
-        SBML.add_annotation(rxn, f"skm:{reaction.reaction_id}")
-        if reaction.external_links:
-            for link in reaction.external_links:
-                SBML.add_annotation(rxn, link)
-                # print(f"SBML: {reaction.reaction_id}, annotation added: {link}")
+        links = [f"skm:{reaction.reaction_id}"] + list(reaction.external_links or [])
+        annotations, skipped_links = annotation_manager.process_node(links)
+        for skipped in skipped_links:
+            print(f"SBML: warning, skipping or could not parse external link for reaction {reaction.reaction_id}: {skipped}")
+        for annotation in annotations:
+            check(rxn.addCVTerm(to_cvterm(annotation)), f"add annotation {annotation.url} to reaction {reaction.reaction_id}")
 
         if reaction.evidence_sentence:
-            SBML.add_note(rxn, 'curator_notes', reaction.evidence_sentence)
+            SBML.add_note(rxn, 'evidence_sentence', reaction.evidence_sentence)
 
         if reaction.reaction_mechanism:
             SBML.add_note(rxn, 'mechanism', reaction.reaction_mechanism)
@@ -235,24 +321,13 @@ class SBML(SBMLDocument, IDTracker):
         return rxn
 
     @staticmethod
-    def add_annotation(node, link):
-        ''' Add an annotation to a node (reaction or species)  '''
-
-        cv = CVTerm(BIOLOGICAL_QUALIFIER)
-        cv.setBiologicalQualifierType(BQB_IS_DESCRIBED_BY)
-        cv.addResource(f"http://identifiers.org/{link.strip().replace(" ", "")}")
-
-        status = node.addCVTerm(cv)
-        return check(status, "add annotation to node")
-
-    @staticmethod
     def add_note(node, prefix, note):
         ''' Add a note to a node (reaction or species) '''
 
         if not note:
             return
 
-        note = f"<body xmlns='http://www.w3.org/1999/xhtml'><p>{prefix}:{note}</p></body>"
+        note = f"<body xmlns='http://www.w3.org/1999/xhtml'><p>{escape(prefix)}:{escape(str(note))}</p></body>"
         if node.isSetNotes():
             status = node.appendNotes(note)
         else:
@@ -299,9 +374,3 @@ class SBML(SBMLDocument, IDTracker):
         # (modifier)-[modifies]->(reaction)
         for species in reaction.modifiers:
             self.create_modifier_reference(species, role=reaction.modifier_role, reaction=rxn)
-
-        # create the empty kinetic law XML node for the reaction, set the SBO term
-        kinetic_law = rxn.createKineticLaw()
-        check(kinetic_law, f'create kinetic law for reaction {reaction.reaction_id}\n')
-        if reaction.kinetic_law_sbo:
-            kinetic_law.setSBOTerm(reaction.kinetic_law_sbo)

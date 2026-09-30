@@ -43,6 +43,7 @@ class PSSAdapter():
                     model_id=None,
                     model_name=None,
                     model_description=None,
+                    model_version=None,
                     creator=None):
         '''
         Constructor for PSSAdapter class.
@@ -58,6 +59,8 @@ class PSSAdapter():
             or from a .env file in the current folder.
         model_id, model_name, model_description : str, optional
             Model metadata to use in exports.
+        model_version : str, optional
+            Version of the exported model, e.g. the PSS version.
         creator : list of str, optional
             Model creators, each in the format of:
             familyName | givenName | organization | email
@@ -83,6 +86,7 @@ class PSSAdapter():
         self.model_id = model_id or "pss_exported_model"
         self.model_name = model_name or "PSS Exported Model"
         self.model_description = model_description or "Model exported from the Plant Stress Signalling knowledge graph (PSS) available at https://skm.nib.si using the skm-pss-export package."
+        self.model_version = model_version
 
         if creator:
             self.creators = [Person(*creator.split("|")) for creator in creator] # expects format of: familyName | givenName | organization | email
@@ -90,6 +94,7 @@ class PSSAdapter():
             self.creators = []
 
         self.export_datetime = None
+        self.access = None
 
     def collect_reactions(self, **kwargs):
         ''' Collect reactions and annotations from the database.
@@ -123,7 +128,8 @@ class PSSAdapter():
 
             # collect reactions
             self.reactions = collector.collect_reactions()
-            self.reaction_ids = list(self.reactions.keys())
+            # sorted, so that the exports are in the same order every time
+            self.reaction_ids = sorted(self.reactions)
             print(f"Collected {len(self.reaction_ids)} reactions.")
 
             # collect node annotations
@@ -133,9 +139,28 @@ class PSSAdapter():
             self.reaction_pathways = collector.collect_reaction_pathways(self.reaction_ids)
 
         self.export_datetime = datetime.now().isoformat()
+        self.access = collector.access
 
         # needed for model fixes
         self.include_genes = collector.include_genes
+
+    def species_links(self, name):
+        ''' The database links of a node, as a new list of <db>:<id>: its
+        external links, its functional cluster (skm:) and its Arabidopsis
+        genes (tair:).
+        '''
+        annotations = self.node_annotations.get(name, {})
+
+        links = list(annotations.get("external_links") or [])
+
+        functional_cluster_id = annotations.get("functional_cluster_id")
+        if functional_cluster_id:
+            links.append(f"skm:{functional_cluster_id}")
+
+        for ath_homologue in annotations.get("ath_homologues") or []:
+            links.append(f"tair:{ath_homologue}")
+
+        return links
 
     def model_fixes(self, interactive=False, apply_fixes=True):
         ''' Identify model fixes to the collected reactions.
@@ -152,10 +177,9 @@ class PSSAdapter():
         ModelFixer(self, apply_fixes=apply_fixes, interactive=interactive).identify_model_fixes()
 
     def create_sbml(self,
-                    access='public',
                     filename=None,
                     entities_table=None,
-                    kinetic_laws=True):
+                    kinetic_laws=False):
 
         sbml = SBML(self, kinetic_laws=kinetic_laws)
 

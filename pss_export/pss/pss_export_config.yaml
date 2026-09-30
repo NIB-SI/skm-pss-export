@@ -77,6 +77,8 @@ node_form_to_SBO:
   protein:          '0000297' # protein complex, alternative: 252-polypeptide chain
   protein_active:   '0000297' # protein complex, alternative: 252-polypeptide chain
   gene:             '0000243' # gene
+  # process is an occurring entity, not a material entity: kept as it describes the PSS
+  # process nodes, although SBML validators warn (see README, SBO terms)
   process:          '0000375' # process
   process_active:   '0000375' # process
   complex:          '0000296' # macromolecular complex, alternative: 253-chemical macromolecule
@@ -190,7 +192,7 @@ node_role_to_SBO:
   # modifiers
   modifier:    '0000019' # modifier
   enzyme:      '0000460' # enzymatic catalyst
-  transporter: '0000248' # transporter
+  transporter: '0000013' # catalyst (a role; the transporter itself is a physical entity, SBO:0000284)
   receptor:    '0000244' # receptor
   stimulator:  '0000459' # stimulator
   inhibitor:   '0000020' # inhibitor
