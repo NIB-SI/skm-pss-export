@@ -7,6 +7,7 @@ p : set of product species names (strings)
 m : set of modifier species names (strings)
 Each function returns a tuple:
 (target_species_name (string), boolean_rule (string))
+The species in a rule are sorted, so that the same reactions always give the same rule.
 '''
 
 def generate_transition(rules):
@@ -100,7 +101,7 @@ def binding_oligomerisation(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -109,7 +110,7 @@ def binding_oligomerisation_inhibition(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = f"!({' & '.join(list(factors))})"
+    rule = f"!({' & '.join(sorted(factors))})"
     return target, rule
 
 @preparerule
@@ -118,7 +119,7 @@ def dissociation(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -127,7 +128,7 @@ def catalysis(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -136,7 +137,7 @@ def protein_activation(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -144,7 +145,7 @@ def transcriptional_translational_activation(s, p, m):
     target = p
     if len(m) == 0:
         return target, None
-    rule = ' & '.join(list(m))
+    rule = ' & '.join(sorted(m))
     return target, rule
 
 @preparerule
@@ -153,7 +154,7 @@ def translocation(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -162,7 +163,7 @@ def unknown_activation(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
 
 @preparerule
@@ -170,7 +171,7 @@ def degradation_secretion(s, p, m):
     target = s
     if len(m) == 0:
         return target, None
-    rule = f"!({' & '.join(m)})"
+    rule = f"!({' & '.join(sorted(m))})"
     return target, rule
 
 @preparerule
@@ -178,7 +179,7 @@ def protein_deactivation(s, p, m):
     target = s
     if len(m) == 0:
         return target, None
-    rule = f"!({' & '.join(m)})"
+    rule = f"!({' & '.join(sorted(m))})"
     return target, rule
 
 @preparerule
@@ -186,7 +187,7 @@ def transcriptional_translational_repression(s, p, m):
     target = p
     if len(m) == 0:
         return target, None
-    rule = f"!({' & '.join(m)})"
+    rule = f"!({' & '.join(sorted(m))})"
     return target, rule
 
 @preparerule
@@ -194,7 +195,7 @@ def unknown_inhibition(s, p, m):
     target = s
     if len(m) == 0:
         return target, None
-    rule = f"!({' & '.join(m)})"
+    rule = f"!({' & '.join(sorted(m))})"
     return target, rule
 
 @preparerule
@@ -203,5 +204,5 @@ def cleavage_autocleavage(s, p, m):
     factors = s.union(m)
     if len(factors) == 0:
         return target, None
-    rule = ' & '.join(list(factors))
+    rule = ' & '.join(sorted(factors))
     return target, rule
