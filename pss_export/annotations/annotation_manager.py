@@ -1,20 +1,43 @@
 import yaml
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Any, Tuple, List, Protocol, Optional
+from typing import Dict, Any, Tuple, List, Optional
 
-class ExportStrategy(Protocol):
-    def format_node(self, valid_records: List[Dict[str, Any]]) -> Any: ...
+IDENTIFIERS_ORG = "http://identifiers.org"
+
+
+@dataclass(frozen=True)
+class Annotation:
+    """A database reference of a node, with its qualifier, the same for all formats.
+
+    Each format writes it in its own way, e.g. TabularQual as
+    (qualifier, curie), SBML as an RDF CV term with the url.
+    """
+    namespace: str      # "bqbiol" or "bqmodel"
+    qualifier: str      # e.g. "is", "isVersionOf"
+    prefix: str         # identifiers.org prefix, e.g. "chebi"
+    local_id: str       # e.g. "2365"
+
+    @property
+    def curie(self) -> str:
+        return f"{self.prefix}:{self.local_id}"
+
+    @property
+    def url(self) -> str:
+        return f"{IDENTIFIERS_ORG}/{self.curie}"
+
 
 class AnnotationManager:
-    """A completely format-agnostic AnnotationManager driven by a generic YAML schema."""
+    """Parses <db>:<id> references into Annotations, driven by a YAML registry of databases."""
+
+    DEFAULT_QUALIFIER = "bqbiol:isVersionOf"
 
     def __init__(self, yaml_filepath: Optional[Path] = None):
         self._registry: Dict[str, Dict[str, Any]] = {}
-        self._strategies: Dict[str, ExportStrategy] = {}
         self.load_from_yaml(yaml_filepath)
 
     def load_from_yaml(self, yaml_filepath: Optional[Path] = None):
-        """Loads and parses data configurations dynamically."""
+        """Loads the database registry."""
         if yaml_filepath is None:
             yaml_filepath = Path(__file__).with_name("annotation_registry.yaml")
 
@@ -25,24 +48,18 @@ class AnnotationManager:
         with open(yaml_filepath, "r", encoding="utf-8") as file:
             config = yaml.safe_load(file)
 
-        # GENERIC INGEST: Store the whole metadata payload dictionary as-is
+        # store the whole metadata dictionary as-is
         for prefix, meta in config.get("databases", {}).items():
             self._registry[prefix.lower()] = meta
-            # Ensure a canonical prefix exists fallback
+            # ensure a canonical prefix exists
             if "canonical_prefix" not in self._registry[prefix.lower()]:
                 self._registry[prefix.lower()]["canonical_prefix"] = prefix.lower()
 
-    def register_export_strategy(self, format_name: str, strategy: ExportStrategy):
-        """Hooks up a format strategy engine to the translation dispatch loop."""
-        self._strategies[format_name.strip().lower()] = strategy
+    def process_node(self, db_references: List[str]) -> Tuple[List[Annotation], List[str]]:
+        """Annotations for the references of a node, and the references that
+        could not be parsed or whose database is not in the registry."""
 
-    def process_node(self, target_format: str, db_references: List[str]) -> Tuple[Any, List[str]]:
-        """Processes raw references and routes elements to selected target format strategy."""
-        fmt = target_format.strip().lower()
-        if fmt not in self._strategies:
-            raise ValueError(f"Unsupported format: '{target_format}'. Targets: {list(self._strategies.keys())}")
-
-        valid_records: List[Dict[str, Any]] = []
+        annotations: List[Annotation] = []
         invalid_refs: List[str] = []
 
         for ref in db_references:
@@ -51,18 +68,21 @@ class AnnotationManager:
                 continue
 
             prefix, local_id = ref.split(":", 1)
-            prefix_clean = prefix.strip().lower()
+            meta = self._registry.get(prefix.strip().lower())
 
-            if prefix_clean not in self._registry:
+            if meta is None:
                 invalid_refs.append(ref)
                 continue
 
-            # Create an intermediate record tracking the matched ID context
-            record = self._registry[prefix_clean].copy()
-            record["local_id"] = local_id.strip()
-            valid_records.append(record)
+            namespace, qualifier = meta.get("qualifier", self.DEFAULT_QUALIFIER).split(":", 1)
+            annotations.append(Annotation(
+                namespace=namespace,
+                qualifier=qualifier,
+                prefix=meta["canonical_prefix"],
+                local_id=local_id.strip(),
+            ))
 
-        return self._strategies[fmt].format_node(valid_records), invalid_refs
+        return annotations, invalid_refs
 
-# Instantiate the shared registry engine instance
+# shared instance
 annotation_manager = AnnotationManager()

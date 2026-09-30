@@ -19,7 +19,7 @@ import pss_export.pss.config
 import pss_export.pss.pss_reaction_definitions as rdef
 import pss_export.entity_classes as ec
 from pss_export.pss.config import Config, pss_export_config
-from pss_export.annotations.annotation_manager import AnnotationManager
+from pss_export.annotations.annotation_manager import AnnotationManager, Annotation
 from pss_export.pss.collectors import PSSCollector
 from pss_export.graph_db import resolve_connection_settings
 import pss_export.pss.pss_adapter as pss_adapter_module
@@ -275,50 +275,43 @@ class TestIDTracker:
 # AnnotationManager
 # ---------------------------------------------------------------------------
 
-class DummyStrategy:
-    """Passthrough strategy that returns valid_records for inspection."""
-    def format_node(self, valid_records):
-        return valid_records
-
-
 class TestAnnotationManager:
 
     @pytest.fixture
     def am(self):
-        manager = AnnotationManager()
-        manager.register_export_strategy("test", DummyStrategy())
-        return manager
+        return AnnotationManager()
 
     def test_registry_loaded(self, am):
         assert "uniprot" in am._registry
         assert "chebi" in am._registry
 
     def test_known_ref_is_valid(self, am):
-        result, invalid = am.process_node("test", ["uniprot:P12345"])
-        assert len(result) == 1
+        result, invalid = am.process_node(["uniprot:P12345"])
         assert invalid == []
-        assert result[0]["local_id"] == "P12345"
-        assert result[0]["qualifier"] == "bqbiol:is"
+        assert result == [Annotation("bqbiol", "is", "uniprot", "P12345")]
+        assert result[0].curie == "uniprot:P12345"
+        assert result[0].url == "http://identifiers.org/uniprot:P12345"
+
+    def test_canonical_prefix_and_model_qualifier(self, am):
+        result, _ = am.process_node(["tair:AT2G38470", "doi:10.1/x"])
+        assert result[0].curie == "tair.name:AT2G38470"
+        assert (result[1].namespace, result[1].qualifier) == ("bqmodel", "isDescribedBy")
 
     def test_ref_without_colon_is_invalid(self, am):
-        result, invalid = am.process_node("test", ["BADREF"])
+        result, invalid = am.process_node(["BADREF"])
         assert result == []
         assert "BADREF" in invalid
 
     def test_unknown_prefix_is_invalid(self, am):
-        result, invalid = am.process_node("test", ["notadb:XYZ"])
+        result, invalid = am.process_node(["notadb:XYZ"])
         assert result == []
         assert "notadb:XYZ" in invalid
 
     def test_mixed_refs(self, am):
         refs = ["uniprot:P12345", "NOCODON", "chebi:12345", "ghost:000"]
-        result, invalid = am.process_node("test", refs)
+        result, invalid = am.process_node(refs)
         assert len(result) == 2
         assert len(invalid) == 2
-
-    def test_unsupported_format_raises(self, am):
-        with pytest.raises(ValueError, match="Unsupported format"):
-            am.process_node("nonexistent_format", ["uniprot:P12345"])
 
 # ---------------------------------------------------------------------------
 # PSSCollector access levels
@@ -559,6 +552,147 @@ class TestConnectionLifecycle:
         with pytest.raises(RuntimeError, match="query failed"):
             self._adapter().collect_reactions(nodes_to_ignore=None)
         assert FakeGraphDB.instances[0].closed
+
+
+# ---------------------------------------------------------------------------
+# SBML: annotations, notes, metadata (no database)
+# ---------------------------------------------------------------------------
+
+class TestSBMLExport:
+
+    @pytest.fixture
+    def adapter(self):
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="",
+                       model_id="pss_test", model_name="PSS test", model_version="v9.9.9",
+                       creator=["Doe | Jane | NIB | jane@example.org"])
+        a.access = "public"
+        a.export_datetime = "2026-09-30T12:00:00"
+        a.node_annotations = {
+            "ABA": {"external_links": ["chebi:2365", "kegg:C06082", "invented:x"],
+                    "description": "Abscisic acid <hormone>"},
+            "PYL[AT5G46790]": {"functional_cluster_id": "fc00001", "ath_homologues": ["AT5G46790"]},
+        }
+        r = ec.Reaction("rx00001", rdef.reaction_types.BINDING_OLIGOMERISATION,
+                        {"evidence_sentence": "ABA binds PYL.", "external_links": ["doi:10.1/x"]})
+        r.add_substrate(ec.Species("ABA", "metabolite", "cytoplasm"))
+        r.add_substrate(ec.Species("PYL[AT5G46790]", "protein", "cytoplasm"))
+        r.add_product(ec.Species("ABA|PYL", "complex", "cytoplasm"))
+        a.reactions = {"rx00001": r}
+        a.reaction_ids = ["rx00001"]
+        return a
+
+    @pytest.fixture
+    def model(self, adapter):
+        import libsbml
+        doc = libsbml.readSBMLFromString(adapter.create_sbml(filename=None))
+        assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
+        return doc.getModel()
+
+    def test_species_links_are_a_copy(self, adapter):
+        links = adapter.species_links("PYL[AT5G46790]")
+        assert links == ["skm:fc00001", "tair:AT5G46790"]
+        links.append("x:y")
+        assert adapter.species_links("PYL[AT5G46790]") == ["skm:fc00001", "tair:AT5G46790"]
+
+    def test_species_annotations(self, model):
+        import libsbml
+        def resources(species_id):
+            sp = model.getSpecies(species_id)
+            return {(cv.getBiologicalQualifierType(), cv.getResourceURI(i))
+                    for cv in sp.getCVTerms() for i in range(cv.getNumResources())}
+        aba = resources("s_ABA_cyt_m")
+        assert (libsbml.BQB_IS, "http://identifiers.org/chebi:2365") in aba
+        assert (libsbml.BQB_IS_VERSION_OF, "http://identifiers.org/kegg:C06082") in aba
+        assert not any("invented" in url for _, url in aba)
+        pyl = {url for _, url in resources("s_PYL_cyt_p")}
+        assert pyl == {"http://identifiers.org/skm:fc00001", "http://identifiers.org/tair.name:AT5G46790"}
+
+    def test_reaction_annotations(self, model):
+        import libsbml
+        rxn = model.getReaction("rx00001")
+        terms = {(cv.getQualifierType(), cv.getResourceURI(i))
+                 for cv in rxn.getCVTerms() for i in range(cv.getNumResources())}
+        assert terms == {(libsbml.BIOLOGICAL_QUALIFIER, "http://identifiers.org/skm:rx00001"),
+                         (libsbml.MODEL_QUALIFIER, "http://identifiers.org/doi:10.1/x")}
+
+    def test_species_notes_escaped(self, model):
+        notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
+        assert "description:Abscisic acid &lt;hormone&gt;" in notes
+        assert "species form:metabolite" in notes
+
+    def test_reaction_notes_and_no_kinetic_law(self, model):
+        rxn = model.getReaction("rx00001")
+        assert "evidence_sentence:ABA binds PYL." in rxn.getNotesString()
+        assert "curator_notes" not in rxn.getNotesString()
+        assert not rxn.isSetKineticLaw()
+
+    def test_kinetic_laws_optional(self, adapter):
+        import libsbml
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None, kinetic_laws=True)).getModel()
+        assert model.getReaction("rx00001").isSetKineticLaw()
+
+    def test_model_metadata(self, model):
+        assert model.getName() == "PSS test"
+        notes = model.getNotesString()
+        for text in ["version:v9.9.9", "access:public", "source:https://skm.nib.si", "export date:2026-09-30T12:00:00"]:
+            assert text in notes
+        history = model.getModelHistory()
+        assert history.getCreator(0).getFamilyName() == "Doe"
+        assert history.getCreatedDate().getYear() == 2026
+
+    def test_transporter_role_is_a_modifier_role(self):
+        assert pss_export_config.node_role_to_SBO["transporter"] == "0000013"
+
+
+class TestCLI:
+    """The CLI commands run end to end (fake database, no reactions)."""
+
+    @pytest.fixture(autouse=True)
+    def fake_db(self, monkeypatch):
+        FakeGraphDB.instances = []
+        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
+
+    @pytest.mark.parametrize("command, filename", [("to-sbml", "out.sbml"), ("to-tabularqual", "out.xlsx")])
+    def test_command_writes_file(self, tmp_path, command, filename):
+        from click.testing import CliRunner
+        from pss_export.cli import cli
+
+        out = tmp_path / filename
+        result = CliRunner().invoke(cli, [command, str(out), "--model-version", "v1",
+                                          "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
+        assert result.exit_code == 0, result.output
+        assert out.exists()
+
+
+class TestBooleanRulesSorted:
+    """The same reaction always gives the same rule (species sorted)."""
+
+    def test_binding_rule_sorted(self):
+        from pss_export.boolean.boolean import binding_oligomerisation
+        r = ec.Reaction("rx", rdef.reaction_types.BINDING_OLIGOMERISATION, {})
+        for name in ["Z", "A", "M"]:
+            s = ec.Species(name, "protein", "cytoplasm")
+            s.set_id(f"s_{name}")
+            r.add_substrate(s)
+        product = ec.Species("AMZ", "complex", "cytoplasm")
+        product.set_id("s_AMZ")
+        r.add_product(product)
+        targets, rule = binding_oligomerisation(r)
+        assert rule == "s_A & s_M & s_Z"
+
+    def test_reaction_ids_sorted(self, monkeypatch):
+        class Collector:
+            include_genes = False
+            access = "public"
+            def __init__(self, *args, **kwargs): pass
+            def collect_reactions(self): return {"rx00003": None, "rx00001": None, "rx00002": None}
+            def collect_node_annotations(self): return {}
+            def collect_reaction_pathways(self, ids): return {}
+        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
+        monkeypatch.setattr(pss_adapter_module, "PSSCollector", Collector)
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        a.collect_reactions()
+        assert a.reaction_ids == ["rx00001", "rx00002", "rx00003"]
 
 
 class TestModelFixTransport:
