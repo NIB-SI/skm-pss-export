@@ -693,3 +693,22 @@ class TestBooleanRulesSorted:
         a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
         a.collect_reactions()
         assert a.reaction_ids == ["rx00001", "rx00002", "rx00003"]
+
+
+class TestModelFixTransport:
+    """Transport reactions added by the model fixes get a Boolean rule."""
+
+    def test_transport_reaction_has_rule(self):
+        pytest.importorskip("matplotlib")
+        from types import SimpleNamespace
+        from pss_export.model_fixes.model_fixes import ModelFixer, TransportReaction
+        from pss_export.boolean.boolean import reaction_rule_constructor
+
+        adapter = SimpleNamespace(reactions={}, additional_reactions=[], include_genes=False)
+        fix = TransportReaction("AREB/ABF[AT1G45249]", "protein_active", "cytoplasm", "nucleus")
+        assert ModelFixer(adapter).apply_model_fixes([fix]) == 1
+
+        reaction = adapter.reactions[adapter.additional_reactions[0]]
+        assert reaction.reaction_type == rdef.reaction_types.TRANSLOCATION
+        assert reaction.reaction_effect == "activation"
+        assert reaction_rule_constructor(reaction) is not None
