@@ -16,7 +16,7 @@ from tabularqual.types import Person as TabularQualPerson
 
 from tabularqual.spreadsheet_writer import write_spreadsheet
 
-from ..entity_classes import IDTracker, Species, SpeciesType, SpeciesReference, Reaction
+from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesReference, Reaction
 from .boolean import reaction_rule_constructor, rule_composer
 
 from ..annotations.annotation_manager import annotation_manager
@@ -79,7 +79,7 @@ class TabularQual(IDTracker):
         model_id = self.pss_adapter.model_id
         name = self.pss_adapter.model_name
 
-        notes = [self.pss_adapter.model_description]
+        notes = [self.pss_adapter.model_description, f"Species: {self.pss_adapter.species_description}"]
         versions = [self.pss_adapter.model_version or "1.0.0"]
 
         source_urls = ["https://skm.nib.si"]
@@ -126,7 +126,8 @@ class TabularQual(IDTracker):
         # annotations... use fc id and "external_links" (list of <db.:<id>), parse to (qulaifier, db:id)
 
         # external links, functional cluster (skm:) and Arabidopsis genes (tair:)
-        links = self.pss_adapter.species_links(species.name)
+        node = self.pss_adapter.nodes.get(species.name) or Node(species.name)
+        links = node.links(self.pss_adapter.species)
 
         # Process the entire reference array using the pre-warmed TabularQual strategy
         # Unrecognized or malformed links will naturally fall into the 'skipped_links' array
@@ -140,7 +141,7 @@ class TabularQual(IDTracker):
         notes = []
 
         # "description" as note 1
-        description = self.pss_adapter.node_annotations.get(species.name, {}).get("description", None)
+        description = node.description
         if description:
             notes.append((f"description:{description}"))
 
@@ -150,9 +151,13 @@ class TabularQual(IDTracker):
             notes.append((f"species form:{form}"))
 
         # "additional_information" as note 3
-        additional_information = self.pss_adapter.node_annotations.get(species.name, {}).get("additional_information", None)
+        additional_information = node.additional_information
         if additional_information:
             notes.append((f"additional_information:{additional_information}"))
+
+        # MapMan bins as note 4
+        if node.mapman:
+            notes.append(f"mapman:{';'.join(node.mapman)}")
 
         tabqual_species = TabularQualSpecies(
             species_id=species_id,

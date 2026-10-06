@@ -350,6 +350,18 @@ class TestCollectorAccess:
         assert "n." not in where
         assert args["pathways"] == ["Hormone - Abscisic acid (ABA)"]
 
+    def test_species_filter(self):
+        where, args = PSSCollector(None, species="stu", nodes_to_ignore=None)._build_where_clause()
+        assert "FunctionalCluster" in where and args["homologues_key"] == "stu_homologues"
+
+    def test_no_species_filter(self):
+        where, args = PSSCollector(None, species=None, access="restricted", nodes_to_ignore=None)._build_where_clause()
+        assert "homologues_key" not in args and where == ""
+
+    def test_unknown_species_raises(self):
+        with pytest.raises(ValueError, match="Unknown species"):
+            PSSCollector(None, species="osa")
+
     def test_restricted_has_no_external_links_filter(self):
         where, args = PSSCollector(None, access="restricted", nodes_to_ignore=None)._build_where_clause()
         assert "external_links" not in where
@@ -415,28 +427,36 @@ class TestCollectorIgnoreNodes:
         r = self._build(collector, [substrate("A"), substrate("SCF"), product("A|SCF")])
         assert [s.name for s in r.substrates] == ["A"]
         assert [p.name for p in r.products] == ["A|SCF"]
+        assert r.in_model
 
-    def test_only_substrate_ignored_drops_reaction(self, collector):
-        assert self._build(collector, [substrate("SCF"), product("B")]) is None
+    def test_networks_keep_ignored_nodes(self, collector):
+        """ the ignored nodes are only left out of the models: participants keep them """
+        r = self._build(collector, [substrate("A"), substrate("SCF"), product("A|SCF")])
+        assert [p.name for p in r.participants] == ["A", "SCF", "A|SCF"]
 
-    def test_only_product_ignored_drops_reaction(self, collector):
-        assert self._build(collector, [substrate("A"), product("SCF")]) is None
+    def test_only_substrate_ignored_leaves_reaction_out_of_the_models(self, collector):
+        r = self._build(collector, [substrate("SCF"), product("B")])
+        assert not r.in_model and [p.name for p in r.participants] == ["SCF", "B"]
+
+    def test_only_product_ignored_leaves_reaction_out_of_the_models(self, collector):
+        assert not self._build(collector, [substrate("A"), product("SCF")]).in_model
 
     def test_modifier_ignored_keeps_reaction(self, collector):
         r = self._build(collector, [substrate("X"), product("Y"), modifier("SCF")],
                         rdef.reaction_types.CATALYSIS)
         assert r.modifiers == []
         assert len(r.substrates) == 1 and len(r.products) == 1
+        assert r.in_model
 
-    def test_all_edges_ignored_drops_reaction(self, collector):
-        assert self._build(collector, [modifier("SCF")], rdef.reaction_types.CATALYSIS) is None
+    def test_all_edges_ignored_leaves_reaction_out_of_the_models(self, collector):
+        assert not self._build(collector, [modifier("SCF")], rdef.reaction_types.CATALYSIS).in_model
 
     def test_empty_side_by_design_keeps_reaction(self, collector):
         """Gene substrate is skipped (include_genes=False), so an empty
         substrate side is not caused by ignoring and must not drop it."""
         r = self._build(collector, [substrate("GENE"), product("P"), modifier("SCF")],
                         rdef.reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_ACTIVATION)
-        assert r is not None
+        assert r.in_model
         assert r.substrates == []
         assert [p.name for p in r.products] == ["P"]
 
@@ -527,6 +547,32 @@ class FakeGraphDB:
         return []
 
 
+@pytest.fixture
+def fake_collector(monkeypatch):
+    """ Replace the database and the collector: install(reactions=..., nodes=...) makes the
+    collector return these; returns the arguments the collector was made with. """
+    def install(reactions=None, nodes=None):
+        seen = {}
+
+        class Collector:
+            include_genes = False
+            access = "public"
+            nodes_to_ignore = []
+
+            def __init__(self, graph_db, species=None, **kwargs):
+                seen.update(kwargs, species=species)
+                self.species = species
+
+            def collect_reactions(self): return dict(reactions or {})
+            def collect_nodes(self): return dict(nodes or {})
+            def collect_reaction_pathways(self, ids): return {}
+
+        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
+        monkeypatch.setattr(pss_adapter_module, "PSSCollector", Collector)
+        return seen
+    return install
+
+
 class TestConnectionLifecycle:
 
     @pytest.fixture(autouse=True)
@@ -566,11 +612,13 @@ class TestSBMLExport:
                        model_id="pss_test", model_name="PSS test", model_version="v9.9.9",
                        creator=["Doe | Jane | NIB | jane@example.org"])
         a.access = "public"
+        a.species = "ath"
         a.export_datetime = "2026-09-30T12:00:00"
-        a.node_annotations = {
-            "ABA": {"external_links": ["chebi:2365", "kegg:C06082", "invented:x"],
-                    "description": "Abscisic acid <hormone>"},
-            "PYL[AT5G46790]": {"functional_cluster_id": "fc00001", "ath_homologues": ["AT5G46790"]},
+        a.nodes = {
+            "ABA": ec.Node("ABA", external_links=["chebi:2365", "kegg:C06082", "invented:x"],
+                           description="Abscisic acid <hormone>"),
+            "PYL[AT5G46790]": ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001",
+                                      homologues={"ath": ["AT5G46790"]}),
         }
         r = ec.Reaction("rx00001", rdef.reaction_types.BINDING_OLIGOMERISATION,
                         {"evidence_sentence": "ABA binds PYL.", "external_links": ["doi:10.1/x"]})
@@ -587,12 +635,6 @@ class TestSBMLExport:
         doc = libsbml.readSBMLFromString(adapter.create_sbml(filename=None))
         assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
         return doc.getModel()
-
-    def test_species_links_are_a_copy(self, adapter):
-        links = adapter.species_links("PYL[AT5G46790]")
-        assert links == ["skm:fc00001", "tair:AT5G46790"]
-        links.append("x:y")
-        assert adapter.species_links("PYL[AT5G46790]") == ["skm:fc00001", "tair:AT5G46790"]
 
     def test_species_annotations(self, model):
         import libsbml
@@ -614,6 +656,15 @@ class TestSBMLExport:
                  for cv in rxn.getCVTerms() for i in range(cv.getNumResources())}
         assert terms == {(libsbml.BIOLOGICAL_QUALIFIER, "http://identifiers.org/skm:rx00001"),
                          (libsbml.MODEL_QUALIFIER, "http://identifiers.org/doi:10.1/x")}
+
+    def test_tair_links_only_for_ath(self, adapter):
+        import libsbml
+        adapter.species = "stu"
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None)).getModel()
+        assert "tair" not in libsbml.XMLNode.convertXMLNodeToString(model.getSpecies("s_PYL_cyt_p").getAnnotation())
+
+    def test_species_note(self, model):
+        assert "species:Arabidopsis thaliana (ath)" in model.getNotesString()
 
     def test_species_notes_escaped(self, model):
         notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
@@ -663,6 +714,27 @@ class TestCLI:
         assert result.exit_code == 0, result.output
         assert out.exists()
 
+    def test_gene_network_needs_a_species(self, tmp_path):
+        from click.testing import CliRunner
+        from pss_export.cli import cli
+        result = CliRunner().invoke(cli, ["to-gene-network", str(tmp_path / "e.tsv"), str(tmp_path / "n.tsv"), "--species", "all",
+                                          "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
+        assert result.exit_code != 0 and "needs a species" in result.output
+
+    @pytest.mark.parametrize("command, options", [("to-reaction-graph", []), ("to-interaction-network", []),
+                                                  ("to-gene-network", ["--species", "stu"]),
+                                                  ("to-interaction-network", ["--species", "all"])])
+    def test_network_commands_write_files(self, tmp_path, command, options):
+        from click.testing import CliRunner
+        from pss_export.cli import cli
+
+        edges, nodes = tmp_path / "edges.tsv", tmp_path / "nodes.tsv"
+        result = CliRunner().invoke(cli, [command, str(edges), str(nodes), *options,
+                                          "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
+        assert result.exit_code == 0, result.output
+        middle = "role" if command == "to-reaction-graph" else "interaction"
+        assert edges.read_text().startswith(f"source\t{middle}\ttarget") and nodes.exists()
+
 
 class TestBooleanRulesSorted:
     """The same reaction always gives the same rule (species sorted)."""
@@ -680,19 +752,19 @@ class TestBooleanRulesSorted:
         targets, rule = binding_oligomerisation(r)
         assert rule == "s_A & s_M & s_Z"
 
-    def test_reaction_ids_sorted(self, monkeypatch):
-        class Collector:
-            include_genes = False
-            access = "public"
-            def __init__(self, *args, **kwargs): pass
-            def collect_reactions(self): return {"rx00003": None, "rx00001": None, "rx00002": None}
-            def collect_node_annotations(self): return {}
-            def collect_reaction_pathways(self, ids): return {}
-        monkeypatch.setattr(pss_adapter_module, "GraphDB", FakeGraphDB)
-        monkeypatch.setattr(pss_adapter_module, "PSSCollector", Collector)
+    def test_reaction_ids_sorted(self, fake_collector):
+        fake_collector(reactions={"rx00003": None, "rx00001": None, "rx00002": None})
         a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
-        a.collect_reactions()
+        a.collect_reactions(species=None)
         assert a.reaction_ids == ["rx00001", "rx00002", "rx00003"]
+
+    def test_species_passed_to_collector(self, fake_collector):
+        seen = fake_collector()
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        a.collect_reactions()                      # default: ath
+        assert seen["species"] == a.species == "ath"
+        a.collect_reactions(species=None)
+        assert seen["species"] is None and a.species is None
 
 
 class TestModelFixTransport:
@@ -712,3 +784,34 @@ class TestModelFixTransport:
         assert reaction.reaction_type == rdef.reaction_types.TRANSLOCATION
         assert reaction.reaction_effect == "activation"
         assert reaction_rule_constructor(reaction) is not None
+
+
+class TestFormats:
+    """The format registry: every format's method and file arguments exist."""
+
+    def test_methods_and_arguments(self):
+        import inspect
+        from pss_export.formats import FORMATS
+        for fmt in FORMATS.values():
+            method = getattr(PSSAdapter, fmt.method)
+            parameters = inspect.signature(method).parameters
+            for f in fmt.files:
+                assert f.argument in parameters, (fmt.key, f.argument)
+
+    def test_export_checks_arguments(self):
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        with pytest.raises(ValueError, match="Unknown export format"):
+            a.export("sif-edges")
+        with pytest.raises(ValueError, match="not filename"):
+            a.export("interaction-network", filename="x")
+
+    def test_export_writes(self, tmp_path):
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        a.export("interaction-network", edges_file=str(tmp_path / "e.tsv"), nodes_file=str(tmp_path / "n.tsv"))
+        assert (tmp_path / "e.tsv").read_text().startswith("source\tinteraction\ttarget")
+
+    def test_cli_lists_formats(self):
+        from click.testing import CliRunner
+        from pss_export.cli import cli
+        result = CliRunner().invoke(cli, ["formats"])
+        assert result.exit_code == 0 and "gene-network" in result.output

@@ -1,4 +1,4 @@
-from ..entity_classes import Reaction
+from ..entity_classes import Reaction, Node
 from .config import pss_export_config, pss_schema_config
 
 INVENTED_REASON_ALLOWLIST = ["invented:harmonise-location"]
@@ -20,10 +20,18 @@ class PSSCollector:
                  reactions=None,
                  access='public',
                  pathways=None,
+                 species=None,
                  include_genes=False,
                  nodes_to_ignore='default'):
 
         self.graph_db = graph_db
+
+        # species: only the reactions whose functional clusters all have genes in it (their
+        # <species>_homologues lists); None: no species filter
+        if species is not None and species not in pss_schema_config.species:
+            raise ValueError(
+                f"Unknown species '{species}', one of: {', '.join(pss_schema_config.species)} (or None)")
+        self.species = species
 
         if access not in ACCESS_LEVELS:
             raise ValueError(
@@ -56,7 +64,7 @@ class PSSCollector:
         ''' Resolve nodes to ignore during export. '''
 
         if nodes_to_ignore == 'default':
-            # ignore nodes that are not reactions or families
+            # the configured list (pss_export_config.yaml)
             return pss_export_config.nodes_to_ignore
         elif nodes_to_ignore is None:
             # no nodes to ignore
@@ -75,7 +83,9 @@ class PSSCollector:
         ''' Filters on the reaction (r) only: selected reactions are always
         collected whole, with all of their edges. '''
         cy_filters = []
-        arguments = {}
+        # the nodes to ignore (models only; empty for the networks) are as if they weren't there: they don't
+        # select a reaction (pathways) or leave it out (species)
+        arguments = {'ignore': self.nodes_to_ignore}
 
         if self.reaction_filter:
             arguments['reaction_ids'] = self.REACTIONS
@@ -86,10 +96,23 @@ class PSSCollector:
             cy_filters.append('''
                 EXISTS {
                     MATCH (r)--(m)
-                    WHERE size(apoc.coll.intersection(m.all_pathways, $pathways)) > 0
+                    WHERE NOT m.name IN $ignore
+                      AND size(apoc.coll.intersection(m.all_pathways, $pathways)) > 0
                 }
                 ''')
-        # (nodes_to_ignore is applied per reaction, see _build_reaction)
+        if self.species is not None:
+            # all gene clusters of the reaction, and those among the components of its complexes, have
+            # genes in the species (reactions without them are kept; abstract clusters (PlantAbstract)
+            # have no genes and, like metabolites, don't decide)
+            arguments['homologues_key'] = f"{self.species}_homologues"
+            cy_filters.append('''
+                all(fc IN [(r)--(n:FunctionalCluster) WHERE NOT n:PlantAbstract AND NOT n.name IN $ignore | n]
+                          + apoc.coll.flatten([(r)--(c:Complex) WHERE NOT c.name IN $ignore |
+                              [(x:FunctionalCluster)-[:COMPONENT_OF]->(c)
+                               WHERE NOT x:PlantAbstract AND NOT x.name IN $ignore | x]])
+                    WHERE size(coalesce(fc[$homologues_key], [])) > 0)
+                ''')
+        # (nodes_to_ignore only applies to the models, see _build_reaction)
         if self.access == 'public':
             # public = at least one source which is not 'other' or 'invented',
             #          or an allowlisted 'invented' reason
@@ -143,73 +166,54 @@ class PSSCollector:
 
             reaction_properties = reaction_dict['reaction']
 
-            reaction = self._build_reaction(
+            reactions[reaction_id] = self._build_reaction(
                 reaction_id, reaction_properties, reaction_paths)
-            if reaction is None:
-                continue
-
-            reactions[reaction_id] = reaction
 
         return reactions
 
     def _build_reaction(self, reaction_id, reaction_properties, reaction_paths):
-        ''' Build a Reaction from its paths, leaving out edges to ignored nodes.
-
-        The reaction itself is dropped (returns None) only if ignoring nodes
-        removed all of its edges, all of its substrates, or all of its products. Removed
-        modifiers, or sides which were already empty (e.g. genes not
-        included), never drop the reaction.
-        '''
-
-        def _make(paths):
-            reaction = Reaction(reaction_id,
-                                reaction_properties['reaction_type'],
-                                reaction_properties,
-                                include_genes=self.include_genes)
-            reaction.add_edges(paths)
-            return reaction
-
-        # paths are (r)-[]-(n), so the participant is the end node
-        kept_paths = [p for p in reaction_paths
-                      if p.end_node['name'] not in self.nodes_to_ignore]
-
-        if not kept_paths:
-            print(f"Reaction {reaction_id} dropped: all edges are to ignored nodes")
-            return None
-
-        reaction = _make(kept_paths)
-
-        if len(kept_paths) < len(reaction_paths):
-            full_reaction = _make(reaction_paths)
-            if ((full_reaction.substrates and not reaction.substrates) or
-                    (full_reaction.products and not reaction.products)):
-                print(f"Reaction {reaction_id} dropped: all substrates or products are ignored nodes")
-                return None
-
+        ''' Build a Reaction from its paths. The nodes to ignore are left out of the models only
+        (Reaction.ignore_in_model); the networks keep every participant. '''
+        reaction = Reaction(reaction_id,
+                            reaction_properties['reaction_type'],
+                            reaction_properties,
+                            include_genes=self.include_genes)
+        reaction.add_edges(reaction_paths)
+        if self.nodes_to_ignore and (reason := reaction.ignore_in_model(self.nodes_to_ignore)):
+            print(f"Reaction {reaction_id} left out of the models: {reason}")
         return reaction
 
-    def collect_node_annotations(self):
+    def collect_nodes(self):
+        ''' The entities (all but reactions and families), with their annotations: {name: Node} '''
 
-        # fetch annotations
-        def _collect_node_annotations(tx):
+        def _collect_nodes(tx):
             cy = '''
                 MATCH (n)
                 WHERE NOT ('Reaction' IN labels(n) OR 'Family' in labels(n) )
                 RETURN n.name AS name,
+                       labels(n) AS labels,
+                       n.short_name AS short_name,
+                       n.display_label AS display_label,
+                       n.synonyms AS synonyms,
                        n.description AS description,
                        n.additional_information AS additional_information,
                        n.pathway AS pathway,
+                       n.all_pathways AS all_pathways,
+                       n.mapman AS mapman,
                        n.external_links AS external_links,
                        n.functional_cluster_id AS functional_cluster_id,
-                       n.ath_homologues AS ath_homologues,
-                       labels(n) AS labels
+                       apoc.coll.sort([(x)-[:COMPONENT_OF]->(n) | x.name]) AS components,
+                       [k IN keys(n) WHERE k ENDS WITH '_homologues'
+                                     AND NOT k IN ['all_homologues', '_all_homologues'] | [k, n[k]]] AS homologues
                 '''
-            result = tx.run(cy)
-            return [x for x in result]
+            return [record.data() for record in tx.run(cy)]
 
-        node_annotations = self.graph_db.run_query(
-            _collect_node_annotations)
-        return {d["name"]: dict(d) for d in node_annotations}
+        nodes = {}
+        for record in self.graph_db.run_query(_collect_nodes):
+            # {species: [gene ids]}, e.g. {"ath": ["AT1G64280"], "stu": [...]}
+            record["homologues"] = {k[:-len("_homologues")]: list(v or []) for k, v in record["homologues"]}
+            nodes[record["name"]] = Node(**record)
+        return nodes
 
     def collect_reaction_pathways(self, reaction_ids):
 

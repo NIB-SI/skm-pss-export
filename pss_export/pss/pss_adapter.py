@@ -18,6 +18,8 @@ from ..sbml import SBML
 
 from ..boolean import TabularQual
 
+from .. import networks
+
 # # projection for DiNAR
 # from .pss_dinar_translation import pss_dinar_translation
 
@@ -78,7 +80,7 @@ class PSSAdapter():
         self.reaction_ids = []
         self.include_genes = None
 
-        self.node_annotations = {}
+        self.nodes = {}
         self.reaction_pathways = {}
 
         self.additional_reactions = []
@@ -95,15 +97,21 @@ class PSSAdapter():
 
         self.export_datetime = None
         self.access = None
+        self.species = None
 
-    def collect_reactions(self, **kwargs):
+    def collect_reactions(self, species='ath', **kwargs):
         ''' Collect reactions and annotations from the database.
-        Optionally limit to specific pathways OR reactions.
+        Optionally limit to specific pathways OR reactions, and to a species.
 
         Has to be done on the fly, to include any updates made to the database.
 
         Parameters
         ----------
+        species : str or None
+            Limit to the reactions whose functional clusters all have genes in this species (a code
+            of pss_schema_config.species, default 'ath'; reactions without functional clusters are
+            kept). The gene annotations from the homologue lists (tair: for ath) and the gene network
+            are then for this species. None: no species filter (no gene network).
         **kwargs : dict
             Additional keyword arguments to pass to the PSSCollector.
 
@@ -116,7 +124,7 @@ class PSSAdapter():
         # reset data structures in case of re-collection
         self.reactions = {}
         self.reaction_ids = []
-        self.node_annotations = {}
+        self.nodes = {}
         self.additional_reactions = []
 
         print("Collecting reactions and annotations from the database...")
@@ -124,7 +132,8 @@ class PSSAdapter():
         # connection is only open while collecting
         with GraphDB(**self.connection_settings) as graph_db:
 
-            collector = PSSCollector(graph_db, **kwargs)
+            collector = PSSCollector(graph_db, species=species, **kwargs)
+            self.species = collector.species
 
             # collect reactions
             self.reactions = collector.collect_reactions()
@@ -132,35 +141,32 @@ class PSSAdapter():
             self.reaction_ids = sorted(self.reactions)
             print(f"Collected {len(self.reaction_ids)} reactions.")
 
-            # collect node annotations
-            self.node_annotations = collector.collect_node_annotations()
+            # collect the entities and their annotations
+            self.nodes = collector.collect_nodes()
 
             # collect reaction pathways (for SBGN)
             self.reaction_pathways = collector.collect_reaction_pathways(self.reaction_ids)
 
         self.export_datetime = datetime.now().isoformat()
         self.access = collector.access
+        self.nodes_to_ignore = collector.nodes_to_ignore     # models only
 
         # needed for model fixes
         self.include_genes = collector.include_genes
 
-    def species_links(self, name):
-        ''' The database links of a node, as a new list of <db>:<id>: its
-        external links, its functional cluster (skm:) and its Arabidopsis
-        genes (tair:).
-        '''
-        annotations = self.node_annotations.get(name, {})
+    @property
+    def model_reaction_ids(self):
+        ''' The collected reactions the models (SBML, TabularQual) include: not those that the nodes to
+        ignore (pss_export_config.yaml nodes_to_ignore) leave without substrates or products. The networks
+        include all collected reactions. '''
+        return [r for r in self.reaction_ids if self.reactions[r].in_model]
 
-        links = list(annotations.get("external_links") or [])
-
-        functional_cluster_id = annotations.get("functional_cluster_id")
-        if functional_cluster_id:
-            links.append(f"skm:{functional_cluster_id}")
-
-        for ath_homologue in annotations.get("ath_homologues") or []:
-            links.append(f"tair:{ath_homologue}")
-
-        return links
+    @property
+    def species_description(self):
+        ''' e.g. "Solanum tuberosum (stu)", or "all species" (no species filter) '''
+        if self.species is None:
+            return "all species"
+        return f"{pss_schema_config.species[self.species]['name']} ({self.species})"
 
     def model_fixes(self, interactive=False, apply_fixes=True):
         ''' Identify model fixes to the collected reactions.
@@ -183,7 +189,7 @@ class PSSAdapter():
 
         sbml = SBML(self, kinetic_laws=kinetic_laws)
 
-        for reaction_id in self.reaction_ids:
+        for reaction_id in self.model_reaction_ids:
             sbml.add_reaction(self.reactions[reaction_id])
 
         for reaction_id in self.additional_reactions:
@@ -207,7 +213,7 @@ class PSSAdapter():
 
         tabqual = TabularQual(self)
 
-        for reaction_id in self.reaction_ids:
+        for reaction_id in self.model_reaction_ids:
             tabqual.add_reaction(self.reactions[reaction_id])
 
         for reaction_id in self.additional_reactions:
@@ -223,3 +229,34 @@ class PSSAdapter():
         print("-" * 40)
 
         return tabqual.write(filename)
+
+    def create_reaction_graph(self, edges_file=None, nodes_file=None):
+        ''' The reaction graph (extended SIF): entities and reactions, one edge per participant.
+        Returns the number of edges. '''
+        return networks.create_reaction_graph(self, edges_file, nodes_file)
+
+    def create_interaction_network(self, edges_file=None, nodes_file=None):
+        ''' The interaction network (extended SIF): entity -> entity influences through the
+        reactions (rules: interaction_rules in pss_export_config.yaml). Returns the number of edges. '''
+        return networks.create_interaction_network(self, edges_file, nodes_file)
+
+    def create_gene_network(self, edges_file=None, nodes_file=None):
+        ''' The gene network (extended SIF, the interaction network's columns): the interaction
+        network with functional clusters expanded into their genes in the species collected for
+        (collect_reactions(species=...); not without a species). Returns the number of edges. '''
+        return networks.create_gene_network(self, edges_file, nodes_file)
+
+    def export(self, format_key, **arguments):
+        ''' Write a format of the registry (pss_export.formats) by its key, e.g.
+        export("gene-network", edges_file="e.tsv", nodes_file="n.tsv"). The arguments are the
+        format's file arguments. '''
+        from ..formats import get_format
+
+        fmt = get_format(format_key)
+        allowed = {f.argument for f in fmt.files}
+        unknown = set(arguments) - allowed
+        if unknown:
+            raise ValueError(f"'{format_key}' takes {', '.join(sorted(allowed))}, not {', '.join(sorted(unknown))}")
+        if self.access is not None and self.access not in fmt.access:
+            raise ValueError(f"'{format_key}' is not available for access '{self.access}'")
+        return getattr(self, fmt.method)(**arguments)

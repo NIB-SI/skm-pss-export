@@ -5,11 +5,13 @@
 # Export settings
 #-------------------------
 
-# Nodes to ignore when exporting
-# Based on the node "name" attribute
+# Nodes to leave out of the MODELS only (SBML, TabularQual, model fixes): their edges are
+# left out, and a reaction left without substrates or products is left out of the model.
+# The networks (reaction graph, interaction network, gene network) keep everything.
+# By node name; functional clusters by their stable name short_name[functional_cluster_id].
 nodes_to_ignore:
   - GA|GID1|SLR1
-  - SLR1[LOC_OS06G03710]
+  - SLR1[fc00150]
   - GID|SCF
   - SCF
   - D14|MAX2|SCF
@@ -19,11 +21,11 @@ nodes_to_ignore:
   - CML12|PID
   - PBP1|PID
   - CMI1|ICR1
-  - LST8[AT2G22040,AT3G18140]
-  - FLS2[AT5G46330]
-  - FKBP62[AT3G25230]
-  - RAR1[AT5G51700]
-  - HSP70[AT3G12580]
+  - LST8[fc00359]
+  - FLS2[fc00076]
+  - FKBP62[fc00479]
+  - RAR1[fc00135]
+  - HSP70[fc00433]
 
 #-------------------------
 # Renaming settings
@@ -98,7 +100,8 @@ node_form_to_SBO:
 
 # annotate reactions in listOfReactions
 # (1) reaction type: according to SBML l3v2, should be child of 'occurring entity representation' SBO:0000231
-# (2) kinetic law: according to SBML l3v2, should be child of 'mathematical expression' SBO:0000244
+# (2) kinetic law: according to SBML l3v2, should be child of 'mathematical expression' SBO:0000064
+#     (all below are rate laws, SBO:0000001)
 reaction_subtype_to_SBO:
   binding-with-modifier:
     reaction_type_SBO: '0000177' # non-covalent binding (PPI=non-covalent), alternative: 0000344-molecular interaction
@@ -124,7 +127,7 @@ reaction_subtype_to_SBO:
     reaction_type_SBO: '0000176' # biochemical reaction (OR 0000672 - spontaneous reaction)
     kinetic_law_SBO:   '0000029' # Henri-Michaelis-Menten rate law
   catalysis-without-substrate-and-without-modifier:
-    reaction_type_SBO: '0000176' # spontaneous reaction (OR 0000672 - spontaneous reaction)
+    reaction_type_SBO: '0000176' # biochemical reaction (OR 0000672 - spontaneous reaction)
     kinetic_law_SBO:   '0000029' # Henri-Michaelis-Menten rate law
 
   degradation-with-modifier:
@@ -156,7 +159,7 @@ reaction_subtype_to_SBO:
     reaction_type_SBO: '0000589' # genetic production (OR 0000183 - transcription)
     kinetic_law_SBO:   '0000198' # Hill-type rate law, reduced form
   translational-repression-with-modifier:
-    reaction_type_SBO: '0000589' # genetic production (OR 0000183 - transcription)
+    reaction_type_SBO: '0000589' # genetic production (OR 0000184 - translation)
     kinetic_law_SBO:   '0000198' # Hill-type rate law, reduced form
   transcriptional-or-translational-repression-with-modifier:
     reaction_type_SBO: '0000589' # genetic production (OR 0000183 - transcription)
@@ -186,14 +189,22 @@ reaction_subtype_to_SBO:
     reaction_type_SBO: '0000176' # biochemical reaction
     kinetic_law_SBO:   '0000029' # Henri-Michaelis-Menten rate law
 
+# the reaction mechanism (the biological process), separate from the reaction's SBO term above
+# (its result, from type and participants); any reaction type. All are children of 'process' SBO:0000375.
+reaction_mechanism_to_SBO:
+  phosphorylation:       '0000216' # phosphorylation
+  dephosphorylation:     '0000330' # dephosphorylation
+  transcription:         '0000183' # transcription
+  translation:           '0000184' # translation
+  conformational change: '0000181' # conformational transition
+
 # annotate species role in the reactions in speciesReference (per reaction)
 # according to SBML l3v2, should be child of 'participant role' SBO:0000003
 node_role_to_SBO:
   # modifiers
   modifier:    '0000019' # modifier
-  enzyme:      '0000460' # enzymatic catalyst
+  catalyst:    '0000013' # catalyst
   transporter: '0000013' # catalyst (a role; the transporter itself is a physical entity, SBO:0000284)
-  receptor:    '0000244' # receptor
   stimulator:  '0000459' # stimulator
   inhibitor:   '0000020' # inhibitor
 
@@ -250,7 +261,6 @@ form_to_state:
 reaction_type_to_process:
   catalysis/auto-catalysis: PROCESS
   catalysis: PROCESS
-  cleavage/auto-cleavage: PROCESS
   protein activation: PROCESS
   degradation/secretion: PROCESS
   translocation: PROCESS
@@ -269,10 +279,6 @@ edge_to_arc:
     SUBSTRATE: CONSUMPTION
     MODIFIER: CATALYSIS
   catalysis:
-    PRODUCT: PRODUCTION
-    SUBSTRATE: CONSUMPTION
-    MODIFIER: CATALYSIS
-  cleavage/auto-cleavage:
     PRODUCT: PRODUCTION
     SUBSTRATE: CONSUMPTION
     MODIFIER: CATALYSIS
@@ -358,3 +364,79 @@ compartment_to_colour:
   apoplast: '#1b1b07'
   nucleolus: '#c8317d'
   extracellular: '#f5f5dc'
+
+
+# -----------------------------------------------------------------------------
+# Interaction network (and gene network): the edges each reaction gives
+# -----------------------------------------------------------------------------
+# Per reaction type and effect, a list of [source, target, influence, directed], where
+# source/target are the reaction's participants:
+#   substrates, products, modifiers (all modifiers),
+#   activating_modifiers / inhibiting_modifiers (modifiers on ACTIVATES / INHIBITS edges)
+# influence: positive, negative or unknown (SBGN Activity Flow, see influences)
+# directed: directed, or mutual (both directions listed, marked undirected)
+#
+# Done in the code, not here:
+# - nodes are entities (a node name), not species: location and form are edge attributes
+# - no self-loops between a reaction's own inputs and outputs (e.g. an inactive -> active form,
+#   a gene template -> its product, a translocation's from -> to); a modifier's influence on its own
+#   entity (autoregulation, e.g. WRKY33 activating its own transcription) is kept
+# - net effect: if a reaction gives two edges between the same pair of entities, the one to the
+#   product is kept
+# - condition nodes (form "condition") are left out
+# - gene network: functional clusters expanded into their genes in one species (all gene pairs; for
+#   autoregulation each gene -> itself); a reaction is only included if all its functional clusters
+#   have genes in that species
+# - reaction types without rules here (e.g. the deprecated cleavage/auto-cleavage) give no edges
+#   (with a warning)
+# See skm-webapp docs/reviews/2026-09-30-network-exports-rules.md for the reasons.
+interaction_rules:
+  binding/oligomerisation:
+    activation:
+      - [substrates, substrates, unknown, mutual]
+      - [substrates, products, positive, directed]
+      - [modifiers, products, positive, directed]
+    inhibition:
+      - [substrates, substrates, negative, mutual]
+  catalysis:
+    activation:
+      - [substrates, products, positive, directed]
+      - [modifiers, products, positive, directed]
+      - [modifiers, substrates, negative, directed]
+  degradation/secretion:
+    inhibition:
+      - [modifiers, substrates, negative, directed]
+  dissociation:
+    activation:
+      - [substrates, products, positive, directed]
+      - [modifiers, products, positive, directed]
+      - [modifiers, substrates, negative, directed]
+  protein activation:
+    activation:
+      - [modifiers, products, positive, directed]
+  protein deactivation:
+    # whichever edge type the curator used for the modifier
+    inhibition:
+      - [modifiers, products, negative, directed]
+  transcriptional/translational activation:
+    activation:
+      - [activating_modifiers, products, positive, directed]
+      - [inhibiting_modifiers, products, negative, directed]
+  transcriptional/translational repression:
+    inhibition:
+      - [modifiers, products, negative, directed]
+  translocation:
+    # the move itself (from -> to) is a self-loop: translocations without a transporter give no edges
+    activation:
+      - [modifiers, products, positive, directed]
+  unknown:
+    activation:
+      - [modifiers, products, positive, directed]
+    inhibition:
+      - [modifiers, products, negative, directed]
+
+# the influences (SBGN Activity Flow): name in the network files, and SBO term
+influences:
+  positive: {interaction: positive-influence, sbo: '0000170'} # stimulation
+  negative: {interaction: negative-influence, sbo: '0000169'} # inhibition
+  unknown:  {interaction: unknown-influence,  sbo: '0000168'} # control

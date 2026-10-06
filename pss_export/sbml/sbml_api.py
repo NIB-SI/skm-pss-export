@@ -6,7 +6,7 @@ from libsbml import (SBMLDocument, writeSBMLToFile, writeSBMLToString,
                     LIBSBML_OPERATION_SUCCESS, OperationReturnValue_toString,
                     CVTerm, BIOLOGICAL_QUALIFIER, MODEL_QUALIFIER)
 
-from ..entity_classes import IDTracker, Species, SpeciesType, SpeciesReference, Reaction
+from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesReference, Reaction
 from ..annotations.annotation_manager import annotation_manager
 
 SBML_LEVEL = 3
@@ -85,7 +85,7 @@ class SBML(SBMLDocument, IDTracker):
         self.add_model_metadata()
 
     def add_model_metadata(self):
-        ''' Model name, notes (description, version, access, source, export
+        ''' Model name, notes (description, version, access, species, source, export
         date) and, if there are creators, the model history. '''
 
         adapter = self.pss_adapter
@@ -97,6 +97,7 @@ class SBML(SBMLDocument, IDTracker):
         SBML.add_note(model, 'description', adapter.model_description)
         SBML.add_note(model, 'version', adapter.model_version)
         SBML.add_note(model, 'access', adapter.access)
+        SBML.add_note(model, 'species', adapter.species_description)
         SBML.add_note(model, 'source', 'https://skm.nib.si')
         SBML.add_note(model, 'export date', adapter.export_datetime)
 
@@ -167,7 +168,7 @@ class SBML(SBMLDocument, IDTracker):
             sp = self.sbml_model.createSpecies()
             sp.setId(species_id)
             sp.setMetaId(f"metaid_{species_id}")
-            sp.setName(species.name)
+            sp.setName(self.node(species).display_label)
 
             if (SBML_VERSION >= 2) and (SBML_LEVEL == 2):
             # TODO -- Error: Error: sbml: LibSBML returned a null value trying to create species type VPg_p.
@@ -193,23 +194,27 @@ class SBML(SBMLDocument, IDTracker):
 
         return species_id
 
+    def node(self, species):
+        ''' The collected node of a species (with its annotations) '''
+        return self.pss_adapter.nodes.get(species.name) or Node(species.name)
+
     def add_species_annotations(self, sp, species):
         ''' Database links (external links, functional cluster, Arabidopsis
-        genes) as annotations, and description, form and additional
-        information as notes. '''
+        genes) as annotations, and description, form, additional
+        information and MapMan bins as notes. '''
 
-        annotations, skipped_links = annotation_manager.process_node(
-            self.pss_adapter.species_links(species.name))
+        node = self.node(species)
+        annotations, skipped_links = annotation_manager.process_node(node.links(self.pss_adapter.species))
         for skipped in skipped_links:
             print(f"SBML: warning, skipping or could not parse external link for species {species.name}: {skipped}")
 
         for annotation in annotations:
             check(sp.addCVTerm(to_cvterm(annotation)), f"add annotation {annotation.url} to species {species.name}")
 
-        node_annotations = self.pss_adapter.node_annotations.get(species.name, {})
-        SBML.add_note(sp, 'description', node_annotations.get("description"))
+        SBML.add_note(sp, 'description', node.description)
         SBML.add_note(sp, 'species form', species.form)
-        SBML.add_note(sp, 'additional_information', node_annotations.get("additional_information"))
+        SBML.add_note(sp, 'additional_information', node.additional_information)
+        SBML.add_note(sp, 'mapman', ';'.join(node.mapman))
 
     def get_sbml_compartment(self, compartment):
 
