@@ -231,7 +231,8 @@ adapter.create_faidare("faidare.json")
 The node files have:
 
 - `node_type`: the node's class, its most specific database label (`PlantCoding`, `Metabolite`, `Complex`, …;
-  `gene` and `reaction` for the rows that aren't database nodes);
+  `reaction` for the reaction graph's reactions; a gene in the gene network has the class of its functional
+  clusters, `PlantCoding` or `PlantNonCoding`, as the genes in CKN);
 - `display_label`: what to show, as in the database (the short name for functional clusters, the name for other
   nodes; functional clusters are named `short_name[functional_cluster_id]`, e.g. `WRKY33[fc00166]`);
 - `short_name` and `synonyms` (the short name and the synonyms);
@@ -287,8 +288,11 @@ adapter.create_gene_network("gene-network-stu-edges.tsv", "gene-network-stu-node
   translocation without a transporter, gives no edge; autoregulation, a modifier on its own entity, is kept), and of two edges from a reaction between the same pair, the one to the product. Condition nodes are left out.
 - **Gene network**: the interaction network with functional clusters expanded into their genes in the species the
   export is made for (from the clusters' homologue lists; all gene pairs, but for autoregulation each gene → itself
-  only). Needs a species. The same edge columns as the interaction network. The node file has a row per gene, annotated
-  only with its functional cluster(s) (PSS has no gene-level annotations), and per other node (metabolites, complexes, …).
+  only). Needs a species. The same edge columns as the interaction network (`source_entity` / `target_entity`: the
+  gene's functional cluster; `source_type` / `target_type`: the cluster's class). The node file has a row per gene,
+  annotated only with its functional cluster(s) (PSS has no gene-level annotations; `species` is filled for genes
+  only), and per other node (metabolites, complexes, …). A gene in functional clusters of different classes is an
+  error.
 
 ## Tests
 
