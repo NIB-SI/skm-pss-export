@@ -5,7 +5,6 @@ For analysing connectivity of PSS
 from collections import defaultdict
 
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from ..entity_classes import IDTracker
 
@@ -139,4 +138,5 @@ class GraphVisualizer:
             # layout
             pos=nx.nx_agraph.graphviz_layout(subgraph, prog="dot"))
 
-        plt.show()
+        from .model_fixes import _plt
+        _plt().show()

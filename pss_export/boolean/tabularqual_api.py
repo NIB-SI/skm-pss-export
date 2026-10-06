@@ -20,6 +20,7 @@ from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesRefer
 from .boolean import reaction_rule_constructor, rule_composer
 
 from ..annotations.annotation_manager import annotation_manager
+from ..utils import MODEL_FIXES_NOTE
 
 def tabularqual_annotations(links):
     ''' (qualifier, curie) pairs for TabularQual, and the links that could not be used '''
@@ -80,6 +81,8 @@ class TabularQual(IDTracker):
         name = self.pss_adapter.model_name
 
         notes = [self.pss_adapter.model_description, f"Species: {self.pss_adapter.species_description}"]
+        if self.pss_adapter.model_fixes_applied is not None:
+            notes.append("Model fixes: " + MODEL_FIXES_NOTE.format(n=self.pss_adapter.model_fixes_applied))
         versions = [self.pss_adapter.model_version or "1.0.0"]
 
         source_urls = ["https://skm.nib.si"]

@@ -2,6 +2,8 @@
 Exports ..... formats ..... of PSS model
 '''
 # library imports
+import copy
+
 from .config import pss_export_config, pss_schema_config
 from .collectors import PSSCollector
 
@@ -84,6 +86,8 @@ class PSSAdapter():
         self.reaction_pathways = {}
 
         self.additional_reactions = []
+        self.model_fixes_applied = None     # number of model fixes applied (None: none run)
+        self._with_model_fixes = None
 
         self.model_id = model_id or "pss_exported_model"
         self.model_name = model_name or "PSS Exported Model"
@@ -122,6 +126,8 @@ class PSSAdapter():
         '''
 
         # reset data structures in case of re-collection
+        self.model_fixes_applied = None
+        self._with_model_fixes = None
         self.reactions = {}
         self.reaction_ids = []
         self.nodes = {}
@@ -180,7 +186,20 @@ class PSSAdapter():
                 "Model fixing needs optional dependencies: "
                 "pip install 'pss-export[model-fixing]'") from e
 
-        ModelFixer(self, apply_fixes=apply_fixes, interactive=interactive).identify_model_fixes()
+        fixes = ModelFixer(self, apply_fixes=apply_fixes, interactive=interactive).identify_model_fixes()
+        if apply_fixes:
+            self.model_fixes_applied = (self.model_fixes_applied or 0) + fixes
+        return fixes
+
+    def with_model_fixes(self):
+        ''' A copy of the collected data with the model fixes applied (pss_export.model_fixes: translation
+        products in the active form, transport reactions between compartments), for the "with model fixes"
+        variant of the models; this adapter stays as collected (exactly PSS). Made once per collection. '''
+        if self._with_model_fixes is None:
+            fixed = copy.deepcopy(self)
+            fixed.model_fixes(apply_fixes=True, interactive=False)
+            self._with_model_fixes = fixed
+        return self._with_model_fixes
 
     def create_sbml(self,
                     filename=None,
@@ -246,10 +265,11 @@ class PSSAdapter():
         (collect_reactions(species=...); not without a species). Returns the number of edges. '''
         return networks.create_gene_network(self, edges_file, nodes_file)
 
-    def export(self, format_key, **arguments):
+    def export(self, format_key, model_fixes=False, **arguments):
         ''' Write a format of the registry (pss_export.formats) by its key, e.g.
         export("gene-network", edges_file="e.tsv", nodes_file="n.tsv"). The arguments are the
-        format's file arguments. '''
+        format's file arguments. model_fixes: the "with model fixes" variant (the formats with
+        ExportFormat.model_fixes), from with_model_fixes(); both variants come from one collection. '''
         from ..formats import get_format
 
         fmt = get_format(format_key)
@@ -259,4 +279,7 @@ class PSSAdapter():
             raise ValueError(f"'{format_key}' takes {', '.join(sorted(allowed))}, not {', '.join(sorted(unknown))}")
         if self.access is not None and self.access not in fmt.access:
             raise ValueError(f"'{format_key}' is not available for access '{self.access}'")
-        return getattr(self, fmt.method)(**arguments)
+        if model_fixes and not fmt.model_fixes:
+            raise ValueError(f"'{format_key}' has no variant with model fixes")
+        adapter = self.with_model_fixes() if model_fixes else self
+        return getattr(adapter, fmt.method)(**arguments)
