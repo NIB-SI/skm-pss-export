@@ -112,8 +112,8 @@ url there (`aracyc`: PMN). `skm:` (reactions and functional clusters) is an iden
 ### Nodes left out of the models
 
 `nodes_to_ignore` in `pss_export/pss/pss_export_config.yaml` lists nodes (by name; functional clusters by their
-stable name `short_name[functional_cluster_id]`) that only the **models** leave out: SBML, TabularQual and the model
-fixes. Their edges are left out, and so is a reaction left without substrates or products
+stable name `short_name[functional_cluster_id]`) that only the **models** leave out: SBML, TabularQual, SBGN and the
+model fixes. Their edges are left out, and so is a reaction left without substrates or products
 (`PSSAdapter.model_reaction_ids`). The networks (reaction graph, interaction network, gene network) keep every
 collected reaction and participant. Otherwise the ignored nodes are as if they weren't there: they don't select a
 reaction for a pathway, or leave it out of a species (also as components of complexes).
@@ -209,6 +209,45 @@ pss-export to-tabularqual output.xlsx --access public
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
 
+
+### SBGN
+
+SBGN-ML ([Process Description](https://sbgn.github.io/)) of the model reactions: the same reactions, participants and
+species ids as SBML (nodes to ignore left out; model fixes in the "with model fixes" variant), as a map with the
+cellular compartments, laid out automatically. Needs [Graphviz](https://graphviz.org/) (the `sfdp` program).
+
+```bash
+pss-export to-sbgn map.sbgn --access public --species all
+pss-export to-sbgn map-newt.sbgn --access public --species all --newt
+```
+
+```python
+adapter.collect_reactions(access="public", species=None)
+adapter.create_sbgn("map.sbgn")
+adapter.export("sbgn-newt", filename="map-newt.sbgn", model_fixes=True)
+```
+
+- **Glyphs**: by the participant's form: protein → macromolecule with an `active`/`inactive` state variable;
+  metabolite → simple chemical; gene, mRNA, miRNA, ncRNA → nucleic acid feature; complex → complex with its components
+  (the database's `COMPONENT_OF` edges); process and foreign entity → unspecified entity (no state variables in SBGN:
+  "(active)" in the label); abiotic → perturbing agent. A process node per reaction (association for binding,
+  dissociation for dissociation) with an input and an output port. Conditions are left out.
+- **Arcs**, by the participant's role: substrate, interactor → consumption; product → production; template (the gene
+  of a transcription/translation) → necessary stimulation, the process then consumes a source and sink; catalyst,
+  transporter → catalysis; stimulator → stimulation; inhibitor → inhibition; modifier → stimulation or inhibition by
+  its edge. Degradation/secretion produces a source and sink.
+- **Compartments**: entities carry their compartment (`compartmentRef`); nucleus, chloroplast, ER, Golgi,
+  mitochondrion, peroxisome and vacuole are in the cytoplasm, the nucleolus in the nucleus; cytoplasm, apoplast and
+  extracellular space are at the top. Processes are in no compartment (SBGN), except in the Newt variant: Newt
+  would put them in the first compartment whose box has them, so they get the one they are laid out in.
+- **Annotations**: MIRIAM RDF (`bqbiol:is` etc., identifiers.org URLs from the database's CURIEs, as in SBML) in each
+  glyph's extension; notes with the description, or the reaction's type, mechanism and evidence. The Newt variant
+  (`sbgn-newt`, `--newt`) adds [Newt](https://newteditor.org/)'s custom properties (name, location, pathway,
+  functional cluster) and colours (by form; compartment borders by compartment).
+- **Layout**: compartment by compartment, bottom-up: each compartment's content is laid out with sfdp
+  (force-directed), then the compartment is one node of that size in its parent's layout. A process is laid out in
+  the innermost compartment with all its participants (or, e.g. apoplast and cytoplasm, its first participant's). No overlaps; the whole PSS
+  is roughly square (about 10,000 × 7,000).
 
 ### FAIDARE
 

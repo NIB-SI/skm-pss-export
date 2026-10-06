@@ -81,6 +81,28 @@ FORMATS = {f.key: f for f in [
     ),
 
     ExportFormat(
+        key='sbgn',
+        title='[SBGN-ML](https://sbgn.github.io/)',
+        description=('Systems Biology Graphical Notation, Process Description: the model reactions as a map, laid out '
+                     'automatically (Graphviz), with the cellular compartments, MIRIAM annotations '
+                     '(identifiers.org) and notes. Opens in SBGN editors and viewers, e.g. '
+                     '[Newt](https://newteditor.org/) or [MINERVA](https://minerva.pages.uni.lu/).'),
+        method='create_sbgn',
+        files=(FormatFile('filename', 'map', 'sbgn', 'application/xml', 'SBGN-ML'),),
+        model_fixes=True,
+    ),
+
+    ExportFormat(
+        key='sbgn-newt',
+        title='SBGN-ML for Newt',
+        description=('The SBGN-ML map with the custom properties (name, location, pathway, functional cluster) '
+                     'and colours that [Newt](https://newteditor.org/) shows.'),
+        method='create_sbgn_newt',
+        files=(FormatFile('filename', 'map', 'sbgn', 'application/xml', 'SBGN-ML for Newt'),),
+        model_fixes=True,
+    ),
+
+    ExportFormat(
         key='reaction-graph',
         title='Reaction graph',
         description=('Entities and reactions as nodes, one edge per participant, as in the database and the PSS '

@@ -168,6 +168,32 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
 
     click.echo(f"Wrote spreadsheet to {filename}")
 
+@cli.command()
+@neo4j_common_params
+@export_common_params
+@reaction_filter_common_params
+@modelfixing_common_params
+@click.argument("filename", type=click.Path())
+@click.option("--newt", is_flag=True, help="The Newt variant: with Newt's custom properties and colours.")
+def to_sbgn(neo4j_uri, neo4j_user, neo4j_password,
+            model_id, model_name, model_description, model_version, creator,
+            access, species, reactions,
+            model_fixes_identify, model_fixes_apply, model_fixes_interactive,
+            nodes_to_ignore,
+            filename, newt):
+    """
+    Export the model reactions to SBGN-ML (Process Description), laid out with Graphviz.
+    """
+    adapter = PSSAdapter(neo4j_uri=neo4j_uri, neo4j_user=neo4j_user, neo4j_password=neo4j_password,
+                         model_id=model_id, model_name=model_name, model_description=model_description,
+                         model_version=model_version, creator=creator)
+    adapter.collect_reactions(reactions=reactions, access=access, species=species, nodes_to_ignore=nodes_to_ignore)
+    if model_fixes_identify:
+        adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
+    n = adapter.create_sbgn_newt(filename) if newt else adapter.create_sbgn(filename)
+    click.echo(f"Wrote {n} reactions to {filename}")
+
+
 def _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions):
     # the networks keep every node: nodes_to_ignore is for the models only
     adapter = PSSAdapter(neo4j_uri=neo4j_uri, neo4j_user=neo4j_user, neo4j_password=neo4j_password)
