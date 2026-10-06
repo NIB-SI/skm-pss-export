@@ -262,6 +262,7 @@ three columns are `source, interaction, target` (`source, role, target` in the r
 
 ```bash
 pss-export to-reaction-graph edges.tsv nodes.tsv --access public
+pss-export to-reaction-graph-json graph.json --access public --species all
 pss-export to-interaction-network edges.tsv nodes.tsv --access public
 pss-export to-gene-network edges.tsv nodes.tsv --access public --species stu
 ```
@@ -269,6 +270,7 @@ pss-export to-gene-network edges.tsv nodes.tsv --access public --species stu
 ```python
 adapter.collect_reactions(access="public", species="stu")
 adapter.create_reaction_graph("reaction-graph-edges.tsv", "reaction-graph-nodes.tsv")
+adapter.create_reaction_graph_json("reaction-graph.json")
 adapter.create_interaction_network("interaction-network-edges.tsv", "interaction-network-nodes.tsv")
 adapter.create_gene_network("gene-network-stu-edges.tsv", "gene-network-stu-nodes.tsv")
 ```
@@ -276,8 +278,12 @@ adapter.create_gene_network("gene-network-stu-edges.tsv", "gene-network-stu-node
 - **Reaction graph**: bipartite, entities and reactions (as in the database and the PSS Explorer), one edge per
   participant, lossless (conditions and gene templates included). `role` is the participant's role
   (substrate, product, interactor, template, modifier, stimulator, inhibitor, catalyst, transporter); participant →
-  reaction for inputs and modifiers, reaction → participant for products. One node file with the entities and the
-  reactions.
+  reaction for inputs and modifiers, reaction → participant for products. The edges have the participant's `form`,
+  `location` and `organ` (organ or tissue, e.g. `leaf`; both with a `…_putative` flag for a curated `putative:`
+  prefix) and `identifiers` (the participant's own genes where curated, e.g. `AT3G03990` of a functional cluster).
+  One node file with the entities and the reactions. Also as one JSON file (`reaction-graph-json`,
+  `{"nodes": [...], "edges": [...]}`, the same fields; lists as lists, booleans as booleans, no value: `null`): the
+  data of the PSS Explorer (made with no species filter, so with a `<species>_homologues` list per species).
 - **Interaction network**: entity → entity influences through the reactions (an SBGN Activity Flow view). Nodes are
   entities (location and form are edge attributes). `interaction` is `positive-influence`, `negative-influence` or
   `unknown-influence` (with `influence_sbo`: SBO:0000170, SBO:0000169, SBO:0000168), `reaction_sbo` the reaction's SBO

@@ -69,7 +69,8 @@ class Reaction:
             output = edge_type in edge_types.OUTPUTS
             key = 'target' if output else 'source'
             node = edge.end_node if output else edge.start_node
-            participant = Species(node['name'], edge[f'{key}_form'], edge[f'{key}_location'])
+            participant = Species(node['name'], edge[f'{key}_form'], edge[f'{key}_location'],
+                                  edge.get(f'{key}_organ'), edge.get(f'{key}_identifiers'))
             participant.edge_type = edge_type
             self.participants.append(participant)
 
@@ -274,7 +275,7 @@ class Node:
 
 
 class Species:
-    def __init__(self, name, form, compartment):
+    def __init__(self, name, form, compartment, organ=None, identifiers=None):
         '''
         Parameters
         ----------
@@ -284,6 +285,10 @@ class Species:
             e.g. 'protein', 'gene', 'complex'
         compartment: str
             e.g. 'cytoplasm', 'nucleus', 'extracellular'
+        organ: str
+            e.g. 'leaf', 'putative:leaf'
+        identifiers: list
+            the participant's own genes, where curated (e.g. ['AT3G03990'] of a functional cluster)
         '''
 
         self.name = name
@@ -294,6 +299,11 @@ class Species:
         # the location as curated; a "putative:" prefix marks a location that isn't certain
         self.location_putative = bool(compartment) and compartment.startswith("putative:")
         self.location = compartment.removeprefix("putative:") if compartment else None
+
+        # the organ or tissue as curated, also with a "putative:" prefix
+        self.organ_putative = bool(organ) and organ.startswith("putative:")
+        self.organ = organ.removeprefix("putative:") if organ else None
+        self.identifiers = list(identifiers or [])
 
         # the compartment in the models (SBML, SBGN, ...): without a (known) location, the cytoplasm
         self.compartment = self.location if self.location not in (None, "unknown") else "cytoplasm"

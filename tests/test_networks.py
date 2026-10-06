@@ -3,6 +3,7 @@ Network exports (reaction graph, interaction network, gene network): the rules p
 type, without a database. See the interaction_rules in pss_export_config.yaml.
 '''
 import csv
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -246,6 +247,31 @@ def test_reaction_graph(tmp_path):
                     ("MYC2", "stimulator", "rx6", "ACTIVATES"), ("NPR1 high", "inhibitor", "rx6", "INHIBITS")}
     nodes = {n["id"]: n for n in read(tmp_path / "n.tsv")}
     assert nodes["rx6"]["node_type"] == "reaction" and nodes["rx6"]["reaction_sbo"] == "SBO:0000589"
+
+
+def test_reaction_graph_organ_identifiers_json(tmp_path):
+    """ organ and identifiers of the participants (as location, "putative:" split off); the JSON has the same fields """
+    r = reaction("rx7", "protein activation", "activation",
+                 [("ADK", "protein", "cytoplasm", "SUBSTRATE"), ("ADK", "protein_active", "cytoplasm", "PRODUCT")])
+    r.participants[0].organ, r.participants[0].organ_putative, r.participants[0].identifiers = "leaf", True, ["AT1"]
+    net.create_reaction_graph(adapter(r), tmp_path / "e.tsv", None)
+    [substrate] = [e for e in read(tmp_path / "e.tsv") if e["edge_type"] == "SUBSTRATE"]
+    assert (substrate["organ"], substrate["organ_putative"], substrate["identifiers"]) == ("leaf", "True", "AT1")
+
+    assert net.create_reaction_graph_json(adapter(r, species=None), tmp_path / "g.json") == 2
+    graph = json.load(open(tmp_path / "g.json"))
+    assert list(graph["edges"][0]) == net.REACTION_GRAPH_EDGE_COLUMNS
+    [substrate] = [e for e in graph["edges"] if e["edge_type"] == "SUBSTRATE"]
+    assert (substrate["organ_putative"], substrate["identifiers"], substrate["directed"]) == (True, ["AT1"], True)
+    nodes = {n["id"]: n for n in graph["nodes"]}
+    assert nodes["ADK"]["ath_homologues"] == ["AT1", "AT2"] and nodes["ADK"]["description"] is None
+    assert nodes["rx7"]["node_type"] == "reaction"
+
+
+def test_species_organ():
+    s = ec.Species("ADK", "protein", "putative:nucleus", "putative:leaf", ["AT1"])
+    assert (s.organ, s.organ_putative, s.identifiers, s.location_putative) == ("leaf", True, ["AT1"], True)
+    assert (ec.Species("ADK", "protein", None).organ, ec.Species("ADK", "protein", None).identifiers) == (None, [])
 
 
 def test_node_type_most_specific():
