@@ -54,7 +54,6 @@ def reaction_rule_constructor(reaction):
             transcriptional_translational_activation,
             'translocation': translocation,
             'unknown': unknown_activation,
-            'cleavage/auto-cleavage': cleavage_autocleavage,
         },
         'inhibition': {
             'binding/oligomerisation': binding_oligomerisation_inhibition,
@@ -196,13 +195,4 @@ def unknown_inhibition(s, p, m):
     if len(m) == 0:
         return target, None
     rule = f"!({' & '.join(sorted(m))})"
-    return target, rule
-
-@preparerule
-def cleavage_autocleavage(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
     return target, rule

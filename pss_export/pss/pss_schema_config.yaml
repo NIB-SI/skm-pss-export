@@ -4,15 +4,41 @@
 # Database schema
 #--------------------------
 
-relevant_labels:
-  - Complex
-  - Foreign
+# the class labels of the nodes, most specific first: a node's type is the first of its labels here
+node_types:
+  - ForeignCoding
+  - ForeignNonCoding
+  - ForeignAbiotic
+  - ForeignEntity
+  - PlantCoding
+  - PlantNonCoding
+  - PlantAbstract
+  - MetaboliteFamily
   - Metabolite
+  - Complex
   - Process
+  - Condition
 
 #--------------------------
 # Database content
 #--------------------------
+
+# the species whose genes are in the functional clusters' homologue lists (<code>_homologues);
+# exports can be limited to one of them (Arabidopsis is the default)
+species:
+  ath:  {name: Arabidopsis thaliana, common_name: Arabidopsis}
+  stu:  {name: Solanum tuberosum, common_name: potato}
+  sly:  {name: Solanum lycopersicum, common_name: tomato}
+  mdo:  {name: Malus domestica, common_name: apple}
+  vvi:  {name: Vitis vinifera, common_name: grapevine}
+  ppe:  {name: Prunus persica, common_name: peach}
+  pavi: {name: Prunus avium, common_name: wild cherry}
+  pcer: {name: Prunus cerasifera, common_name: cherry plum}
+  pdul: {name: Prunus dulcis, common_name: almond}
+  parm: {name: Prunus armeniaca, common_name: apricot}
+  pcox: {name: Pyrus communis, common_name: pear}
+  psib: {name: Prunus sibirica, common_name: Siberian apricot}
+
 
 pathways:
   - Signalling:

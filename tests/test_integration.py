@@ -166,3 +166,19 @@ class TestPathwayFilter:
         subset = collect_or_skip(make_adapter(), access="public", pathways=TEST_PATHWAYS)
 
         assert len(subset.reaction_ids) < len(full.reaction_ids)
+
+
+class TestSpeciesFilter:
+    """The species filter (in the collector's query) against the database."""
+
+    def test_species_filter(self):
+        adapter = make_adapter()
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=None)
+        unfiltered = {r: adapter.reactions[r] for r in adapter.reaction_ids}
+        nodes = adapter.nodes
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species="stu")
+        assert adapter.species == "stu"
+        assert set(adapter.reaction_ids) < set(unfiltered)
+        # the Cypher species filter and Reaction.has_genes_in agree (ignored nodes don't count in either)
+        expected = {r for r, rx in unfiltered.items() if rx.has_genes_in(nodes, "stu", adapter.nodes_to_ignore)}
+        assert set(adapter.reaction_ids) == expected

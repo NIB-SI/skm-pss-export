@@ -4,6 +4,10 @@ Export models from the Plant Stress Signalling (PSS) Neo4j knowledge graph to va
 
 
 
+![How pss-export works: collect reactions from PSS (with filters), then write SBML, TabularQual or networks](docs/pss-export-overview.svg)
+
+(Figure source: `docs/make_overview_svg.py`.)
+
 ## Installation
  
 Install directly from GitHub:
@@ -74,6 +78,38 @@ adapter.collect_reactions(access="public")   # connects, queries, closes
 adapter.create_sbml(filename="output.sbml")
 adapter.create_tabularqual(filename="output.xlsx")
 ```
+
+### Formats
+
+The formats pss-export makes, with their titles and descriptions (Markdown), files and options, are in
+`pss_export.formats.FORMATS` (`pss-export formats` lists them). Any of them can be written by its key:
+
+```python
+adapter.collect_reactions(access="public", species="stu")
+adapter.export("gene-network", edges_file="edges.tsv", nodes_file="nodes.tsv")
+```
+
+### Species
+
+Every export is for a species: `collect_reactions(species=...)` / `--species`, one of ath (default), stu, sly, mdo,
+vvi, ppe, pavi, pcer, pdul, parm, pcox, psib (`species` in `pss_export/pss/pss_schema_config.yaml`). Only the reactions whose gene
+clusters (functional clusters of homologues), including those among the components of their complexes, all have genes
+in that species (in the clusters' homologue lists) are exported; reactions without them always are. Abstract clusters (`PlantAbstract`, no genes) don't decide, like
+metabolites: they are in a species when their reactions are (their `species` property isn't kept up to date), and stay
+named nodes in the gene network. The Arabidopsis gene annotations from the homologue lists (`tair.name:`) are only added for ath
+(curated TAIR links of a node are always kept); the gene network is in that species. `species=None` (`--species all`):
+no species filter, for all exports except the gene network.
+
+### Nodes left out of the models
+
+`nodes_to_ignore` in `pss_export/pss/pss_export_config.yaml` lists nodes (by name; functional clusters by their
+stable name `short_name[functional_cluster_id]`) that only the **models** leave out: SBML, TabularQual and the model
+fixes. Their edges are left out, and so is a reaction left without substrates or products
+(`PSSAdapter.model_reaction_ids`). The networks (reaction graph, interaction network, gene network) keep every
+collected reaction and participant. Otherwise the ignored nodes are as if they weren't there: they don't select a
+reaction for a pathway, or leave it out of a species (also as components of complexes).
+`collect_reactions(nodes_to_ignore=...)` takes another list, or `None` for none
+(CLI: `--nodes-to-ignore` of `to-sbml` / `to-tabularqual`).
 
 ## CLI usage
 
@@ -149,6 +185,70 @@ pss-export to-tabularqual output.xlsx --access public
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
 
+
+### Networks: reaction graph, interaction network, gene network
+
+The node files have:
+
+- `node_type`: the node's class, its most specific database label (`PlantCoding`, `Metabolite`, `Complex`, …;
+  `gene` and `reaction` for the rows that aren't database nodes);
+- `display_label`: what to show, as in the database (the short name for functional clusters, the name for other
+  nodes; functional clusters are named `short_name[functional_cluster_id]`, e.g. `WRKY33[fc00166]`);
+- `short_name` and `synonyms` (the short name and the synonyms);
+- `components`: a complex's components as PSS entity names, not limited to the exported reactions, from the
+  database's `COMPONENT_OF` edges: the substrates of the binding reactions that form the complex, never complexes
+  themselves (a complex in a complex is listed as its components); `component_cluster_ids`: the functional cluster
+  ids of those that are clusters (in the gene network, clusters are expanded into genes, which carry the
+  `functional_cluster_id`);
+- `pathway` (the main one) and `all_pathways`;
+- `mapman`: the MapMan bins of a functional cluster's Arabidopsis genes (GoMapMan 2, MapMan4), as
+  `<bin code>_<full bin name>` (also notes in SBML and TabularQual);
+- the genes (entity node files: interaction network, reaction graph): a `genes` column with the genes in the species
+  exported for, or with no species filter (`--species all`) a `<species>_homologues` column per species.
+
+The interaction and gene network edges have the reaction's `evidence_sentence` and `experimental_techniques`.
+
+Lists are joined with `|`, as in TAIR's files and GAF (names can contain commas, `AHK2,3,4`, and gene symbols `;`,
+`PIP1;3`). Names, synonyms and the other values that go into lists are plain ASCII without `|` in the database
+(Greek letters spelled out, as in ChEBI: `beta-carotene`), except complex names (`ABF1|IDD14`), which are never in a
+list; a value with `|` anyway is written with `/` instead, with a warning. In the gene network, a gene in several
+functional clusters has one entry per cluster, in the same order, in `display_label`, `short_name`, `pathway` and
+`functional_cluster_id` (empty entries where a cluster has no value), and all of the clusters' `synonyms`,
+`all_pathways` and `mapman`.
+
+Tab-separated edge and node files. The edge files are *extended SIF* (as in Pathway Commons): a header, and the first
+three columns are `source, interaction, target` (`source, role, target` in the reaction graph), so they can be read as SIF or imported as a table (e.g. in Cytoscape).
+
+```bash
+pss-export to-reaction-graph edges.tsv nodes.tsv --access public
+pss-export to-interaction-network edges.tsv nodes.tsv --access public
+pss-export to-gene-network edges.tsv nodes.tsv --access public --species stu
+```
+
+```python
+adapter.collect_reactions(access="public", species="stu")
+adapter.create_reaction_graph("reaction-graph-edges.tsv", "reaction-graph-nodes.tsv")
+adapter.create_interaction_network("interaction-network-edges.tsv", "interaction-network-nodes.tsv")
+adapter.create_gene_network("gene-network-stu-edges.tsv", "gene-network-stu-nodes.tsv")
+```
+
+- **Reaction graph**: bipartite, entities and reactions (as in the database and the PSS Explorer), one edge per
+  participant, lossless (conditions and gene templates included). `role` is the participant's role
+  (substrate, product, interactor, template, modifier, stimulator, inhibitor, catalyst, transporter); participant →
+  reaction for inputs and modifiers, reaction → participant for products. One node file with the entities and the
+  reactions.
+- **Interaction network**: entity → entity influences through the reactions (an SBGN Activity Flow view). Nodes are
+  entities (location and form are edge attributes). `interaction` is `positive-influence`, `negative-influence` or
+  `unknown-influence` (with `influence_sbo`: SBO:0000170, SBO:0000169, SBO:0000168), `reaction_sbo` the reaction's SBO
+  term (as in SBML: its result, e.g. activation), `reaction_mechanism_sbo` its mechanism's (e.g. phosphorylation). `directed=False` marks mutual influences (binding partners), listed in both directions. Every edge (also in the
+  reaction graph and the gene network) has `rank` 0, CKN's rank for the best supported edges (CKN: 0 to 4). The edges
+  each reaction type gives are the `interaction_rules` in `pss_export/pss/pss_export_config.yaml`; on top of these: no
+  self-loops between a reaction's own inputs and outputs (so e.g. an inactive → active form of the same protein, or a
+  translocation without a transporter, gives no edge; autoregulation, a modifier on its own entity, is kept), and of two edges from a reaction between the same pair, the one to the product. Condition nodes are left out.
+- **Gene network**: the interaction network with functional clusters expanded into their genes in the species the
+  export is made for (from the clusters' homologue lists; all gene pairs, but for autoregulation each gene → itself
+  only). Needs a species. The same edge columns as the interaction network. The node file has a row per gene, annotated
+  only with its functional cluster(s) (PSS has no gene-level annotations), and per other node (metabolites, complexes, …).
 
 ## Tests
 

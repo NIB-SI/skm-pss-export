@@ -20,6 +20,8 @@ class Graph:
         idtracker = IDTracker(location=self.location)
         G = nx.DiGraph()
         for reaction in self.pss_adapter.reactions.values():
+            if not reaction.in_model:
+                continue
             G.add_node(reaction.id,
                        label=f"{reaction.id}\n{reaction.reaction_type}",
                        type='reaction',

@@ -20,6 +20,13 @@ class reaction_types:
     UNKNOWN = 'unknown'
 
 
+class edge_types:
+    """ The PSS edge types between a reaction and its participants, by side. """
+    INPUTS = ['SUBSTRATE', 'TRANSLOCATE_FROM']
+    OUTPUTS = ['PRODUCT', 'TRANSLOCATE_TO']
+    MODIFIERS = ['ACTIVATES', 'INHIBITS']
+
+
 class reaction_classes:
     """Class to hold constants for different classes of reaction types.
     These classes are used to categorize reactions based on their biological function.
@@ -74,6 +81,20 @@ class participant_roles:
 
         # product roles
         reaction.product_role = participant_roles.PRODUCT
+
+    @staticmethod
+    def of(reaction, participant):
+        """
+        The role of a participant (as collected, with its edge type) in the reaction; a modifier on
+        an INHIBITS edge of a reaction with stimulators is an inhibitor.
+        """
+        if participant.edge_type in edge_types.INPUTS:
+            return reaction.substrate_role
+        if participant.edge_type in edge_types.OUTPUTS:
+            return reaction.product_role
+        if participant.edge_type == 'INHIBITS' and reaction.modifier_role == participant_roles.STIMULATOR:
+            return participant_roles.INHIBITOR
+        return reaction.modifier_role
 
 
 
