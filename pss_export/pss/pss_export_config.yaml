@@ -9,14 +9,13 @@
 # left out, and a reaction left without substrates or products is left out of the model.
 # The networks (reaction graph, interaction network, gene network) keep everything.
 # By node name; functional clusters by their stable name short_name[functional_cluster_id].
+# SCF is left out (constant E3 ligase machinery), but not the SCF complexes (EBF|SCF, COI1|JA-Ile|SCF,
+# D14|MAX2|SCF, GID|SCF): they form from their specific partners and regulate their degradations
+# (EIN3, JAZ, DELLA, D53), which would otherwise run unregulated.
 nodes_to_ignore:
   - GA|GID1|SLR1
   - SLR1[fc00150]
-  - GID|SCF
   - SCF
-  - D14|MAX2|SCF
-  - COI1|JA-Ile|SCF
-  - EBF|SCF
   - RISC - miR390
   - CML12|PID
   - PBP1|PID
