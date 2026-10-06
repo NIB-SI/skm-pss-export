@@ -259,15 +259,15 @@ class Node:
         return list(self.homologues.get(species) or [])
 
     def links(self, species):
-        """ Its database links, as a new list of <db>:<id>: its external links (curated, whatever
-        the species), its functional cluster (skm:) and, for Arabidopsis (species 'ath'), its genes
-        from the homologue list (tair:). """
+        """ Its database links, as a new list of identifiers.org CURIEs (as PSS stores them, #42): its
+        external links (curated, whatever the species), its functional cluster (skm:) and, for Arabidopsis
+        (species 'ath'), its genes from the homologue list (tair.name:), without duplicates. """
         links = list(self.external_links)
         if self.functional_cluster_id:
             links.append(f"skm:{self.functional_cluster_id}")
         if species == 'ath':
-            links += [f"tair:{gene}" for gene in self.genes('ath')]
-        return links
+            links += [f"tair.name:{gene}" for gene in self.genes('ath')]
+        return list(dict.fromkeys(links))
 
     def __repr__(self):
         return f"Node(name={self.name}, type={self.type})"

@@ -243,14 +243,14 @@ def test_node_type_most_specific():
 
 
 def test_node_label_and_links():
-    n = ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001", external_links=["tair:AT5G46790"],
+    n = ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001", external_links=["tair.name:AT5G46790"],
                 homologues={"ath": ["AT5G46790"]})
     assert n.display_label == "PYL"
     assert ec.Node("PYL[fc00001]", display_label="PYL").display_label == "PYL"
-    assert n.links("ath") == ["tair:AT5G46790", "skm:fc00001", "tair:AT5G46790"]
-    assert n.links("stu") == ["tair:AT5G46790", "skm:fc00001"]        # curated TAIR link kept
+    assert n.links("ath") == ["tair.name:AT5G46790", "skm:fc00001"]          # not twice
+    assert n.links("stu") == ["tair.name:AT5G46790", "skm:fc00001"]        # curated TAIR link kept
     links = n.links("ath"); links.append("x:y")
-    assert n.links("ath") == ["tair:AT5G46790", "skm:fc00001", "tair:AT5G46790"]   # a new list
+    assert n.links("ath") == ["tair.name:AT5G46790", "skm:fc00001"]   # a new list
 
 
 def test_gene_rows_one_entry_per_cluster(tmp_path):

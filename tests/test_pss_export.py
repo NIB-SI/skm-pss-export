@@ -293,9 +293,26 @@ class TestAnnotationManager:
         assert result[0].url == "http://identifiers.org/uniprot:P12345"
 
     def test_canonical_prefix_and_model_qualifier(self, am):
-        result, _ = am.process_node(["tair:AT2G38470", "doi:10.1/x"])
+        result, _ = am.process_node(["tair.name:AT2G38470", "doi:10.1/x"])
         assert result[0].curie == "tair.name:AT2G38470"
         assert (result[1].namespace, result[1].qualifier) == ("bqmodel", "isDescribedBy")
+
+    def test_identifiers_org_curies(self, am):
+        """ the links as PSS stores them (#42): CURIEs, with their prefix's case in the url """
+        result, invalid = am.process_node(["CHEBI:15653", "biocyc:META:CPD-728", "pubmed:29934298",
+                                           "GO:0019005", "kegg:ath:AT5G15070", "chebi:2365"])
+        assert invalid == []
+        assert [a.url for a in result] == [
+            "http://identifiers.org/CHEBI:15653", "http://identifiers.org/biocyc:META:CPD-728",
+            "http://identifiers.org/pubmed:29934298", "http://identifiers.org/GO:0019005",
+            "http://identifiers.org/kegg:ath:AT5G15070", "http://identifiers.org/CHEBI:2365"]
+
+    def test_databases_without_identifiers_org(self, am):
+        result, invalid = am.process_node(["aracyc:RXN-20153", "skm:rx00001", "skm:fc00166", "pmid:123", "gmm:27.3"])
+        assert [a.url for a in result] == [
+            "https://pmn.plantcyc.org/ARA/new-image?object=RXN-20153",
+            "http://identifiers.org/skm:rx00001", "http://identifiers.org/skm:fc00166"]   # skm is in identifiers.org
+        assert invalid == ["pmid:123", "gmm:27.3"]      # old prefixes are no annotations any more
 
     def test_ref_without_colon_is_invalid(self, am):
         result, invalid = am.process_node(["BADREF"])
@@ -308,7 +325,7 @@ class TestAnnotationManager:
         assert "notadb:XYZ" in invalid
 
     def test_mixed_refs(self, am):
-        refs = ["uniprot:P12345", "NOCODON", "chebi:12345", "ghost:000"]
+        refs = ["uniprot:P12345", "NOCODON", "CHEBI:12345", "ghost:000"]
         result, invalid = am.process_node(refs)
         assert len(result) == 2
         assert len(invalid) == 2
@@ -615,7 +632,7 @@ class TestSBMLExport:
         a.species = "ath"
         a.export_datetime = "2026-09-30T12:00:00"
         a.nodes = {
-            "ABA": ec.Node("ABA", external_links=["chebi:2365", "kegg:C06082", "invented:x"],
+            "ABA": ec.Node("ABA", external_links=["CHEBI:2365", "kegg:C06082", "invented:x"],
                            description="Abscisic acid <hormone>"),
             "PYL[AT5G46790]": ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001",
                                       homologues={"ath": ["AT5G46790"]}),
@@ -643,7 +660,7 @@ class TestSBMLExport:
             return {(cv.getBiologicalQualifierType(), cv.getResourceURI(i))
                     for cv in sp.getCVTerms() for i in range(cv.getNumResources())}
         aba = resources("s_ABA_cyt_m")
-        assert (libsbml.BQB_IS, "http://identifiers.org/chebi:2365") in aba
+        assert (libsbml.BQB_IS, "http://identifiers.org/CHEBI:2365") in aba
         assert (libsbml.BQB_IS_VERSION_OF, "http://identifiers.org/kegg:C06082") in aba
         assert not any("invented" in url for _, url in aba)
         pyl = {url for _, url in resources("s_PYL_cyt_p")}

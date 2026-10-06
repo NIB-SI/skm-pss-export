@@ -1,20 +1,40 @@
 # Annotation registry
-# Configures external database prefixes to systems biology output targets.
+# The databases of PSS external links, by their identifiers.org prefix as PSS stores them (#42: links are
+# identifiers.org CURIEs, e.g. CHEBI:15653, biocyc:META:CPD-728, pubmed:29934298), with the annotation qualifier.
+# The url is https://identifiers.org/<canonical_prefix>:<id> (also for skm: reactions and functional clusters,
+# https://registry.identifiers.org/registry/skm), or for databases without an identifiers.org namespace (aracyc:
+# PMN) the first of url_templates whose pattern matches the id.
+# Links of other databases (invented:, other:, conceptual:, ...) are not annotations.
 
-# ---------------------------------------------------------------------
-# Valid Biological & Model Ontologies
-# ---------------------------------------------------------------------
 databases:
+  doi:
+    qualifier: "bqmodel:isDescribedBy"
+    display_name: "DOI"
+    canonical_prefix: "doi"
+    reasoning: "Digital Object Identifier for scientific literature. Maps model provenance to published experiments, validating model layouts via model-level qualifiers."
+
+  pubmed:
+    qualifier: "bqmodel:isDescribedBy"
+    display_name: "PubMed"
+    canonical_prefix: "pubmed"
+    reasoning: "PubMed identifier. Connects model kinetics, parameter values, or reactions directly to the source reference journal paper where they were empirically documented."
+
+  pmc:
+    qualifier: "bqmodel:isDescribedBy"
+    display_name: "PMC"
+    canonical_prefix: "pmc"
+    reasoning: "PubMed Central open-access repository references. Performs identical literature provenance tracking as standard PMIDs using model-level descriptors."
+
   chebi:
     qualifier: "bqbiol:is"
     display_name: "ChEBI"
-    canonical_prefix: "chebi"
+    canonical_prefix: "CHEBI"
     reasoning: "Chemical Entities of Biological Interest. Used for small molecules with exact, non-ambiguous molecular structures. Requires identity qualifier (bqbiol:is)."
 
-  pubchem:
+  pubchem.compound:
     qualifier: "bqbiol:is"
     display_name: "PubChem"
-    canonical_prefix: "pubchem"
+    canonical_prefix: "pubchem.compound"
     reasoning: "PubChem Compound/Substance IDs refer to precise chemical formulations and structures, establishing an exact match identity."
 
   kegg:
@@ -23,16 +43,19 @@ databases:
     canonical_prefix: "kegg"
     reasoning: "KEGG maps broad pathways, orthology groups, and generalized compound entries. Because a generic KEGG ID often represents a family of specific structural variants or abstract pathways, 'isVersionOf' is mathematically more accurate than an exact identity match."
 
-  metacyc:
+  biocyc:
     qualifier: "bqbiol:isVersionOf"
     display_name: "MetaCyc"
-    canonical_prefix: "metacyc"
+    canonical_prefix: "biocyc"
     reasoning: "MetaCyc represents curated metabolic pathways. Models map individual reaction components or whole networks to these conceptual pathway structures, signifying that the model element is a specific context version of that master metabolic entity."
 
   aracyc:
     qualifier: "bqbiol:isVersionOf"
     display_name: "AraCyc"
     canonical_prefix: "aracyc"
+    url_templates:
+      - pattern: ".*"
+        url: "https://pmn.plantcyc.org/ARA/new-image?object={id}"
     reasoning: "An Arabidopsis-specific metabolic database branch derived from MetaCyc frameworks. Inherits the structural classification strategy of conceptual pathway versions."
 
   uniprot:
@@ -41,22 +64,16 @@ databases:
     canonical_prefix: "uniprot"
     reasoning: "Universal Protein Resource. Tracks exact amino acid sequences. Used to declare explicit structural molecular identities for macromolecules in computational models."
 
-  uniprotkb:
-    qualifier: "bqbiol:is"
-    display_name: "UniProt"
-    canonical_prefix: "uniprot"
-    reasoning: "Alternative notation alias for the UniProt Knowledgebase; maps back to the canonical UniProt pipeline, keeping properties identical to the master repository."
-
   go:
     qualifier: "bqbiol:isVersionOf"
     display_name: "GO"
-    canonical_prefix: "go"
+    canonical_prefix: "GO"
     reasoning: "Gene Ontology covers Cellular Components, Biological Processes, and Molecular Functions. A model element typically realizes or participates in an abstract ontology term, qualifying it as a version or instance of that broader biological concept."
 
-  ec:
+  ec-code:
     qualifier: "bqbiol:isVersionOf"
     display_name: "EC"
-    canonical_prefix: "ec"
+    canonical_prefix: "ec-code"
     reasoning: "Enzyme Commission numbers designate functional catalytic classification classes, not physical physical molecules. An enzyme in a model belongs to/is an implementation version of this catalytic class."
 
   interpro:
@@ -77,65 +94,29 @@ databases:
     canonical_prefix: "eggnog"
     reasoning: "Orthologous groups database spanning evolutionary lineages. Model components belonging to these clusters are specialized localized instances or versions of the broader orthology classification."
 
-  nuccore:
+  insdc:
     qualifier: "bqbiol:is"
-    display_name: "NCBI"
-    canonical_prefix: "nuccore"
+    display_name: "INSDC"
+    canonical_prefix: "insdc"
     reasoning: "NCBI Nucleotide Core sequence identifiers match directly against concrete genetic sequences, establishing a distinct physical identity mapping."
 
-  ena:
+  ena.embl:
     qualifier: "bqbiol:is"
     display_name: "ENA"
-    canonical_prefix: "ena"
+    canonical_prefix: "ena.embl"
     reasoning: "European Nucleotide Archive registry. Used for distinct sequence-level alignments where exact molecular matching is expected."
 
-  tair:
+  tair.name:
     qualifier: "bqbiol:is"
     display_name: "TAIR"
     canonical_prefix: "tair.name"
     reasoning: "The Arabidopsis Information Resource. Encapsulates physical genomic loci and specific model system structural genes for thale cress models."
 
-  plaza:
-    qualifier: "bqbiol:is"
-    display_name: "PLAZA"
-    canonical_prefix: "plaza"
-    reasoning: "Comparative genomics framework tracking concrete structural gene models and sequences across plant evolutionary lineages."
-
-  ncbitaxon:
+  taxonomy:
     qualifier: "bqbiol:occursIn"
     display_name: "Taxon"
-    canonical_prefix: "ncbitaxon"
+    canonical_prefix: "taxonomy"
     reasoning: "NCBI Taxonomy IDs represent distinct biological species. They constrain model entities to explicit host physiological organisms (e.g., stating a reaction or compound variant uniquely occursIn a specific organism strain)."
-
-  doi:
-    qualifier: "bqmodel:isDescribedBy"
-    display_name: "DOI"
-    canonical_prefix: "doi"
-    reasoning: "Digital Object Identifier for scientific literature. Maps model provenance to published experiments, validating model layouts via model-level qualifiers."
-
-  pmid:
-    qualifier: "bqmodel:isDescribedBy"
-    display_name: "PubMed"
-    canonical_prefix: "pmid"
-    reasoning: "PubMed identifier. Connects model kinetics, parameter values, or reactions directly to the source reference journal paper where they were empirically documented."
-
-  pmcid:
-    qualifier: "bqmodel:isDescribedBy"
-    display_name: "PMC"
-    canonical_prefix: "pmcid"
-    reasoning: "PubMed Central open-access repository references. Performs identical literature provenance tracking as standard PMIDs using model-level descriptors."
-
-  gmm:
-    qualifier: "bqbiol:isVersionOf"
-    display_name: "MapMan"
-    canonical_prefix: "mapman"
-    reasoning: "Shorthand variation for the GoMapMan/Mercator automated plant annotation ontology. Maps plant genes and metabolites to abstract hierarchical classification clusters ('BINs'). A component mapped here is an implementation variant or instance ('isVersionOf') of that functional category."
-
-  mm:
-    qualifier: "bqbiol:isVersionOf"
-    display_name: "MapMan"
-    canonical_prefix: "mapman"
-    reasoning: "Shorthand variation for MapMan BIN classifications. Re-uses the canonical 'mapman' namespace to ensure uniform URI resolution across the package pipeline."
 
   skm:
     qualifier: "bqbiol:is"
