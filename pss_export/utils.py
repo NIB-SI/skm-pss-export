@@ -41,3 +41,9 @@ def write_tsv(filename, columns, rows):
         writer.writerow(columns)
         writer.writerows([clean(row.get(c), f"{row.get('id', row.get('reaction_id'))}, {c}") for c in columns]
                          for row in rows)
+
+
+# the model-level note of a model "with model fixes" (SBML, TabularQual)
+MODEL_FIXES_NOTE = ("{n} applied by pss-export (translation products in the active form, transport reactions "
+                    "between compartments): this model has reactions and changes that are not in PSS (marked in "
+                    "their notes)")

@@ -12,7 +12,11 @@ The CLI and the SKM web app's downloads page read this. Titles and descriptions 
     adapter.export("gene-network", edges_file="edges.tsv", nodes_file="nodes.tsv")
 
 All formats are made for a species (collect_reactions(species=...), one of pss_schema_config.species, default 'ath';
-None: no species filter, not for the gene network).
+None: no species filter, not for the gene network). The models (model_fixes=True) also come "with model fixes":
+
+    adapter.export("sbml", filename="model.xml")                                    # exactly PSS
+    adapter.export("sbml", filename="model-with-model-fixes.xml", model_fixes=True)  # connected
+
 '''
 
 from dataclasses import dataclass
@@ -40,6 +44,7 @@ class ExportFormat:
     files: Tuple[FormatFile, ...]
     access: Tuple[str, ...] = ACCESS_LEVELS   # access levels it can be made for
     filterable: bool = True               # can be limited to reactions / pathways
+    model_fixes: bool = False             # also has a "with model fixes" variant (export(..., model_fixes=True))
 
 
 TSV = 'text/tab-separated-values'
@@ -59,6 +64,7 @@ FORMATS = {f.key: f for f in [
                      'knowledge graph](https://github.com/R4d0slav/ThesisRepository).'),
         method='create_sbml',
         files=(FormatFile('filename', 'model', 'xml', 'application/sbml+xml'),),
+        model_fixes=True,
     ),
 
     ExportFormat(
@@ -71,6 +77,7 @@ FORMATS = {f.key: f for f in [
         method='create_tabularqual',
         files=(FormatFile('filename', 'model', 'xlsx',
                           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),),
+        model_fixes=True,
     ),
 
     ExportFormat(

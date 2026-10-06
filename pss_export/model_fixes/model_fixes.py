@@ -26,7 +26,6 @@ The following solutions are implemented:
 
 from collections import defaultdict
 from rich.console import Console
-import matplotlib.pyplot as plt
 import networkx as nx
 
 from ..pss.pss_reaction_definitions import reaction_types, reaction_classes
@@ -34,6 +33,16 @@ from ..pss.config import pss_export_config
 
 from ..entity_classes import IDTracker, Reaction, Species
 from .graph import Graph, GraphVisualizer
+
+
+def _plt():
+    ''' matplotlib, only for the interactive mode (the model-fixing-plots extra) '''
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as e:
+        raise ImportError("The interactive model fixing needs matplotlib: "
+                          "pip install 'pss-export[model-fixing-plots]'") from e
+    return plt
 
 console = Console()
 
@@ -172,7 +181,7 @@ class ModelFixer:
         )
 
         if self.interactive:
-            plt.ion()
+            _plt().ion()
 
         num_form_fixes_applied = 0
         for iteration in range(max_iterations):
@@ -228,8 +237,10 @@ class ModelFixer:
         )
 
         if self.interactive:
-            plt.ioff()
-            plt.close('all')
+            _plt().ioff()
+            _plt().close('all')
+
+        return num_form_fixes_applied + num_location_fixes_applied
 
     def _identify_model_fixes(self, part='location'):
 
@@ -672,7 +683,7 @@ class ModelFixer:
             action = console.input(
                 "Enter 's' to skip to the next node, or 'q' to quit: ").strip(
                 ).lower()
-            plt.clf()  # close plot once user has made a choice
+            _plt().clf()  # close plot once user has made a choice
             if action == 's':
                 console.print(f"   - Skipping node {node_name.split('[')[0]}")
             elif action == 'q':
@@ -686,7 +697,7 @@ class ModelFixer:
             action = console.input(
                 "Enter 'a' to apply the fix(es), 's' to skip, or 'q' to quit: "
             ).strip().lower()
-            plt.clf()  # close plot once user has made a choice
+            _plt().clf()  # close plot once user has made a choice
             if action == 'a':
                 num_applied = self.apply_model_fixes(fixes)
             elif action == 's':

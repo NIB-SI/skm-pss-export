@@ -8,6 +8,7 @@ from libsbml import (SBMLDocument, writeSBMLToFile, writeSBMLToString,
 
 from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesReference, Reaction
 from ..annotations.annotation_manager import annotation_manager
+from ..utils import MODEL_FIXES_NOTE
 
 SBML_LEVEL = 3
 SBML_VERSION = 2
@@ -100,6 +101,8 @@ class SBML(SBMLDocument, IDTracker):
         SBML.add_note(model, 'species', adapter.species_description)
         SBML.add_note(model, 'source', 'https://skm.nib.si')
         SBML.add_note(model, 'export date', adapter.export_datetime)
+        if adapter.model_fixes_applied is not None:
+            SBML.add_note(model, 'model fixes', MODEL_FIXES_NOTE.format(n=adapter.model_fixes_applied))
 
         if adapter.creators:
             history = libsbml.ModelHistory()

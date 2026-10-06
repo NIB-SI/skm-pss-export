@@ -182,3 +182,36 @@ class TestSpeciesFilter:
         # the Cypher species filter and Reaction.has_genes_in agree (ignored nodes don't count in either)
         expected = {r for r, rx in unfiltered.items() if rx.has_genes_in(nodes, "stu", adapter.nodes_to_ignore)}
         assert set(adapter.reaction_ids) == expected
+
+
+class TestModelFixesVariants:
+    """Both variants of a model from one collection: without (exactly PSS) and with model fixes."""
+
+    def test_both_variants(self, tmp_path):
+        pytest.importorskip("networkx")
+        adapter = make_adapter()
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=None)
+        model_reactions = list(adapter.model_reaction_ids)
+
+        plain, fixed = tmp_path / "model.xml", tmp_path / "model-with-model-fixes.xml"
+        adapter.export("sbml", filename=str(plain))
+        adapter.export("sbml", filename=str(fixed), model_fixes=True)
+        adapter.export("tabularqual", filename=str(tmp_path / "model-with-model-fixes.xlsx"), model_fixes=True)
+        again = tmp_path / "model-again.xml"
+        adapter.export("sbml", filename=str(again))
+
+        # the adapter stays as collected: the variant without fixes is the same before and after
+        assert adapter.model_fixes_applied is None and adapter.additional_reactions == []
+        assert list(adapter.model_reaction_ids) == model_reactions
+        strip_date = lambda p: "\n".join(l for l in p.read_text().splitlines() if "export date" not in l)
+        assert strip_date(plain) == strip_date(again)
+
+        # the fixed variant: from one fixed copy, with the note
+        variant = adapter.with_model_fixes()
+        assert variant is adapter.with_model_fixes() and variant.model_fixes_applied > 0
+        assert "model fixes" not in plain.read_text() and "model fixes" in fixed.read_text()
+
+    def test_no_variant_for_networks(self):
+        adapter = make_adapter()
+        with pytest.raises(ValueError, match="no variant with model fixes"):
+            adapter.export("interaction-network", edges_file="e.tsv", model_fixes=True)

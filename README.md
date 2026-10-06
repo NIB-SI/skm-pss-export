@@ -133,6 +133,21 @@ pss-export to-sbml output-model-fixes.sbml \
   --model-fixes-apply
 ```
 
+The model fixes connect parts of the models that PSS leaves disconnected: translation products are made in the
+active form (when the inactive form is not used), and transport reactions are added between compartments where a
+node is made and used. They are not in PSS: the models (SBML, TabularQual) come in two variants, without (exactly
+PSS, the default) and with model fixes, both from one collection (`PSSAdapter.with_model_fixes()` makes the fixed
+copy; the collected data stays as it is):
+
+```python
+adapter.collect_reactions(access="public")
+adapter.export("sbml", filename="model.xml")                                    # exactly PSS
+adapter.export("sbml", filename="model-with-model-fixes.xml", model_fixes=True)  # connected
+```
+
+The fixed models say so in their model notes, and the changed or added reactions in theirs. Interactive model
+fixing (`--model-fixes-interactive`, with plots) needs `pip install ".[model-fixing-plots]"` (matplotlib).
+
 To add equations to the SBML file, you can use SBMLsqueezer from 
 https://github.com/draeger-lab/SBMLsqueezer, e.g.
 ```bash
