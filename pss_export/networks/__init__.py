@@ -1,1 +1,1 @@
-from .network_api import create_reaction_graph, create_interaction_network, create_gene_network
+from .network_api import create_reaction_graph, create_reaction_graph_json, create_interaction_network, create_gene_network

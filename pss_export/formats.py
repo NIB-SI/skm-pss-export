@@ -92,6 +92,16 @@ FORMATS = {f.key: f for f in [
     ),
 
     ExportFormat(
+        key='reaction-graph-json',
+        title='Reaction graph (JSON)',
+        description=('The reaction graph as one JSON file, `{"nodes": [...], "edges": [...]}`, with the fields of '
+                     'its node and edge files (lists as lists, booleans as booleans, no value: `null`). The data of '
+                     'the PSS Explorer.'),
+        method='create_reaction_graph_json',
+        files=(FormatFile('filename', 'graph', 'json', 'application/json', 'nodes and edges'),),
+    ),
+
+    ExportFormat(
         key='interaction-network',
         title='Interaction network',
         description=('Entities as nodes, and their influences on each other through the reactions as edges (an SBGN '
