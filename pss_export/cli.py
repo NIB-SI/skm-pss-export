@@ -223,6 +223,20 @@ def to_gene_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reac
 
 
 @cli.command()
+@neo4j_common_params
+@click.option("--access", default="public", type=click.Choice(["public", "restricted"]), help="Access level of the reactions described.")
+@click.argument("filename", type=click.Path())
+def to_faidare(neo4j_uri, neo4j_user, neo4j_password, access, filename):
+    """
+    Export the FAIDARE data discovery file (JSON): an entry per gene and species.
+    """
+    adapter = PSSAdapter(neo4j_uri=neo4j_uri, neo4j_user=neo4j_user, neo4j_password=neo4j_password)
+    adapter.collect_reactions(access=access, species=None, nodes_to_ignore=None)
+    n = adapter.create_faidare(filename)
+    click.echo(f"Wrote {n} entries to {filename}")
+
+
+@cli.command()
 def formats():
     """
     List the export formats.

@@ -340,3 +340,28 @@ def test_ignored_nodes_do_not_decide_the_species():
                      ("HSP70|HSP90", "complex", "cytoplasm", "ACTIVATES")])
     for r in (forms, uses):
         assert not r.has_genes_in(ns, "stu") and r.has_genes_in(ns, "stu", ignore=["HSP70"])
+
+
+def test_faidare(tmp_path):
+    """ an entry per gene and species of the gene clusters in reactions, with the cluster's reactions, MapMan bins
+    and a link to the cluster in the PSS Explorer; every species (no species filter) """
+    import json
+    from pss_export.faidare import create_faidare
+    ns = nodes(("ADK", CLUSTER, {"ath": ["AT1", "AT2"], "stu": ["S1"]}), ("cZ", ["Node", "Metabolite"], {}),
+               ("cZ-P", ["Node", "Metabolite"], {}))
+    ns["ADK"].functional_cluster_id, ns["ADK"].short_name, ns["ADK"]._synonyms = "fc00001", "ADK", ["ADK", "ATADK"]
+    ns["ADK"].mapman = ["26.11_External stimuli response.pathogen"]
+    r = reaction("rx1", "catalysis", "activation",
+                 [("cZ", "metabolite", "cytoplasm", "SUBSTRATE"), ("cZ-P", "metabolite", "cytoplasm", "PRODUCT"),
+                  ("ADK", "protein_active", "cytoplasm", "ACTIVATES")])
+    with pytest.raises(ValueError, match="every species"):
+        create_faidare(adapter(r, nodes=ns), tmp_path / "f.json")
+    assert create_faidare(adapter(r, nodes=ns, species=None), tmp_path / "f.json") == 3
+    entries = json.load(open(tmp_path / "f.json"))
+    assert [(e["name"], e["species"]) for e in entries] == [
+        ("AT1", ["Arabidopsis thaliana"]), ("AT2", ["Arabidopsis thaliana"]), ("S1", ["Solanum tuberosum"])]
+    e = entries[0]
+    assert e["url"] == "https://skm.nib.si/pss/?functional_cluster_id=fc00001"
+    assert "ADK takes part in catalysis with cZ, cZ-P. Synonyms are: ATADK. " in e["description"]
+    assert (e["annotationId"], e["annotationName"]) == (
+        ["MapMan4:26.11"], ["External stimuli response.pathogen (MapMan4:26.11)"])

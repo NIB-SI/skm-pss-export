@@ -21,6 +21,7 @@ from ..sbml import SBML
 from ..boolean import TabularQual
 
 from .. import networks
+from .. import faidare
 
 # # projection for DiNAR
 # from .pss_dinar_translation import pss_dinar_translation
@@ -264,6 +265,12 @@ class PSSAdapter():
         network with functional clusters expanded into their genes in the species collected for
         (collect_reactions(species=...); not without a species). Returns the number of edges. '''
         return networks.create_gene_network(self, edges_file, nodes_file)
+
+    def create_faidare(self, filename):
+        ''' The FAIDARE data discovery file (JSON): an entry per gene and species of the gene clusters in the
+        collected reactions; needs a collection without a species filter (collect_reactions(species=None)).
+        Returns the number of entries. '''
+        return faidare.create_faidare(self, filename)
 
     def export(self, format_key, model_fixes=False, **arguments):
         ''' Write a format of the registry (pss_export.formats) by its key, e.g.

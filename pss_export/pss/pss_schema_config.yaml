@@ -38,6 +38,8 @@ species:
   parm: {name: Prunus armeniaca, common_name: apricot}
   pcox: {name: Pyrus communis, common_name: pear}
   psib: {name: Prunus sibirica, common_name: Siberian apricot}
+  osa:  {name: Oryza sativa, common_name: rice}
+  nta:  {name: Nicotiana tabacum, common_name: tobacco}
 
 
 pathways:

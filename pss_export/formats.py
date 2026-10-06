@@ -114,6 +114,17 @@ FORMATS = {f.key: f for f in [
         files=(FormatFile('edges_file', 'edges', 'tsv', TSV, 'gene -> gene (and other node) influences'),
                FormatFile('nodes_file', 'nodes', 'tsv', TSV, 'genes and other nodes')),
     ),
+
+    ExportFormat(
+        key='faidare',
+        title='[FAIDARE](https://urgi.versailles.inrae.fr/faidare/) data discovery file',
+        description=('JSON entries for the [FAIDARE portal](https://urgi.versailles.inrae.fr/faidare/), one per gene '
+                     'and species: the gene\'s functional cluster, its reactions and MapMan bins, with a link to the '
+                     'cluster in the PSS Explorer. Every species (made without a species filter).'),
+        method='create_faidare',
+        files=(FormatFile('filename', 'entries', 'json', 'application/json'),),
+        filterable=False,
+    ),
 ]}
 
 

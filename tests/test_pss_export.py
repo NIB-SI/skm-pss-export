@@ -377,7 +377,7 @@ class TestCollectorAccess:
 
     def test_unknown_species_raises(self):
         with pytest.raises(ValueError, match="Unknown species"):
-            PSSCollector(None, species="osa")
+            PSSCollector(None, species="xyz")
 
     def test_restricted_has_no_external_links_filter(self):
         where, args = PSSCollector(None, access="restricted", nodes_to_ignore=None)._build_where_clause()

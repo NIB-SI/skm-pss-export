@@ -92,7 +92,7 @@ adapter.export("gene-network", edges_file="edges.tsv", nodes_file="nodes.tsv")
 ### Species
 
 Every export is for a species: `collect_reactions(species=...)` / `--species`, one of ath (default), stu, sly, mdo,
-vvi, ppe, pavi, pcer, pdul, parm, pcox, psib (`species` in `pss_export/pss/pss_schema_config.yaml`). Only the reactions whose gene
+vvi, ppe, pavi, pcer, pdul, parm, pcox, psib, osa, nta (`species` in `pss_export/pss/pss_schema_config.yaml`). Only the reactions whose gene
 clusters (functional clusters of homologues), including those among the components of their complexes, all have genes
 in that species (in the clusters' homologue lists) are exported; reactions without them always are. Abstract clusters (`PlantAbstract`, no genes) don't decide, like
 metabolites: they are in a species when their reactions are (their `species` property isn't kept up to date), and stay
@@ -209,6 +209,22 @@ pss-export to-tabularqual output.xlsx --access public
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
 
+
+### FAIDARE
+
+The data discovery file for the [FAIDARE portal](https://urgi.versailles.inrae.fr/faidare/) (JSON): an entry per gene
+and species of the gene clusters that take part in the collected reactions, describing the gene's functional cluster
+(genes, pathway, its reactions and their participants, synonyms, links), with a link to the cluster in the PSS Explorer
+and the cluster's MapMan bins as annotations (`MapMan4:<code>`). Every species: collect without a species filter.
+
+```bash
+pss-export to-faidare faidare.json --access public
+```
+
+```python
+adapter.collect_reactions(access="public", species=None)
+adapter.create_faidare("faidare.json")
+```
 
 ### Networks: reaction graph, interaction network, gene network
 
