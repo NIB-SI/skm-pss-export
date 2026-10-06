@@ -18,7 +18,7 @@ from ..entity_classes import Person
 # SBML
 from ..sbml import SBML
 
-from ..boolean import TabularQual
+from ..boolean import TabularQual, create_boolnet
 
 from .. import networks
 from .. import faidare
@@ -229,19 +229,24 @@ class PSSAdapter():
 
         return sbml.write(filename)
 
-    def create_tabularqual(self, filename=None):
-        '''  '''
-
+    def boolean_model(self):
+        ''' The Boolean model of the collected reactions (the models' reactions and any added by the model
+        fixes): a TabularQual with its species and transitions (rules), for TabularQual and BoolNet '''
         tabqual = TabularQual(self)
-
-        for reaction_id in self.model_reaction_ids:
+        for reaction_id in self.model_reaction_ids + self.additional_reactions:
             tabqual.add_reaction(self.reactions[reaction_id])
-
-        for reaction_id in self.additional_reactions:
-            print(reaction_id)
-            tabqual.add_reaction(self.reactions[reaction_id])
-
         tabqual.create_transitions()
+        return tabqual
+
+    def create_boolnet(self, filename, nodes_file=None):
+        ''' The Boolean model in the BoolNet format (the TabularQual model's rules; inputs keep their value),
+        and optionally a node file. Returns the number of rules. '''
+        return create_boolnet(self.boolean_model(), filename, nodes_file)
+
+    def create_tabularqual(self, filename=None):
+        ''' The Boolean model as a TabularQual spreadsheet '''
+
+        tabqual = self.boolean_model()
 
         print("-" * 40)
         print("Number of species in TabularQual spreadsheet: ", len(tabqual.species_ids))
@@ -265,6 +270,11 @@ class PSSAdapter():
         ''' The reaction graph (extended SIF): entities and reactions, one edge per participant.
         Returns the number of edges. '''
         return networks.create_reaction_graph(self, edges_file, nodes_file)
+
+    def create_reaction_graph_json(self, filename):
+        ''' The reaction graph as one JSON file, {"nodes": [...], "edges": [...]}, with the fields of
+        the reaction graph's files: the data of the PSS Explorer. Returns the number of edges. '''
+        return networks.create_reaction_graph_json(self, filename)
 
     def create_interaction_network(self, edges_file=None, nodes_file=None):
         ''' The interaction network (extended SIF): entity -> entity influences through the

@@ -224,6 +224,20 @@ def to_reaction_graph(neo4j_uri, neo4j_user, neo4j_password, access, species, re
 
 
 @cli.command()
+@neo4j_common_params
+@reaction_filter_common_params
+@click.argument("filename", type=click.Path())
+def to_reaction_graph_json(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, filename):
+    """
+    Export the reaction graph as one JSON file (nodes and edges): the data of the PSS Explorer
+    (use --species all).
+    """
+    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions)
+    n = adapter.create_reaction_graph_json(filename)
+    click.echo(f"Wrote {n} edges to {filename}")
+
+
+@cli.command()
 @network_params
 def to_interaction_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, edges_file, nodes_file):
     """
