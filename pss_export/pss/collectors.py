@@ -224,7 +224,7 @@ class PSSCollector:
                 RETURN r.reaction_id AS reaction_id, collect(DISTINCT n.pathway) AS pathway
                 '''
             result = tx.run(cy, reaction_ids=reaction_ids)
-            return {r["reaction_id"]: r["pathway"] for r in result}
+            return [(r["reaction_id"], r["pathway"]) for r in result]
 
-        return self.graph_db.run_query(
-            _collect_reaction_pathways, reaction_ids)
+        # {reaction id: [the pathways of its participants]}
+        return dict(self.graph_db.run_query(_collect_reaction_pathways, reaction_ids))

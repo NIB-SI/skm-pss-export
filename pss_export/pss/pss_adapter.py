@@ -22,6 +22,7 @@ from ..boolean import TabularQual, create_boolnet
 
 from .. import networks
 from .. import faidare
+from .. import sbgn
 
 # # projection for DiNAR
 # from .pss_dinar_translation import pss_dinar_translation
@@ -254,6 +255,16 @@ class PSSAdapter():
         print("-" * 40)
 
         return tabqual.write(filename)
+
+    def create_sbgn(self, filename):
+        ''' SBGN-ML (Process Description) of the model reactions, laid out with Graphviz (needs the `sfdp`
+        program), with MIRIAM annotations. Returns the number of process nodes. '''
+        return sbgn.create_sbgn(self, filename)
+
+    def create_sbgn_newt(self, filename):
+        ''' The SBGN-ML map for Newt: as create_sbgn, plus Newt's custom properties (name, location, pathway,
+        ...) and colours. Returns the number of process nodes. '''
+        return sbgn.create_sbgn(self, filename, newt=True)
 
     def create_reaction_graph(self, edges_file=None, nodes_file=None):
         ''' The reaction graph (extended SIF): entities and reactions, one edge per participant.
