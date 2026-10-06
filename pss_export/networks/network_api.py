@@ -4,13 +4,15 @@ Network exports: the reaction graph, the interaction network and the gene networ
 All three are tab-separated edge and node files, the edges in extended SIF (as Pathway
 Commons): a header, and the first three columns are source, interaction, target.
 
-- Reaction graph: bipartite, entities and reactions, one edge per participant (lossless).
+- Reaction graph: bipartite, entities and reactions, one edge per participant (lossless); also
+  as one JSON file (nodes and edges with the same fields), the data of the PSS Explorer.
 - Interaction network: entity -> entity influences through reactions, by the rules in
   pss_export_config.yaml (interaction_rules).
 - Gene network: the interaction network in one species, functional clusters expanded into
   their genes. The same edge columns as the interaction network.
 '''
 
+import json
 from itertools import product as pairs
 
 from ..entity_classes import Node
@@ -44,7 +46,8 @@ GENE_NODE_COLUMNS = ['id', 'node_type', 'species', 'display_label', 'short_name'
                      'components', 'component_cluster_ids', 'external_links']
 
 REACTION_GRAPH_EDGE_COLUMNS = ['source', 'role', 'target', 'directed', 'rank',
-                               'reaction_id', 'edge_type', 'role_sbo', 'location', 'location_putative', 'form']
+                               'reaction_id', 'edge_type', 'role_sbo', 'location', 'location_putative', 'form',
+                               'organ', 'organ_putative', 'identifiers']
 
 def gene_columns(species):
     ''' The gene columns of an entity node file: the genes in the species exported for, or with no
@@ -190,6 +193,7 @@ def create_gene_network(pss_adapter, edges_file=None, nodes_file=None):
         return node(nodes, name).genes(species) if name in clusters else [name]
 
     edges = []
+    gene_clusters = set()           # the clusters expanded into genes
     for reaction_id in pss_adapter.reaction_ids:
         reaction = pss_adapter.reactions[reaction_id]
         clusters = reaction.gene_clusters(nodes)
@@ -202,27 +206,27 @@ def create_gene_network(pss_adapter, edges_file=None, nodes_file=None):
             else:
                 # a gene in both clusters: no self-loop
                 gene_pairs = [(source, target) for source, target in pairs(sources, targets) if source != target]
+            # a gene's type is its cluster's class (PlantCoding, PlantNonCoding), as for CKN genes
+            gene_clusters.update(name for name in (edge['source'], edge['target']) if name in clusters)
             for source, target in gene_pairs:
-                edges.append({**edge,
-                              'source': source, 'target': target,
-                              'source_type': 'gene' if edge['source'] in clusters else edge['source_type'],
-                              'target_type': 'gene' if edge['target'] in clusters else edge['target_type']})
+                edges.append({**edge, 'source': source, 'target': target})
 
     if edges_file:
         write_tsv(edges_file, INTERACTION_EDGE_COLUMNS, edges)
     if nodes_file:
-        write_tsv(nodes_file, GENE_NODE_COLUMNS, gene_node_rows(edges, nodes, species))
+        write_tsv(nodes_file, GENE_NODE_COLUMNS, gene_node_rows(edges, nodes, species, gene_clusters))
     return len(edges)
 
 
-def gene_node_rows(edges, nodes, species):
+def gene_node_rows(edges, nodes, species, expanded):
     ''' A row per gene (from its functional clusters only: no gene-level annotations in PSS)
-    and per other node '''
+    and per other node. `expanded`: the functional clusters expanded into genes. A gene's
+    node_type is the class of its clusters; genes in clusters of different classes are an error. '''
 
     gene_ids, clusters, others = set(), set(), set()
     for edge in edges:
         for side in ('source', 'target'):
-            if edge[f'{side}_type'] == 'gene':
+            if edge[f'{side}_entity'] in expanded:
                 gene_ids.add(edge[side])
                 clusters.add(edge[f'{side}_entity'])
             else:
@@ -238,8 +242,12 @@ def gene_node_rows(edges, nodes, species):
     rows = []
     for gene in sorted(gene_clusters):
         cluster_nodes = gene_clusters[gene]
+        types = {c.type for c in cluster_nodes}
+        if len(types) != 1:
+            raise ValueError(f"gene {gene} is in functional clusters of different classes: "
+                             + ', '.join(f'{c.name} ({c.type})' for c in cluster_nodes))
         rows.append({
-            'id': gene, 'node_type': 'gene', 'species': species,
+            'id': gene, 'node_type': types.pop(), 'species': species,
             # one entry per cluster, in the same order (empty where a cluster has no value)
             'display_label': [c.display_label for c in cluster_nodes],
             'short_name': [c.short_name for c in cluster_nodes],
@@ -262,6 +270,37 @@ def create_reaction_graph(pss_adapter, edges_file=None, nodes_file=None):
     ''' Write the reaction graph: entities and reactions, one edge per participant (as
     collected, conditions and gene templates included). Returns the number of edges. '''
 
+    edges = reaction_graph_edges(pss_adapter)
+    if edges_file:
+        write_tsv(edges_file, REACTION_GRAPH_EDGE_COLUMNS, edges)
+    if nodes_file:
+        write_tsv(nodes_file, REACTION_GRAPH_NODE_COLUMNS + gene_columns(pss_adapter.species),
+                  reaction_graph_nodes(pss_adapter))
+    return len(edges)
+
+
+def create_reaction_graph_json(pss_adapter, filename):
+    ''' Write the reaction graph as one JSON file, {"nodes": [...], "edges": [...]}: the rows of the
+    node and edge files, with the same fields (lists as lists, booleans as booleans, no value: null).
+    The data of the PSS Explorer. Returns the number of edges. '''
+
+    columns = REACTION_GRAPH_NODE_COLUMNS + gene_columns(pss_adapter.species)
+    nodes = [{c: json_value(row.get(c)) for c in columns} for row in reaction_graph_nodes(pss_adapter)]
+    edges = [{c: json_value(row.get(c)) for c in REACTION_GRAPH_EDGE_COLUMNS} for row in reaction_graph_edges(pss_adapter)]
+    with open(filename, 'w', encoding='utf-8') as out:
+        json.dump({'nodes': nodes, 'edges': edges}, out, ensure_ascii=False)
+    return len(edges)
+
+
+def json_value(value):
+    ''' Lists as lists, an empty string as null '''
+    if isinstance(value, tuple):
+        return list(value)
+    return None if value == '' else value
+
+
+def reaction_graph_edges(pss_adapter):
+    ''' The reaction graph's edges: one per participant '''
     edges = []
     for reaction_id in pss_adapter.reaction_ids:
         reaction = pss_adapter.reactions[reaction_id]
@@ -280,24 +319,27 @@ def create_reaction_graph(pss_adapter, edges_file=None, nodes_file=None):
                 'location': participant.location,
                 'location_putative': participant.location_putative,
                 'form': participant.form,
+                'organ': participant.organ,
+                'organ_putative': participant.organ_putative,
+                'identifiers': participant.identifiers,
             })
+    return edges
 
-    if edges_file:
-        write_tsv(edges_file, REACTION_GRAPH_EDGE_COLUMNS, edges)
-    if nodes_file:
-        entities = {p.name for r in pss_adapter.reaction_ids for p in pss_adapter.reactions[r].participants}
-        rows = entity_node_rows(entities, pss_adapter.nodes, pss_adapter.species)
-        for reaction_id in pss_adapter.reaction_ids:
-            reaction = pss_adapter.reactions[reaction_id]
-            rows.append({
-                'id': reaction_id, 'node_type': 'reaction', 'display_label': reaction_id,
-                'external_links': reaction.external_links,
-                'reaction_type': reaction.reaction_type,
-                'reaction_effect': reaction.reaction_effect,
-                'reaction_mechanism': reaction.reaction_mechanism,
-                'reaction_sbo': sbo(reaction.reaction_type_sbo),
-                'reaction_mechanism_sbo': sbo(reaction.reaction_mechanism_sbo),
-                'evidence_sentence': reaction.evidence_sentence,
-            })
-        write_tsv(nodes_file, REACTION_GRAPH_NODE_COLUMNS + gene_columns(pss_adapter.species), rows)
-    return len(edges)
+
+def reaction_graph_nodes(pss_adapter):
+    ''' The reaction graph's nodes: the entities, then the reactions '''
+    entities = {p.name for r in pss_adapter.reaction_ids for p in pss_adapter.reactions[r].participants}
+    rows = entity_node_rows(entities, pss_adapter.nodes, pss_adapter.species)
+    for reaction_id in pss_adapter.reaction_ids:
+        reaction = pss_adapter.reactions[reaction_id]
+        rows.append({
+            'id': reaction_id, 'node_type': 'reaction', 'display_label': reaction_id,
+            'external_links': reaction.external_links,
+            'reaction_type': reaction.reaction_type,
+            'reaction_effect': reaction.reaction_effect,
+            'reaction_mechanism': reaction.reaction_mechanism,
+            'reaction_sbo': sbo(reaction.reaction_type_sbo),
+            'reaction_mechanism_sbo': sbo(reaction.reaction_mechanism_sbo),
+            'evidence_sentence': reaction.evidence_sentence,
+        })
+    return rows

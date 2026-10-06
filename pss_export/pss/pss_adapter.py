@@ -260,6 +260,11 @@ class PSSAdapter():
         Returns the number of edges. '''
         return networks.create_reaction_graph(self, edges_file, nodes_file)
 
+    def create_reaction_graph_json(self, filename):
+        ''' The reaction graph as one JSON file, {"nodes": [...], "edges": [...]}, with the fields of
+        the reaction graph's files: the data of the PSS Explorer. Returns the number of edges. '''
+        return networks.create_reaction_graph_json(self, filename)
+
     def create_interaction_network(self, edges_file=None, nodes_file=None):
         ''' The interaction network (extended SIF): entity -> entity influences through the
         reactions (rules: interaction_rules in pss_export_config.yaml). Returns the number of edges. '''
