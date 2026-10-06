@@ -1,3 +1,4 @@
+import re
 import yaml
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,8 +16,9 @@ class Annotation:
     """
     namespace: str      # "bqbiol" or "bqmodel"
     qualifier: str      # e.g. "is", "isVersionOf"
-    prefix: str         # identifiers.org prefix, e.g. "chebi"
+    prefix: str         # identifiers.org prefix as in the CURIE, e.g. "CHEBI"
     local_id: str       # e.g. "2365"
+    url_template: Optional[str] = None      # for databases without an identifiers.org namespace
 
     @property
     def curie(self) -> str:
@@ -24,11 +26,14 @@ class Annotation:
 
     @property
     def url(self) -> str:
+        if self.url_template:
+            return self.url_template.format(id=self.local_id)
         return f"{IDENTIFIERS_ORG}/{self.curie}"
 
 
 class AnnotationManager:
-    """Parses <db>:<id> references into Annotations, driven by a YAML registry of databases."""
+    """Parses PSS external links (identifiers.org CURIEs, <prefix>:<id>) into Annotations, driven by a YAML
+    registry of databases."""
 
     DEFAULT_QUALIFIER = "bqbiol:isVersionOf"
 
@@ -74,12 +79,19 @@ class AnnotationManager:
                 invalid_refs.append(ref)
                 continue
 
+            local_id = local_id.strip()
             namespace, qualifier = meta.get("qualifier", self.DEFAULT_QUALIFIER).split(":", 1)
+            templates = meta.get("url_templates", [])
+            url_template = next((t["url"] for t in templates if re.fullmatch(t["pattern"], local_id)), None)
+            if templates and url_template is None:
+                invalid_refs.append(ref)         # e.g. skm:<something else than rx/fc>
+                continue
             annotations.append(Annotation(
                 namespace=namespace,
                 qualifier=qualifier,
                 prefix=meta["canonical_prefix"],
-                local_id=local_id.strip(),
+                local_id=local_id,
+                url_template=url_template,
             ))
 
         return annotations, invalid_refs

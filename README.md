@@ -100,6 +100,15 @@ named nodes in the gene network. The Arabidopsis gene annotations from the homol
 (curated TAIR links of a node are always kept); the gene network is in that species. `species=None` (`--species all`):
 no species filter, for all exports except the gene network.
 
+### External links and annotations
+
+PSS external links are identifiers.org CURIEs, in the case each database requires (e.g. `CHEBI:15653`,
+`pubmed:29934298`, `biocyc:META:CPD-728`, `kegg:C04785`; skm-webapp #42). The exports use them as they are: the
+annotations (SBML CV terms, TabularQual) are `https://identifiers.org/<CURIE>`, with the qualifiers in
+`pss_export/annotations/annotation_registry.yaml`; databases without an identifiers.org namespace have their own
+url there (`aracyc`: PMN). `skm:` (reactions and functional clusters) is an identifiers.org namespace too. PSS-internal links
+(`invented:`, `other:`, `conceptual:`) are no annotations.
+
 ### Nodes left out of the models
 
 `nodes_to_ignore` in `pss_export/pss/pss_export_config.yaml` lists nodes (by name; functional clusters by their
