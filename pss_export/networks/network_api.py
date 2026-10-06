@@ -193,6 +193,7 @@ def create_gene_network(pss_adapter, edges_file=None, nodes_file=None):
         return node(nodes, name).genes(species) if name in clusters else [name]
 
     edges = []
+    gene_clusters = set()           # the clusters expanded into genes
     for reaction_id in pss_adapter.reaction_ids:
         reaction = pss_adapter.reactions[reaction_id]
         clusters = reaction.gene_clusters(nodes)
@@ -205,27 +206,27 @@ def create_gene_network(pss_adapter, edges_file=None, nodes_file=None):
             else:
                 # a gene in both clusters: no self-loop
                 gene_pairs = [(source, target) for source, target in pairs(sources, targets) if source != target]
+            # a gene's type is its cluster's class (PlantCoding, PlantNonCoding), as for CKN genes
+            gene_clusters.update(name for name in (edge['source'], edge['target']) if name in clusters)
             for source, target in gene_pairs:
-                edges.append({**edge,
-                              'source': source, 'target': target,
-                              'source_type': 'gene' if edge['source'] in clusters else edge['source_type'],
-                              'target_type': 'gene' if edge['target'] in clusters else edge['target_type']})
+                edges.append({**edge, 'source': source, 'target': target})
 
     if edges_file:
         write_tsv(edges_file, INTERACTION_EDGE_COLUMNS, edges)
     if nodes_file:
-        write_tsv(nodes_file, GENE_NODE_COLUMNS, gene_node_rows(edges, nodes, species))
+        write_tsv(nodes_file, GENE_NODE_COLUMNS, gene_node_rows(edges, nodes, species, gene_clusters))
     return len(edges)
 
 
-def gene_node_rows(edges, nodes, species):
+def gene_node_rows(edges, nodes, species, expanded):
     ''' A row per gene (from its functional clusters only: no gene-level annotations in PSS)
-    and per other node '''
+    and per other node. `expanded`: the functional clusters expanded into genes. A gene's
+    node_type is the class of its clusters; genes in clusters of different classes are an error. '''
 
     gene_ids, clusters, others = set(), set(), set()
     for edge in edges:
         for side in ('source', 'target'):
-            if edge[f'{side}_type'] == 'gene':
+            if edge[f'{side}_entity'] in expanded:
                 gene_ids.add(edge[side])
                 clusters.add(edge[f'{side}_entity'])
             else:
@@ -241,8 +242,12 @@ def gene_node_rows(edges, nodes, species):
     rows = []
     for gene in sorted(gene_clusters):
         cluster_nodes = gene_clusters[gene]
+        types = {c.type for c in cluster_nodes}
+        if len(types) != 1:
+            raise ValueError(f"gene {gene} is in functional clusters of different classes: "
+                             + ', '.join(f'{c.name} ({c.type})' for c in cluster_nodes))
         rows.append({
-            'id': gene, 'node_type': 'gene', 'species': species,
+            'id': gene, 'node_type': types.pop(), 'species': species,
             # one entry per cluster, in the same order (empty where a cluster has no value)
             'display_label': [c.display_label for c in cluster_nodes],
             'short_name': [c.short_name for c in cluster_nodes],
