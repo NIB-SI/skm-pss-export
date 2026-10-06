@@ -210,6 +210,19 @@ pss-export to-tabularqual output.xlsx --access public
   - A complex is formed but not activated by an activation reaction
 
 
+### BoolNet
+
+The Boolean model in the BoolNet format (`targets, factors`), for [BoolNet](https://cran.r-project.org/package=BoolNet),
+[pyboolnet](https://pyboolnet.readthedocs.io) and [BoolDog](https://nib-si.github.io/BoolDog/): the same machinery,
+species ids and rules as the TabularQual export (`PSSAdapter.boolean_model()`), with the reactions of each rule as a
+comment above it. Species without a rule of their own (inputs) keep their value (`s_x, s_x`), so every variable is
+defined. The node file labels the species ids (PSS node, display label, type, form, location). Also with model fixes
+(`model_fixes=True`).
+
+```python
+adapter.export("boolnet", filename="model.bnet", nodes_file="model-nodes.tsv")
+```
+
 ### FAIDARE
 
 The data discovery file for the [FAIDARE portal](https://urgi.versailles.inrae.fr/faidare/) (JSON): an entry per gene

@@ -81,6 +81,19 @@ FORMATS = {f.key: f for f in [
     ),
 
     ExportFormat(
+        key='boolnet',
+        title='[BoolNet](https://cran.r-project.org/package=BoolNet)',
+        description=('The Boolean model in the BoolNet format (`targets, factors`), for BoolNet, '
+                     '[pyboolnet](https://pyboolnet.readthedocs.io) and [BoolDog](https://nib-si.github.io/BoolDog/): '
+                     'the same rules and species ids as the TabularQual export; inputs keep their value. A node file '
+                     'labels the species ids.'),
+        method='create_boolnet',
+        files=(FormatFile('filename', 'model', 'bnet', 'text/plain'),
+               FormatFile('nodes_file', 'nodes', 'tsv', TSV, 'the species ids and their PSS nodes')),
+        model_fixes=True,
+    ),
+
+    ExportFormat(
         key='reaction-graph',
         title='Reaction graph',
         description=('Entities and reactions as nodes, one edge per participant, as in the database and the PSS '

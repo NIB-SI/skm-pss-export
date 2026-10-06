@@ -18,7 +18,7 @@ from ..entity_classes import Person
 # SBML
 from ..sbml import SBML
 
-from ..boolean import TabularQual
+from ..boolean import TabularQual, create_boolnet
 
 from .. import networks
 from .. import faidare
@@ -228,19 +228,24 @@ class PSSAdapter():
 
         return sbml.write(filename)
 
-    def create_tabularqual(self, filename=None):
-        '''  '''
-
+    def boolean_model(self):
+        ''' The Boolean model of the collected reactions (the models' reactions and any added by the model
+        fixes): a TabularQual with its species and transitions (rules), for TabularQual and BoolNet '''
         tabqual = TabularQual(self)
-
-        for reaction_id in self.model_reaction_ids:
+        for reaction_id in self.model_reaction_ids + self.additional_reactions:
             tabqual.add_reaction(self.reactions[reaction_id])
-
-        for reaction_id in self.additional_reactions:
-            print(reaction_id)
-            tabqual.add_reaction(self.reactions[reaction_id])
-
         tabqual.create_transitions()
+        return tabqual
+
+    def create_boolnet(self, filename, nodes_file=None):
+        ''' The Boolean model in the BoolNet format (the TabularQual model's rules; inputs keep their value),
+        and optionally a node file. Returns the number of rules. '''
+        return create_boolnet(self.boolean_model(), filename, nodes_file)
+
+    def create_tabularqual(self, filename=None):
+        ''' The Boolean model as a TabularQual spreadsheet '''
+
+        tabqual = self.boolean_model()
 
         print("-" * 40)
         print("Number of species in TabularQual spreadsheet: ", len(tabqual.species_ids))

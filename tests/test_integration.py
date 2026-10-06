@@ -229,3 +229,27 @@ class TestIgnoreListSCF:
         assert [p.name for p in forms.products] == ["COI1|JA-Ile|SCF"]
         assert degrades.in_model and [p.name for p in degrades.modifiers] == ["COI1|JA-Ile|SCF"]
         assert not adapter.reactions["rx00110"].in_model           # the formation of SCF itself
+
+
+class TestBoolNet:
+    """BoolNet: the TabularQual model's rules, every variable defined, a node file for the ids."""
+
+    def test_boolnet_from_the_tabularqual_model(self, tmp_path):
+        import csv, re
+        adapter = make_adapter()
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=None)
+        model = adapter.boolean_model()
+        n = adapter.export("boolnet", filename=str(tmp_path / "m.bnet"), nodes_file=str(tmp_path / "n.tsv"))
+        rules = {}
+        for line in open(tmp_path / "m.bnet"):
+            if line.strip() and not line.startswith("#") and not line.startswith("targets"):
+                target, rule = line.split(",", 1)
+                rules[target.strip()] = rule.strip()
+        assert n == len(rules) == len(model.species_dict)
+        transitions = {t.target: t.rule for t in model.transitions}
+        assert all(rules[t] == r for t, r in transitions.items())                 # the same rules
+        assert all(rules[t] == t for t in rules if t not in transitions)           # inputs keep their value
+        used = {v for r in rules.values() for v in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", r)}
+        assert used <= set(rules)                                                   # every variable defined
+        nodes = list(csv.DictReader(open(tmp_path / "n.tsv"), delimiter="\t"))
+        assert {row["id"] for row in nodes} == set(rules)
