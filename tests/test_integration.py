@@ -215,3 +215,17 @@ class TestModelFixesVariants:
         adapter = make_adapter()
         with pytest.raises(ValueError, match="no variant with model fixes"):
             adapter.export("interaction-network", edges_file="e.tsv", model_fixes=True)
+
+
+class TestIgnoreListSCF:
+    """SCF is left out of the models, not the SCF complexes: they form from their specific partners and
+    regulate their degradations (e.g. JAZ by COI1|JA-Ile|SCF)."""
+
+    def test_scf_complexes_regulate_their_degradations(self):
+        adapter = make_adapter()
+        collect_or_skip(adapter, access="public", reactions=["rx00043", "rx00044", "rx00110"], species=None)
+        forms, degrades = adapter.reactions["rx00043"], adapter.reactions["rx00044"]
+        assert forms.in_model and "SCF" not in {p.name for p in forms.substrates}
+        assert [p.name for p in forms.products] == ["COI1|JA-Ile|SCF"]
+        assert degrades.in_model and [p.name for p in degrades.modifiers] == ["COI1|JA-Ile|SCF"]
+        assert not adapter.reactions["rx00110"].in_model           # the formation of SCF itself
