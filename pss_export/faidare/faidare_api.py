@@ -38,10 +38,19 @@ def cluster_reactions(pss_adapter):
     return found
 
 
+def plural(n, singular, plural_form=None):
+    ''' e.g. "1 gene", "12 genes" '''
+    return f"{n} {singular if n == 1 else (plural_form or singular + 's')}"
+
+
 def description(gene, cluster, reactions):
-    genes = [g for code in pss_schema_config.species for g in cluster.genes(code)]
-    parts = [f"{gene} belongs to the FunctionalCluster {cluster.short_name or 'unknown'} with description "
-             f"'{cluster.description or ''}'. This FunctionalCluster includes the gene(s) {', '.join(genes)}. "
+    # the cluster's genes counted, not listed (a list of all homologues made the description too long)
+    genes_per_species = [len(cluster.genes(code)) for code in pss_schema_config.species]
+    num_genes = sum(genes_per_species)
+    num_species = sum(1 for n in genes_per_species if n)
+    parts = [f"{gene} belongs to the FunctionalCluster {cluster.name or 'unknown'} with description "
+             f"'{cluster.description or ''}'. This FunctionalCluster includes {plural(num_genes, 'gene')} across "
+             f"{plural(num_species, 'species', 'species')}. "
              f"In the Plant Stress Signalling model, it forms part of the '{cluster.pathway or 'unknown'}' pathway. ",
              f"{cluster.short_name} takes part in "
              + ' and '.join(f"{rtype} with {', '.join(sorted(others))}" for rtype, others in sorted(reactions.items()))
