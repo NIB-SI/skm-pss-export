@@ -1,0 +1,118 @@
+type	effect	downstream_type	downstream_effect	role	links	example
+binding/oligomerisation	activation	protein activation	activation	modifier	23	rx00529 BAK1|BRI1 rx00491
+binding/oligomerisation	activation	binding/oligomerisation	activation	interactor	16	rx00087 EDS1|PAD4 rx00054
+binding/oligomerisation	activation	transcriptional/translational activation	activation	stimulator	12	rx00991 EDS1-WRKY18 rx00992
+binding/oligomerisation	activation	degradation/secretion	inhibition	modifier	5	rx00016 EBF|SCF rx00017
+binding/oligomerisation	activation	protein deactivation	inhibition	modifier	4	rx00006 CTR|ETR rx00010
+binding/oligomerisation	activation	degradation/secretion	inhibition	substrate	2	rx00289 GA|GID1|SLR1 rx00298
+binding/oligomerisation	activation	protein activation	activation	substrate	2	rx00099 NPR1|TGA rx00544
+binding/oligomerisation	activation	unknown	inhibition	substrate	2	rx00087 EDS1|PAD4 rx00088
+binding/oligomerisation	activation	dissociation	activation	substrate	1	rx00094 NPR1|NPR1 rx00096
+binding/oligomerisation	activation	transcriptional/translational repression	inhibition	inhibitor	1	rx00173 CML|Ca2+ rx00196
+catalysis	activation	catalysis	activation	substrate	211	rx00001 SAMe rx00002
+catalysis	activation	protein activation	activation	modifier	33	rx00132 ROS rx00095
+catalysis	activation	degradation/secretion	inhibition	substrate	19	rx00132 ROS rx00133
+catalysis	activation	binding/oligomerisation	activation	modifier	16	rx00056 SA rx00500
+catalysis	activation	degradation/secretion	inhibition	modifier	8	rx00056 SA rx00422
+catalysis	activation	translocation	activation	substrate	8	rx00030 OPDA rx00031
+catalysis	activation	binding/oligomerisation	activation	interactor	5	rx00003 ET rx00008
+catalysis	activation	protein deactivation	inhibition	modifier	4	rx00056 SA rx00234
+catalysis	activation	unknown	inhibition	modifier	4	rx00056 SA rx00311
+catalysis	activation	transcriptional/translational activation	activation	stimulator	3	rx00270 GA rx00302
+catalysis	activation	binding/oligomerisation	inhibition	interactor	1	rx00592 me-vsiRNA rx00581
+catalysis	activation	translocation	activation	transporter	1	rx00624 PA rx00961
+catalysis	activation	unknown	activation	substrate	1	rx00003 ET rx00616
+dissociation	activation	binding/oligomerisation	activation	interactor	7	rx00096 NPR1[fc00115] rx00500
+dissociation	activation	binding/oligomerisation	inhibition	interactor	3	rx00096 NPR1[fc00115] rx00100
+dissociation	activation	transcriptional/translational activation	activation	template	3	rx00096 NPR1[fc00115] rx00309
+dissociation	activation	degradation/secretion	inhibition	substrate	2	rx00096 NPR1[fc00115] rx00422
+dissociation	activation	protein activation	activation	substrate	2	rx00096 NPR1[fc00115] rx00511
+dissociation	activation	protein activation	activation	modifier	1	rx00096 NPR1[fc00115] rx00478
+dissociation	activation	protein deactivation	inhibition	modifier	1	rx00096 NPR1[fc00115] rx00432
+dissociation	activation	translocation	activation	substrate	1	rx00096 NPR1[fc00115] rx00097
+dissociation	activation	unknown	inhibition	modifier	1	rx00096 NPR1[fc00115] rx00088
+protein activation	activation	protein activation	activation	substrate	278	rx00015 EIN3(like)[fc00063] rx00235
+protein activation	activation	protein activation	activation	modifier	154	rx00009 EIN2[fc00062] rx00015
+protein activation	activation	transcriptional/translational activation	activation	stimulator	94	rx01006 MYC2[fc00108] rx00050
+protein activation	activation	binding/oligomerisation	activation	interactor	53	rx00511 NPR1[fc00115] rx00094
+protein activation	activation	transcriptional/translational activation	activation	template	41	rx00138 WRKY33[fc00166] rx00160
+protein activation	activation	protein deactivation	inhibition	substrate	38	rx00009 EIN2[fc00062] rx00010
+protein activation	activation	protein deactivation	inhibition	modifier	27	rx00007 CTR|ETR rx00010
+protein activation	activation	translocation	activation	transporter	27	rx00568 OSCA1[fc00389] rx00603
+protein activation	activation	binding/oligomerisation	inhibition	interactor	17	rx00027 LOX[fc00096] rx00634
+protein activation	activation	transcriptional/translational repression	inhibition	inhibitor	16	rx00164 GRX480[fc00079] rx00151
+protein activation	activation	catalysis	activation	catalyst	12	rx00027 LOX[fc00096] rx00026
+protein activation	activation	degradation/secretion	inhibition	modifier	9	rx00318 D14[fc00054] rx00909
+protein activation	activation	degradation/secretion	inhibition	substrate	9	rx00015 EIN3(like)[fc00063] rx00017
+protein activation	activation	transcriptional/translational repression	inhibition	template	7	rx00015 EIN3(like)[fc00063] rx00186
+protein activation	activation	unknown	inhibition	modifier	5	rx00009 EIN2[fc00062] rx00210
+protein activation	activation	translocation	activation	substrate	4	rx00511 NPR1[fc00115] rx00097
+protein activation	activation	binding/oligomerisation	activation	modifier	1	rx00856 HSF[fc00394] rx00827
+protein activation	activation	dissociation	activation	modifier	1	rx00095 TRX-H[fc00155] rx00096
+protein activation	activation	unknown	inhibition	substrate	1	rx00701 CAT[fc00191] rx00311
+protein deactivation	inhibition	protein activation	activation	substrate	38	rx00010 EIN2[fc00062] rx00009
+protein deactivation	inhibition	transcriptional/translational activation	activation	stimulator	37	rx00432 MYC2[fc00108] rx00050
+protein deactivation	inhibition	protein deactivation	inhibition	substrate	26	rx00010 EIN2[fc00062] rx00525
+protein deactivation	inhibition	binding/oligomerisation	inhibition	interactor	20	rx00234 GST[fc00081] rx00690
+protein deactivation	inhibition	protein deactivation	inhibition	modifier	19	rx00432 MYC2[fc00108] rx00877
+protein deactivation	inhibition	binding/oligomerisation	activation	interactor	14	rx00524 EDS1[fc00060] rx00991
+protein deactivation	inhibition	protein activation	activation	modifier	11	rx00010 EIN2[fc00062] rx00015
+protein deactivation	inhibition	transcriptional/translational repression	inhibition	inhibitor	10	rx00432 MYC2[fc00108] rx00250
+protein deactivation	inhibition	transcriptional/translational activation	activation	template	5	rx00524 EDS1[fc00060] rx00771
+protein deactivation	inhibition	catalysis	activation	catalyst	4	rx00197 SAMS[fc00146] rx00001
+protein deactivation	inhibition	degradation/secretion	inhibition	substrate	4	rx00518 ARF[fc00187] rx00112
+protein deactivation	inhibition	translocation	activation	substrate	3	rx00010 EIN2[fc00062] rx00430
+protein deactivation	inhibition	translocation	activation	transporter	2	rx00476 SNRK2[fc00318] rx00097
+protein deactivation	inhibition	unknown	inhibition	modifier	2	rx00010 EIN2[fc00062] rx00210
+protein deactivation	inhibition	transcriptional/translational repression	inhibition	template	1	rx00524 EDS1[fc00060] rx00148
+transcriptional/translational activation	activation	transcriptional/translational activation	activation	template	328	rx00025 PDF1.2[fc00127] rx00135
+transcriptional/translational activation	activation	binding/oligomerisation	inhibition	interactor	93	rx00103 PR5[fc00132] rx00673
+transcriptional/translational activation	activation	protein activation	activation	modifier	87	rx00309 NPR1[fc00115] rx00478
+transcriptional/translational activation	activation	binding/oligomerisation	activation	interactor	70	rx00098 WRKY70[fc00172] rx00987
+transcriptional/translational activation	activation	transcriptional/translational activation	activation	stimulator	50	rx00019 ERF/EDF[fc00066] rx00025
+transcriptional/translational activation	activation	protein activation	activation	substrate	41	rx00160 WRKY33[fc00166] rx00138
+transcriptional/translational activation	activation	catalysis	activation	catalyst	29	rx00187 ICS[fc00084] rx00069
+transcriptional/translational activation	activation	transcriptional/translational repression	inhibition	template	20	rx00013 EBF[fc00058] rx00012
+transcriptional/translational activation	activation	protein deactivation	inhibition	modifier	15	rx00163 DELLA[fc00056] rx00505
+transcriptional/translational activation	activation	degradation/secretion	inhibition	substrate	10	rx00124 WRKY53[fc00169] rx00123
+transcriptional/translational activation	activation	degradation/secretion	inhibition	modifier	9	rx00064 Trichome-initiation rx00080
+transcriptional/translational activation	activation	transcriptional/translational repression	inhibition	inhibitor	7	rx00158 ERF1[fc00068] rx00151
+transcriptional/translational activation	activation	protein deactivation	inhibition	substrate	5	rx00771 EDS1[fc00060] rx00524
+transcriptional/translational activation	activation	translocation	activation	substrate	5	rx00309 NPR1[fc00115] rx00097
+transcriptional/translational activation	activation	unknown	inhibition	modifier	3	rx00309 NPR1[fc00115] rx00088
+transcriptional/translational activation	activation	unknown	inhibition	substrate	3	rx00101 PR1[fc00312] rx00210
+transcriptional/translational activation	activation	binding/oligomerisation	activation	modifier	2	rx00574 HSF[fc00394] rx00827
+transcriptional/translational activation	activation	catalysis	activation	substrate	2	rx00590 viral dsRNA rx00591
+transcriptional/translational activation	activation	translocation	activation	transporter	2	rx00760 EDS5[fc00061] rx00517
+transcriptional/translational repression	inhibition	transcriptional/translational activation	activation	stimulator	40	rx00151 ORA59[fc00120] rx00441
+transcriptional/translational repression	inhibition	transcriptional/translational activation	activation	template	20	rx00012 EBF[fc00058] rx00013
+transcriptional/translational repression	inhibition	binding/oligomerisation	activation	interactor	19	rx00148 EDS1[fc00060] rx00991
+transcriptional/translational repression	inhibition	protein activation	activation	substrate	7	rx00186 EIN3(like)[fc00063] rx00015
+transcriptional/translational repression	inhibition	catalysis	activation	catalyst	6	rx00240 ICS[fc00084] rx00069
+transcriptional/translational repression	inhibition	transcriptional/translational repression	inhibition	template	6	rx00151 ORA59[fc00120] rx00250
+transcriptional/translational repression	inhibition	binding/oligomerisation	inhibition	interactor	5	rx00196 COI1[fc00047] rx00232
+transcriptional/translational repression	inhibition	degradation/secretion	inhibition	substrate	3	rx00186 EIN3(like)[fc00063] rx00017
+transcriptional/translational repression	inhibition	transcriptional/translational repression	inhibition	inhibitor	2	rx00206 ERF1[fc00068] rx00151
+transcriptional/translational repression	inhibition	protein deactivation	inhibition	substrate	1	rx00148 EDS1[fc00060] rx00524
+transcriptional/translational repression	inhibition	translocation	activation	substrate	1	rx00148 EDS1[fc00060] rx00523
+translocation	activation	protein activation	activation	modifier	57	rx00004 Cu2+ rx00005
+translocation	activation	binding/oligomerisation	activation	interactor	42	rx00097 NPR1[fc00115] rx00094
+translocation	activation	translocation	activation	substrate	32	rx00031 OPDA rx00396
+translocation	activation	catalysis	activation	substrate	10	rx00031 OPDA rx00033
+translocation	activation	binding/oligomerisation	inhibition	interactor	9	rx00602 Ca2+ rx00194
+translocation	activation	binding/oligomerisation	activation	modifier	6	rx00602 Ca2+ rx00739
+translocation	activation	transcriptional/translational activation	activation	template	5	rx00097 NPR1[fc00115] rx00309
+translocation	activation	protein activation	activation	substrate	4	rx00097 NPR1[fc00115] rx00511
+translocation	activation	protein deactivation	inhibition	modifier	3	rx00097 NPR1[fc00115] rx00432
+translocation	activation	protein deactivation	inhibition	substrate	3	rx00430 EIN2[fc00062] rx00010
+translocation	activation	degradation/secretion	inhibition	substrate	2	rx00097 NPR1[fc00115] rx00422
+translocation	activation	unknown	inhibition	modifier	2	rx00097 NPR1[fc00115] rx00088
+translocation	activation	transcriptional/translational repression	inhibition	template	1	rx00523 EDS1[fc00060] rx00148
+unknown	activation	binding/oligomerisation	activation	interactor	1	rx00616 ET rx00008
+unknown	inhibition	binding/oligomerisation	activation	interactor	5	rx00088 EDS1|PAD4 rx00054
+unknown	inhibition	transcriptional/translational activation	activation	template	3	rx00210 PR1[fc00312] rx00101
+unknown	inhibition	unknown	inhibition	substrate	2	rx00088 EDS1|PAD4 rx00089
+unknown	inhibition	binding/oligomerisation	inhibition	interactor	1	rx00311 CAT[fc00191] rx00310
+unknown	inhibition	degradation/secretion	inhibition	modifier	1	rx00311 CAT[fc00191] rx00260
+unknown	inhibition	protein activation	activation	modifier	1	rx00311 CAT[fc00191] rx00312
+unknown	inhibition	protein activation	activation	substrate	1	rx00311 CAT[fc00191] rx00701

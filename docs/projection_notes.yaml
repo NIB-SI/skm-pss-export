@@ -1,0 +1,100 @@
+# Comments on the figures of docs/projection_figures.py, added to docs/projections/index.html.
+# Keys are figure names (the file names without extension; "introduction" goes at the top).
+# Values are HTML fragments. Check them after a change to the projections: the figures are
+# regenerated, these comments are not.
+
+introduction: >
+  <p>The Plant Stress Signalling (PSS) knowledge graph is made of curated reactions. For analysis, each
+  reaction is turned into (projected onto) three networks:</p>
+  <ul>
+  <li><strong>reaction graph</strong>: reactions and their participants as nodes, with edges from each
+  participant to the reaction (input, activator, inhibitor) and from the reaction to its outputs;</li>
+  <li><strong>interaction network</strong>: entities only (proteins, complexes, metabolites, …), with
+  entity → entity edges that have an influence: positive, negative or unknown;</li>
+  <li><strong>gene network</strong>: the interaction network with each gene cluster replaced by its
+  genes.</li>
+  </ul>
+  <p>This document shows, with examples from the data: (1) how each reaction type is projected, (2) how
+  reactions connect to each other in the interaction network, and (3) the skm-tools functions that
+  simplify the interaction network. The legend below applies to all figures.</p>
+  <p><strong>Conditions</strong> (e.g. "NPR1 high &amp; JAZ low", modifiers of many transcriptional
+  reactions) appear only in the reaction graph: the interaction and gene networks leave them out.</p>
+  <p><strong>Self-loops.</strong> An entity that is both an input and an output of a reaction (e.g. the
+  protein in a protein activation, which is not split into an inactive and an active node) gives no edge.
+  The only self-loops are autoregulation: a modifier that regulates its own production, e.g. a
+  transcription factor activating its own transcription (see the last figure of section 1).</p>
+
+binding_oligomerisation-activation: >
+  The interactors and the activators each get a positive edge to the complex. Interactors are also linked
+  to each other in both directions, with unknown influence; in the gene network, every gene of one
+  interactor is linked to every gene of the others, so these edges grow quickly with the cluster sizes.
+  This example is a homodimer (one interactor binding itself), so it has no edges between interactors:
+  see the example with three interactors below.
+
+binding_oligomerisation-inhibition: >
+  The interactors are linked to each other in both directions, with negative influence. The complex gets
+  no edges, so nothing downstream of the complex is connected through this reaction (see section 2).
+
+catalysis-activation: >
+  Substrate → product, positive; catalyst → product, positive; catalyst → substrate, negative (the
+  catalyst uses up its substrate).
+
+degradation_secretion-inhibition: >
+  Each modifier → the substrate, negative. There is no product, so nothing continues from a degradation.
+
+dissociation-activation: >
+  Complex → each component, positive; modifiers → components, positive, and → complex, negative. In the
+  gene network the complex stays one node: only gene clusters are split into genes.
+
+protein_activation-activation: >
+  The input and the output are the same protein (there is no separate node for the active form), so the
+  only edges are from the activators to the protein, positive.
+
+protein_deactivation-inhibition: >
+  As protein activation, but the edges from the modifiers to the protein are negative.
+
+transcriptional_translational_activation-activation: >
+  Activators → the gene product, positive; inhibitors (linked to the reaction by INHIBITS in the reaction
+  graph) → the gene product, negative. The template is the same gene as the product, so it gives no edge.
+
+transcriptional_translational_repression-inhibition: >
+  Every modifier → the gene product, negative: a modifier of a repression represses, even when the
+  reaction graph links it to the reaction with ACTIVATES.
+
+translocation-activation: >
+  The networks don't distinguish compartments, so the moved entity is one node and its move gives no
+  edge. Only the transporters (and other modifiers) get an edge to it.
+
+translocation-activation-no_modifiers: >
+  This translocation has no transporter or other modifier, and the move itself gives no edge (see above),
+  so the reaction gives no edges at all in the interaction and gene networks.
+
+unknown-activation: >
+  Modifier → product, positive. The input is the same entity as the product, so it gives no edge.
+
+unknown-inhibition: >
+  Modifier → product, negative.
+
+transcriptional_translational_activation-activation-autoregulation: >
+  The activator of this transcription is also its product: a gene that activates its own expression. This
+  gives a self-loop in the interaction network, and each gene → itself in the gene network.
+
+binding_oligomerisation-activation-interactors: >
+  Each pair of interactors is linked in both directions, with unknown influence (dashed, with an open
+  diamond at the source). In the gene network, so is each pair of their genes. Each interactor also has a
+  positive edge to the complex.
+
+protein_activation-activation--protein_activation-activation-substrate: >
+  The most common connection, but it doesn't form a chain in the interaction network: the protein is the
+  same node before and after each activation, so the two reactions' activators both point at that one
+  node.
+
+remove_and_rewire-nothing_rewired: >
+  Rewiring doesn't go through the edges between binding partners, only through edges to the complex. Here
+  the binding is an inhibition, which has no edges to the complex, so removing a partner connects nothing.
+
+remove_and_rewire-metabolites: >
+  In the interaction network, each enzyme has a negative edge to its substrate (it uses it up) and a
+  positive edge to its product. When the metabolites are removed, each enzyme is connected to the enzyme
+  that uses its product (SAMS → ACS → ACO, positive), and the last enzyme to what the end product acts on
+  (ACO → ET|ETR). No edge skips an enzyme.

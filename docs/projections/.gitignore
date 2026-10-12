@@ -1,0 +1,3 @@
+# the separate figures; index.html embeds them (regenerate with docs/projection_figures.py)
+*.svg
+*.png
