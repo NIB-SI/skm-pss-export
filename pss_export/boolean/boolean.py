@@ -23,15 +23,19 @@ def generate_transition(rules):
 
 
 def rule_composer(species_id, activation_rules, inhibition_rules):
+    ''' A species' rule from the rules of the reactions that set it: any activation, and none of the inhibitions
+    (without an activation, the species keeps its value until inhibited). None without rules. '''
 
     if len(activation_rules) + len(inhibition_rules) > 0:
 
-        if len(activation_rules) == 0:
-            activation_rules.append(species_id)
-            # activation_reactions.append('self')
+        # (a copy: the callers' lists are kept as they are)
+        activation_rules = list(activation_rules) or [species_id]
 
         update_function = f"{' | '.join(activation_rules)}"
-        # update_reaction = f"( {' | '.join(activation_reactions)} )"
+        # several activations before an inhibition: in brackets, as & binds tighter than |
+        # (else the inhibition would only apply to the last activation)
+        if len(activation_rules) > 1 and inhibition_rules:
+            update_function = f"( {update_function} )"
 
         if len(inhibition_rules) == 0:
             pass

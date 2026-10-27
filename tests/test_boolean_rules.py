@@ -140,10 +140,17 @@ class TestRuleComposer:
         assert rule == "s_X & !(s_M)"
         assert evaluate(rule, {"s_X": True, "s_M": False}) and not evaluate(rule, {"s_X": True, "s_M": True})
 
-    @pytest.mark.xfail(strict=True, reason="the activations are joined with | and the inhibition appended with & "
-                       "without brackets: & binds tighter, so the inhibition only applies to the last activation "
-                       "(14 of 156 inhibited rules in the public BoolNet export of 2026-10-20, e.g. EIN3)")
     def test_inhibition_applies_to_every_activation(self):
-        rule = rule_composer("s_X", ["s_A", "s_B"], ["!(s_M)"])
-        # A is on, but M inhibits: X must be off whichever activation is on
-        assert not evaluate(rule, {"s_A": True, "s_B": False, "s_M": True})
+        """several activations are in brackets before an inhibition (& binds tighter than |; without them, the
+        inhibition only applied to the last activation: 14 of 156 inhibited rules in the public BoolNet export of
+        2026-10-20, e.g. EIN3)"""
+        rule = rule_composer("s_X", ["s_A", "s_B & s_C"], ["!(s_M)"])
+        assert rule == "( s_A | s_B & s_C ) & !(s_M)"
+        # A is on, but M inhibits: X is off whichever activation is on
+        assert not evaluate(rule, {"s_A": True, "s_B": False, "s_C": False, "s_M": True})
+        assert evaluate(rule, {"s_A": True, "s_B": False, "s_C": False, "s_M": False})
+
+    def test_callers_lists_unchanged(self):
+        activations, inhibitions = [], ["!(s_M)"]
+        rule_composer("s_X", activations, inhibitions)
+        assert activations == [] and inhibitions == ["!(s_M)"]
