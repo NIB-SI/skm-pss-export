@@ -586,37 +586,40 @@ class ModelFixer:
                     comp_locations.append(locations_in_comp)
             console.print()
 
+            # (the compartments as sorted lists, not sets: the same reactions always give the same fixes, in the same
+            # order; a set's order of strings changes from run to run)
+
             # find all compartments where the form_species is produced (product of a reaction)
             # (excluding produced by transport reactions)
-            producing_compartments = {
+            producing_compartments = sorted({
                 subgraph.nodes[v].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction' and subgraph.
                 nodes[r].get('reaction_type') != reaction_types.TRANSLOCATION
                 for u, v, data in subgraph.out_edges(r, data=True)
                 if data.get('type') == 'product' and v in form_species
-            }
+            }, key=str)
 
             # find all places the form_species is produced by transport reactions
-            transport_producing_compartments = {
+            transport_producing_compartments = sorted({
                 subgraph.nodes[v].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction' and subgraph.
                 nodes[r].get('reaction_type') == reaction_types.TRANSLOCATION
                 for u, v, data in subgraph.out_edges(r, data=True)
                 if data.get('type') == 'product' and v in form_species
-            }
+            }, key=str)
 
             # find all compartments where the form_species is consumed (substrate of a reaction)
             # (including consumed by transport reactions)
-            consuming_compartments = {
+            consuming_compartments = sorted({
                 subgraph.nodes[u].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction'
                 for u, v, data in subgraph.in_edges(r, data=True)
                 if data.get('type') in ['substrate', 'modifier']
                 and u in form_species
-            }
+            }, key=str)
 
             console.print(
                 f"Producing compartments: {','.join(list(producing_compartments)) if producing_compartments else 'None'}"
