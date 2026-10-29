@@ -766,8 +766,7 @@ class TestBooleanRulesSorted:
         product = ec.Species("AMZ", "complex", "cytoplasm")
         product.set_id("s_AMZ")
         r.add_product(product)
-        targets, rule = binding_oligomerisation(r)
-        assert rule == "s_A & s_M & s_Z"
+        assert binding_oligomerisation(r) == {"s_AMZ": "s_A & s_M & s_Z"}
 
     def test_reaction_ids_sorted(self, fake_collector):
         fake_collector(reactions={"rx00003": None, "rx00001": None, "rx00002": None})
