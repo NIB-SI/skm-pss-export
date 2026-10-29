@@ -802,6 +802,84 @@ class TestModelFixTransport:
         assert reaction_rule_constructor(reaction) is not None
 
 
+class TestModelFixActivation:
+    """An active form that is only switched off, with its inactive form in the model, gets an activation from it."""
+
+    @staticmethod
+    def adapter(*reactions):
+        from types import SimpleNamespace
+        return SimpleNamespace(reactions={r.id: r for r in reactions}, additional_reactions=[], include_genes=False)
+
+    @staticmethod
+    def reaction(reaction_id, reaction_type, effect, substrates=(), products=(), modifiers=()):
+        """participants as (name, form)"""
+        r = ec.Reaction(reaction_id, reaction_type, {"reaction_effect": effect})
+        for name, form in substrates:
+            r.add_substrate(ec.Species(name, form, "nucleus"))
+        for name, form in products:
+            r.add_product(ec.Species(name, form, "nucleus"))
+        for name, form in modifiers:
+            r.add_modifier(ec.Species(name, form, "nucleus"))
+        return r
+
+    def deactivation(self):
+        """JAZ -| MYC2 (as rx00047): MYC2 active -> MYC2"""
+        return self.reaction("rx00047", rdef.reaction_types.PROTEIN_DEACTIVATION, "inhibition",
+                             substrates=[("MYC2", "protein_active")], products=[("MYC2", "protein")],
+                             modifiers=[("JAZ", "protein_active")])
+
+    def test_activation_added(self):
+        pytest.importorskip("matplotlib")
+        from pss_export.model_fixes.model_fixes import ModelFixer, ActivationReaction
+        from pss_export.boolean.boolean import reaction_rule_constructor
+
+        adapter = self.adapter(self.deactivation())
+        fixer = ModelFixer(adapter)
+        fixes = fixer._suggest_fixes_activation()
+        assert [(f.name, f.inactive_form, f.form, f.compartment) for f in fixes] == \
+            [("MYC2", "protein", "protein_active", "nucleus")]
+        assert isinstance(fixes[0], ActivationReaction)
+        assert fixer.apply_model_fixes(fixes) == 1
+
+        reaction = adapter.reactions[adapter.additional_reactions[0]]
+        assert reaction.reaction_type == rdef.reaction_types.PROTEIN_ACTIVATION
+        assert reaction.reaction_effect == "activation"
+        assert [(s.form, s.compartment) for s in reaction.substrates] == [("protein", "nucleus")]
+        assert [(s.form, s.compartment) for s in reaction.products] == [("protein_active", "nucleus")]
+        reaction.substrates[0].set_id("s_MYC2_nuc_p")
+        reaction.products[0].set_id("s_MYC2_nuc_pa")
+        assert reaction_rule_constructor(reaction)(reaction) == {"s_MYC2_nuc_pa": "s_MYC2_nuc_p"}
+
+        # nothing left to fix, and applying it again adds nothing
+        assert fixer._suggest_fixes_activation() == []
+        assert fixer.apply_model_fixes(fixes) == 0
+
+    def test_not_when_activated(self):
+        pytest.importorskip("matplotlib")
+        from pss_export.model_fixes.model_fixes import ModelFixer
+        activation = self.reaction("rx00002", rdef.reaction_types.PROTEIN_ACTIVATION, "activation",
+                                   substrates=[("MYC2", "protein")], products=[("MYC2", "protein_active")],
+                                   modifiers=[("K", "protein_active")])
+        assert ModelFixer(self.adapter(self.deactivation(), activation))._suggest_fixes_activation() == []
+
+    def test_not_without_inactive_form(self):
+        """MYC2 bound by JAZ (binding inhibition, as before rx00047's curation): no inactive MYC2 in the model"""
+        pytest.importorskip("matplotlib")
+        from pss_export.model_fixes.model_fixes import ModelFixer
+        binding = self.reaction("rx00047", rdef.reaction_types.BINDING_OLIGOMERISATION, "inhibition",
+                                substrates=[("MYC2", "protein_active"), ("JAZ", "protein_active")],
+                                products=[("JAZ|MYC2", "complex")])
+        assert ModelFixer(self.adapter(binding))._suggest_fixes_activation() == []
+
+    def test_not_in_model(self):
+        """reactions left out of the models are not looked at"""
+        pytest.importorskip("matplotlib")
+        from pss_export.model_fixes.model_fixes import ModelFixer
+        reaction = self.deactivation()
+        reaction.in_model = False
+        assert ModelFixer(self.adapter(reaction))._suggest_fixes_activation() == []
+
+
 class TestFormats:
     """The format registry: every format's method and file arguments exist."""
 

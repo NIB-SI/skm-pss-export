@@ -180,6 +180,7 @@ class PSSAdapter():
         ''' Identify model fixes to the collected reactions.
             1) Fix node 'form' issues by changing input/outputs to active forms.
             2) Add transport reactions for species in multiple compartments.
+            3) Add activations from the inactive form for active forms that are only switched off.
         '''
         try:
             from ..model_fixes import ModelFixer
@@ -195,7 +196,8 @@ class PSSAdapter():
 
     def with_model_fixes(self):
         ''' A copy of the collected data with the model fixes applied (pss_export.model_fixes: translation
-        products in the active form, transport reactions between compartments), for the "with model fixes"
+        products in the active form, transport reactions between compartments, activations of active forms that are
+        only switched off), for the "with model fixes"
         variant of the models; this adapter stays as collected (exactly PSS). Made once per collection. '''
         if self._with_model_fixes is None:
             fixed = copy.deepcopy(self)
