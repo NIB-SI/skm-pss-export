@@ -28,13 +28,15 @@ EXCLUDE = {'faidare'}       # every species, large and not of interest here
 MODEL_FIXES_SUFFIX = '-with-model-fixes'
 
 
-def git_commit():
-    ''' The commit of the pss_export package, if it is a git checkout '''
+def pss_export_version():
+    ''' The version of the pss_export package used: from git when it is a checkout (e.g. v0.2.1, or
+    v0.2.1-3-gabc1234 after the tag; the metadata of an editable install can be out of date), else the installed
+    version '''
     try:
-        return subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=Path(pss_export.__file__).parent,
+        return subprocess.run(['git', 'describe', '--tags', '--always'], cwd=Path(pss_export.__file__).parent,
                               capture_output=True, text=True, check=True).stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
-        return 'unknown'
+        return importlib.metadata.version('pss-export')
 
 
 def export_all(dump_date, out):
@@ -61,10 +63,9 @@ def export_all(dump_date, out):
             adapter.export(fmt.key, model_fixes=model_fixes, **{a: str(p) for a, p in files.items()})
             written.extend(files.values())
 
-    version = importlib.metadata.version('pss-export')
     (out / 'version.txt').write_text(
         f'PSS dump\t{dump_date}\n'
-        f'pss-export\t{version} ({git_commit()})\n'
+        f'pss-export\t{pss_export_version()}\n'
         f'exported\t{datetime.date.today().isoformat()}\n'
         f'access\t{ACCESS}\n'
         f'species\t{SPECIES}\n')
