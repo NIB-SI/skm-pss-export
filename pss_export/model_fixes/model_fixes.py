@@ -9,6 +9,9 @@ The issues are:
    (e.g. a protein activation reaction).
 2) A number of nodes occur in multiple compartments as different species,
    but are missing transport reactions to connect them.
+3) Some active forms are only switched off (deactivated, degraded, bound) and never activated, while their inactive
+   form is in the model. In the Boolean models they keep their initial value until switched off, and are never
+   switched on again.
 
 
 The following solutions are implemented:
@@ -21,6 +24,10 @@ The following solutions are implemented:
     a) Identify all nodes that occur in multiple compartments as different species, and are not connected.
     b) For each of these nodes, identify all compartments where it is produced (output from a reaction) and where it is consumed (input to a reaction).
     c) For each pair of compartments (from production to consumption), add a transport reaction if it does not already exist.
+
+3) For each active form (protein_active, complex_active) that is the target of an inhibition but the product of no
+   activation, and whose inactive form (same compartment) is in the model, add an activation from the inactive form
+   (protein activation, no modifier). Its Boolean rule is then: inactive form and none of the inhibitions.
 
 '''
 
@@ -59,6 +66,8 @@ class ModelFixTypes:
     LOC_TRANSPORT_PROTEIN_ER_TO_CYT = "fix-loc:protein-er-to-cyt"
     LOC_TRANSPORT_FROM_CYT = "fix-loc:from-cyt"
 
+    FORM_ACTIVATION_FROM_INACTIVE = "fix-form:activation-from-inactive"
+
     # Explanations for each fix type
     _explanations = {
         FORM_PROTEIN_PRODUCT_ACTIVE: "Change the output of these transcription/translation reactions from 'protein' to 'protein_active'.",
@@ -68,7 +77,9 @@ class ModelFixTypes:
         LOC_TRANSPORT_TO_CONSUMED: "Based on where node is consumed, add new transport reaction(s), transporting node from where it is produced to where it is consumed.",
         LOC_TRANSPORT_FROM_PRODUCED: "Based on where node is produced, add new transport reaction(s), transporting node from where it is produced to where it is consumed.",
         LOC_TRANSPORT_PROTEIN_ER_TO_CYT: "For proteins, if it exists in the 'endoplasmic reticulum' and is consumed in the 'cytoplasm', transport it from the 'endoplasmic reticulum' to the 'cytoplasm'.",
-        LOC_TRANSPORT_FROM_CYT: "As last resort, if node exists in the 'cytoplasm' and is consumed elsewhere, transport if from the 'cytoplasm' to all consuming compartments, where it is not already present."
+        LOC_TRANSPORT_FROM_CYT: "As last resort, if node exists in the 'cytoplasm' and is consumed elsewhere, transport if from the 'cytoplasm' to all consuming compartments, where it is not already present.",
+
+        FORM_ACTIVATION_FROM_INACTIVE: "An active form that is only switched off (deactivated, degraded, bound) and never activated, while its inactive form is in the model: add an activation from the inactive form (inactive -> active, no modifier)."
     }
 
     @classmethod
@@ -151,6 +162,38 @@ class TransportReaction:
             f"""source_compartment='{self.source_compartment}', target_compartment='{self.target_compartment}')"""
         )
 
+class ActivationReaction:
+    '''Hold the information to create a new activation reaction, from the inactive to the active form.'''
+
+    inactive_forms = {'protein_active': 'protein', 'complex_active': 'complex'}
+
+    def __init__(self,
+                 name,
+                 form,
+                 compartment,
+                 fix_type=ModelFixTypes.FORM_ACTIVATION_FROM_INACTIVE):
+        '''
+        Parameters
+        ----------
+        name: str
+            The name of the node to be activated.
+        form: str
+            The active form ('protein_active' or 'complex_active').
+        compartment: str
+            The compartment of both forms.
+        '''
+        self.name = name
+        self.form = form
+        self.inactive_form = self.inactive_forms[form]
+        self.compartment = compartment
+        self.fix_type = fix_type
+
+    def __repr__(self):
+        return (
+            f"""ActivationReaction(name='{self.name.split("[")[0]}', form='{self.inactive_form}' -> '{self.form}', """
+            f"""compartment='{self.compartment}')"""
+        )
+
 class ModelFixer:
 
     def __init__(self, pss_adapter, interactive=False, apply_fixes=True):
@@ -231,16 +274,63 @@ class ModelFixer:
             f"Step 2 complete, applied {num_location_fixes_applied} fixes to species locations.\n"
         )
 
+        # 3) Active forms only switched off (after the location step: its transports also activate)
+        self.console.print("Step 3: active forms only switched off.")
+        num_activation_fixes_applied = 0
+        fixes = self._suggest_fixes_activation()
+        if not fixes:
+            self.console.print("Nothing to fix.")
+        else:
+            self.console.print(f"[green]Suggestion: {ModelFixTypes.get_explanation(ModelFixTypes.FORM_ACTIVATION_FROM_INACTIVE)}")
+            for fix in fixes:
+                self.console.print(f" - {fix}")
+            if self.interactive:
+                action = input("Apply these fixes? (a = apply, s = skip): ").strip().lower()
+                if action == 'a':
+                    num_activation_fixes_applied = self.apply_model_fixes(fixes)
+            elif self.apply_fixes:
+                num_activation_fixes_applied = self.apply_model_fixes(fixes)
+        self.console.print(
+            f"Step 3 complete, applied {num_activation_fixes_applied} fixes adding activations.\n"
+        )
+
+        num_fixes_applied = num_form_fixes_applied + num_location_fixes_applied + num_activation_fixes_applied
+
         # Summary
         self.console.rule(
-            f"[bold red]Model fixing complete, applied {num_form_fixes_applied + num_location_fixes_applied} fixes."
+            f"[bold red]Model fixing complete, applied {num_fixes_applied} fixes."
         )
 
         if self.interactive:
             _plt().ioff()
             _plt().close('all')
 
-        return num_form_fixes_applied + num_location_fixes_applied
+        return num_fixes_applied
+
+    def _suggest_fixes_activation(self):
+        ''' An activation from the inactive form for each active form that is switched off by an inhibition but
+        activated by no reaction, when its inactive form (same compartment) is in the model. The inhibition targets
+        are those of the Boolean rules (pss_export.boolean.boolean). '''
+        key = lambda s: (s.name, s.form, s.compartment)
+        all_species, activated, switched_off = set(), set(), set()
+        for reaction in self.pss_adapter.reactions.values():
+            if not reaction.in_model:
+                continue
+            all_species.update(key(s) for s in reaction.substrates + reaction.products + reaction.modifiers)
+            if reaction.reaction_effect == 'activation':
+                activated.update(key(s) for s in reaction.products)
+            elif reaction.reaction_effect == 'inhibition':
+                if reaction.reaction_type == reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_REPRESSION:
+                    switched_off.update(key(s) for s in reaction.products)
+                else:
+                    switched_off.update(key(s) for s in reaction.substrates)
+
+        fixes = []
+        for name, form, compartment in sorted(switched_off - activated):
+            inactive_form = ActivationReaction.inactive_forms.get(form)
+            if inactive_form and (name, inactive_form, compartment) in all_species:
+                fixes.append(ActivationReaction(name, form, compartment))
+        return fixes
 
     def _identify_model_fixes(self, part='location'):
 
@@ -496,37 +586,40 @@ class ModelFixer:
                     comp_locations.append(locations_in_comp)
             console.print()
 
+            # (the compartments as sorted lists, not sets: the same reactions always give the same fixes, in the same
+            # order; a set's order of strings changes from run to run)
+
             # find all compartments where the form_species is produced (product of a reaction)
             # (excluding produced by transport reactions)
-            producing_compartments = {
+            producing_compartments = sorted({
                 subgraph.nodes[v].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction' and subgraph.
                 nodes[r].get('reaction_type') != reaction_types.TRANSLOCATION
                 for u, v, data in subgraph.out_edges(r, data=True)
                 if data.get('type') == 'product' and v in form_species
-            }
+            }, key=str)
 
             # find all places the form_species is produced by transport reactions
-            transport_producing_compartments = {
+            transport_producing_compartments = sorted({
                 subgraph.nodes[v].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction' and subgraph.
                 nodes[r].get('reaction_type') == reaction_types.TRANSLOCATION
                 for u, v, data in subgraph.out_edges(r, data=True)
                 if data.get('type') == 'product' and v in form_species
-            }
+            }, key=str)
 
             # find all compartments where the form_species is consumed (substrate of a reaction)
             # (including consumed by transport reactions)
-            consuming_compartments = {
+            consuming_compartments = sorted({
                 subgraph.nodes[u].get('compartment')
                 for r in subgraph.nodes
                 if subgraph.nodes[r].get('type') == 'reaction'
                 for u, v, data in subgraph.in_edges(r, data=True)
                 if data.get('type') in ['substrate', 'modifier']
                 and u in form_species
-            }
+            }, key=str)
 
             console.print(
                 f"Producing compartments: {','.join(list(producing_compartments)) if producing_compartments else 'None'}"
@@ -759,6 +852,32 @@ class ModelFixer:
                 )
                 new_reaction.add_substrate(Species(fix.name, fix.form, fix.source_compartment))
                 new_reaction.add_product(Species(fix.name, fix.form, fix.target_compartment))
+
+                self.pss_adapter.reactions[reaction_id] = new_reaction
+                self.pss_adapter.additional_reactions.append(reaction_id)
+                num_fixes_applied += 1
+
+            elif isinstance(fix, ActivationReaction):
+                # Create a new activation reaction, from the inactive to the active form
+                node_symbol = IDTracker.remove_nonalphanum(IDTracker.get_display_label(fix.name))
+                reaction_id = f"activation_{node_symbol}_{pss_export_config.node_form_to_short[fix.form]}_{pss_export_config.compartment_to_short[fix.compartment]}"
+                if reaction_id in self.pss_adapter.reactions:
+                    self.console.print(
+                        f"Warning: Activation reaction {reaction_id} already exists, skipping."
+                    )
+                    continue
+                self.console.print(
+                    f"Applying fix: Adding activation reaction for {fix.name} ({fix.inactive_form} -> {fix.form}) in {fix.compartment}."
+                )
+                new_reaction = Reaction(
+                    reaction_id=reaction_id,
+                    reaction_type=reaction_types.PROTEIN_ACTIVATION,
+                    export_notes=fix.fix_type,
+                    reaction_properties={'reaction_effect': 'activation'},
+                    include_genes=self.pss_adapter.include_genes
+                )
+                new_reaction.add_substrate(Species(fix.name, fix.inactive_form, fix.compartment))
+                new_reaction.add_product(Species(fix.name, fix.form, fix.compartment))
 
                 self.pss_adapter.reactions[reaction_id] = new_reaction
                 self.pss_adapter.additional_reactions.append(reaction_id)

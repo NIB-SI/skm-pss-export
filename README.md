@@ -143,8 +143,10 @@ pss-export to-sbml output-model-fixes.sbml \
 ```
 
 The model fixes connect parts of the models that PSS leaves disconnected: translation products are made in the
-active form (when the inactive form is not used), and transport reactions are added between compartments where a
-node is made and used. They are not in PSS: the models (SBML, TabularQual) come in two variants, without (exactly
+active form (when the inactive form is not used), transport reactions are added between compartments where a
+node is made and used, and an active form that is only switched off (deactivated, degraded, bound; never activated)
+gets an activation from its inactive form when that is in the model (else, in the Boolean models, it is never
+switched on again). They are not in PSS: the models (SBML, TabularQual) come in two variants, without (exactly
 PSS, the default) and with model fixes, both from one collection (`PSSAdapter.with_model_fixes()` makes the fixed
 copy; the collected data stays as it is):
 
@@ -208,6 +210,9 @@ pss-export to-tabularqual output.xlsx --access public
   - They occur in multiple compartments but lack transport reactions
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
+- **Only switched off**: a species that reactions only switch off (deactivation, degradation, binding) keeps its
+  initial value until it is switched off, and is never switched on again. For active forms whose inactive form is in
+  the model, the "with model fixes" variant adds an activation from the inactive form.
 
 
 ### BoolNet

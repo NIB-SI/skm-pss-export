@@ -1,37 +1,31 @@
 # class to generate the boolean rule based in the reaction type
 # class BooleanRules:
 ''' Functions to create Boolean rules from PSS reaction types
-All functions take three arguments:
-s : set of substrate species names (strings)
-p : set of product species names (strings)
-m : set of modifier species names (strings)
-Each function returns a tuple:
-(target_species_name (string), boolean_rule (string))
+All functions take four arguments:
+s : set of substrate species ids (strings)
+p : set of product species ids (strings)
+m : set of modifier species ids (strings)
+processes : set of the reaction's process species ids (strings)
+Each function returns a dict of the species the reaction sets (target ids) and their rule:
+{target_species_id (string): boolean_rule (string)}, empty without a rule (no inputs).
 The species in a rule are sorted, so that the same reactions always give the same rule.
 '''
 
-def generate_transition(rules):
-    """
-    List of rules
-    """
-
-    activation_rules = rule_dict["activation"]
-    inhibition_rules = rule_dict["inhibition"]
-
-    update_function = rule_composer(species_id, activation_rules, inhibition_rules)
-
-
-
 def rule_composer(species_id, activation_rules, inhibition_rules):
+    ''' A species' rule from the rules of the reactions that set it: any activation, and none of the inhibitions
+    (without an activation, the species keeps its value until inhibited). None without rules. '''
 
     if len(activation_rules) + len(inhibition_rules) > 0:
 
-        if len(activation_rules) == 0:
-            activation_rules.append(species_id)
-            # activation_reactions.append('self')
+        # (copies: the callers' lists are kept as they are; the same rule from several reactions only once)
+        activation_rules = list(dict.fromkeys(activation_rules)) or [species_id]
+        inhibition_rules = list(dict.fromkeys(inhibition_rules))
 
         update_function = f"{' | '.join(activation_rules)}"
-        # update_reaction = f"( {' | '.join(activation_reactions)} )"
+        # several activations before an inhibition: in brackets, as & binds tighter than |
+        # (else the inhibition would only apply to the last activation)
+        if len(activation_rules) > 1 and inhibition_rules:
+            update_function = f"( {update_function} )"
 
         if len(inhibition_rules) == 0:
             pass
@@ -89,110 +83,75 @@ def preparerule(function):
         s_set = {n.id for n in reaction.substrates}
         p_set = {n.id for n in reaction.products}
         m_set = {n.id for n in reaction.modifiers}
-        return function(s_set, p_set, m_set)
+        processes = {n.id for n in reaction.substrates + reaction.products + reaction.modifiers
+                     if n.form in ('process', 'process_active')}
+        return function(s_set, p_set, m_set, processes)
 
     return wrapper
 
 
-@preparerule
-def binding_oligomerisation(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def rules_for(targets, factors, negate=False, processes=frozenset()):
+    ''' A rule per target: all its inputs (factors), or none of them (negate); no rule without inputs.
+    A process is no input of its own rule: it has no inactive form, so a regulated process is its own substrate and
+    product (Thermotolerance + HSFA6b -> Thermotolerance: Thermotolerance = HSFA6b). Other species keep themselves
+    (Phytophthora + cholesterol -> Phytophthora: it persists, given cholesterol). '''
+    rules = {}
+    for target in targets:
+        inputs = factors - {target} if target in processes else factors
+        if len(inputs) > 0:
+            rule = ' & '.join(sorted(inputs))
+            rules[target] = f"!({rule})" if negate else rule
+    return rules
+
 
 @preparerule
-def binding_oligomerisation_inhibition(s, p, m):
-    target = s
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = f"!({' & '.join(sorted(factors))})"
-    return target, rule
+def binding_oligomerisation(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def dissociation(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def binding_oligomerisation_inhibition(s, p, m, processes):
+    # each binding partner is off while the others (and the modifiers) are on: a rule per partner, without itself
+    rules = {}
+    for target in s:
+        rules.update(rules_for({target}, (s - {target}) | m, negate=True, processes=processes))
+    return rules
 
 @preparerule
-def catalysis(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def dissociation(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def protein_activation(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def catalysis(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def transcriptional_translational_activation(s, p, m):
-    target = p
-    if len(m) == 0:
-        return target, None
-    rule = ' & '.join(sorted(m))
-    return target, rule
+def protein_activation(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def translocation(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def transcriptional_translational_activation(s, p, m, processes):
+    return rules_for(p, m, processes=processes)
 
 @preparerule
-def unknown_activation(s, p, m):
-    target = p
-    factors = s.union(m)
-    if len(factors) == 0:
-        return target, None
-    rule = ' & '.join(sorted(factors))
-    return target, rule
+def translocation(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def degradation_secretion(s, p, m):
-    target = s
-    if len(m) == 0:
-        return target, None
-    rule = f"!({' & '.join(sorted(m))})"
-    return target, rule
+def unknown_activation(s, p, m, processes):
+    return rules_for(p, s | m, processes=processes)
 
 @preparerule
-def protein_deactivation(s, p, m):
-    target = s
-    if len(m) == 0:
-        return target, None
-    rule = f"!({' & '.join(sorted(m))})"
-    return target, rule
+def degradation_secretion(s, p, m, processes):
+    return rules_for(s, m, negate=True, processes=processes)
 
 @preparerule
-def transcriptional_translational_repression(s, p, m):
-    target = p
-    if len(m) == 0:
-        return target, None
-    rule = f"!({' & '.join(sorted(m))})"
-    return target, rule
+def protein_deactivation(s, p, m, processes):
+    return rules_for(s, m, negate=True, processes=processes)
 
 @preparerule
-def unknown_inhibition(s, p, m):
-    target = s
-    if len(m) == 0:
-        return target, None
-    rule = f"!({' & '.join(sorted(m))})"
-    return target, rule
+def transcriptional_translational_repression(s, p, m, processes):
+    return rules_for(p, m, negate=True, processes=processes)
+
+@preparerule
+def unknown_inhibition(s, p, m, processes):
+    return rules_for(s, m, negate=True, processes=processes)

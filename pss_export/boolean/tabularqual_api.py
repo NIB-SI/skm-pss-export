@@ -221,16 +221,16 @@ class TabularQual(IDTracker):
             print(f"TabularQual: {reaction.reaction_id}, could not construct reaction rule")
             return -1
 
-        targets, reaction_rule = rule_constructor(reaction)
+        reaction_rules = rule_constructor(reaction)
 
-        # print("TabularQual: reaction rule:", reaction.reaction_id, "targets:", targets, "rule:", reaction_rule)
+        # print("TabularQual: reaction rules:", reaction.reaction_id, reaction_rules)
 
-        if reaction_rule is None:
+        if not reaction_rules:
             print(f"TabularQual: {reaction.reaction_id}, no reaction rule generated")
             return
 
-        for target in sorted(targets):
-            self.rules[target][reaction.reaction_effect].append(reaction_rule)
+        for target in sorted(reaction_rules):
+            self.rules[target][reaction.reaction_effect].append(reaction_rules[target])
             self.rules_rx[target].append(reaction.reaction_id)
 
     def create_transitions(self):
