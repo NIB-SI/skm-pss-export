@@ -1,0 +1,1552 @@
+targets, factors
+# rx00029
+s_1213EOT_chl_m, s_13HPOT_chl_m & s_AOS_chl_pa
+# rx00042
+s_12OHJAIle_cyt_m, s_CYP94_cyt_pa & s_JAIle_cyt_m
+# rx00757
+s_12OHJA_cyt_m, s_12OHJAIle_cyt_m & s_IAR_cyt_pa
+# rx00026
+s_13HPOT_chl_m, s_ALA_chl_m & s_LOX_chl_pa
+# rx00530
+s_3H3PPCoA_per_m, s_CACoA_per_m & s_MFP_per_pa
+# rx00534
+s_3O3PPCoA_per_m, s_3H3PPCoA_per_m
+# rx00431
+s_5phosphomevalonate_cyt_m, s_MVA_cyt_m & s_MVK_cyt_pa
+# rx00638
+s_6K2_cyt_p, s_6K2_cyt_p & !(s_VPg_cyt_p)
+# rx00751
+s_8OHABA_cyt_m, s_ABA_cyt_m & s_CYP707A3_cyt_pa
+# rx00315
+s_9cis10apobetacarotenal_cyt_m, s_9cisbetacarotene_cyt_m & s_CCD_cyt_pa
+# rx00549
+s_9cisViolaxanthin_cyt_m, s_VISO_cyt_pa & s_Violaxanthin_cyt_m
+# rx00314
+s_9cisbetacarotene_cyt_m, s_D27_cyt_pa & s_betaCarotene_cyt_m
+# rx00552, rx00749
+s_ABA_cyt_m, s_AAO_cyt_pa & s_Abscisicaldehyde_cyt_m | s_ABAGE_er_m & s_BGLU18_er_pa
+# rx00682
+s_ABCF1_cyt_p, s_ABCF1_cyt_p & !(s_VPg_cyt_p)
+# rx00830
+s_ABF1IDD14_nuc_c, s_AREBABF_nuc_p & s_IDD14_nuc_p
+# rx00831
+s_ABF2IDD14_nuc_c, s_AREBABF_nuc_p & s_IDD14_nuc_p
+# rx00832
+s_ABF3IDD14_nuc_c, s_AREBABF_nuc_p & s_IDD14_nuc_p
+# rx00833
+s_ABF4IDD14_nuc_c, s_AREBABF_nuc_p & s_IDD14_nuc_p
+# rx00838
+s_ABI4RGL2_cyt_c, s_ABI4_cyt_p & s_DELLA_cyt_p
+# rx00846
+s_ABI5HY5_cyt_c, s_ABI5_cyt_p & s_HY5_cyt_p
+# rx00843, rx00845, rx00847
+s_ABI5_cyt_p, s_ABI4RGL2_cyt_ca | s_ABI4_cyt_pa | s_ABI5HY5_cyt_ca
+# rx00002
+s_ACC_cyt_m, s_ACS_cyt_pa & s_SAMe_cyt_m
+# rx00855
+s_ACO_cyt_p, s_ACO_cyt_p & !(s_ABI4_nuc_pa)
+# rx00193
+s_ACO_er_pa, s_ERF_nuc_pa
+# rx00248, rx00716, rx00853
+s_ACS_cyt_p, s_WRKY33_nuc_pa & ( !(s_ERF11_nuc_pa) & !(s_ABI4_nuc_pa) )
+# rx00140
+s_ACS_er_pa, s_ACS_cyt_p & s_MPK36_cyt_pa
+# rx00685
+s_ACT_nuc_p, s_ORA59_nuc_pa
+# rx00312
+s_ACX_per_pa, s_ACX_per_p & s_CAT_per_pa
+# rx00598
+s_ADH1_cyt_p, s_ERFVII_cyt_pa
+# rx00777, rx00780
+s_ADR1L1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00778, rx00781
+s_ADR1L2_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00776, rx00779
+s_ADR1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00199, rx00200
+s_AGO1_cyt_pa, s_AGO1_cyt_pa & ( !(s_HCPro_cyt_pa) & !(s_CI_cyt_p) )
+# rx00589, rx00653
+s_AGO1_nuc_p, s_AGO1_nuc_p & !(s_miR168_cyt_mi)
+# rx00384, rx00385, rx00386, rx00387, rx00388
+s_AHK234_er_pa, ( s_AHK234_er_p & s_tZ_cyt_m | s_AHK234_er_p & s_cZ_cyt_m | s_AHK234_er_p & s_DZ_cyt_m | s_AHK234_er_p & s_iP_cyt_m ) & !(s_AHP_cyt_pa)
+# rx00389
+s_AHP_cyt_pa, s_AHK234_er_pa & s_AHP_cyt_p
+# rx00527
+s_AHP_nuc_pa, s_AHP_cyt_pa
+# rx00977
+s_AKT1AIP1_cyt_ca, s_AIP1_cyt_pa & s_AKT1_cyt_pa
+# rx00693
+s_ALA_chl_m, s_DAD1_chl_pa & s_phospholipids_chl_m
+# rx00766, rx00769
+s_ALD1_cyt_p, s_SARD1_cyt_pa | s_CBP60G_nuc_pa
+# rx00579
+s_APX_cyt_pa, s_HSFA6b_cyt_pa
+# rx00610
+s_AREBABF_cyt_p, s_AREBABF_cyt_p & !(s_BRAHMA_cyt_pa & s_SNRK2_cyt_p)
+# rx00569, rx00608
+s_AREBABF_cyt_pa, s_AREBABF_cyt_p & s_SNRK2_cyt_pa & !(s_DELLA_cyt_pa)
+# rx00112
+s_ARF_nuc_p, s_ARF_nuc_p & !(s_TAS3_cyt_nc)
+# rx00518
+s_ARF_nuc_pa, s_ARF_nuc_pa & !(s_AUXIAA_nuc_pa)
+# rx00391
+s_ARRA_nuc_p, s_ARRB_nuc_pa
+# rx00392, rx00570
+s_ARRA_nuc_pa, s_AHP_cyt_pa & s_ARRA_nuc_p | s_ARRA_nuc_p & s_SNRK2_cyt_pa
+# rx00390, rx00393
+s_ARRB_nuc_pa, s_AHP_nuc_pa & s_ARRB_nuc_p & !(s_ARRA_nuc_pa)
+# rx00493
+s_ASK_cyt_pa, s_ASK_cyt_pa & !(s_BSU1_cyt_pa)
+# rx00674
+s_AT3G17020_cyt_p, s_AT3G17020_cyt_p & !(s_VPg_cyt_p)
+# rx00710
+s_ATAF1_nuc_p, s_Drought_cyt_ab
+# rx00546
+s_ATG13A_cyt_pa, s_ATG13A_cyt_pa & !(s_TORC1_cyt_ca)
+# rx00547
+s_ATG1A_cyt_pa, s_ATG1A_cyt_pa & !(s_TORC1_cyt_ca)
+# rx00205
+s_ATPB_cyt_p, s_ATPB_cyt_p & !(s_HCPro_cyt_pa)
+# rx00692
+s_ATPC1_cyt_p, s_ATPC1_cyt_p & !(s_VPg_cyt_p)
+# rx00130, rx00463
+s_AUXIAA_nuc_pa, s_AUXIAA_nuc_pa & ( !(s_WRKY57_nuc_pa) & !(s_TIR1_nuc_pa) )
+# rx00553
+s_Abscisicaldehyde_cyt_m, s_ABA2_cyt_pa & s_Xanthoxin_cyt_m
+# rx00555, rx00558
+s_Antheraxanthin_cyt_m, s_VDE1_cyt_pa & s_Violaxanthin_cyt_m | s_ZEP_cyt_pa & s_Zeaxanthin_cyt_m
+# rx00063
+s_Anthocyaninaccumulation_vac_pra, s_WDbHLHMYB_nuc_ca
+# rx01002
+s_AtMC4_cyt_pa, s_AtMC4_cyt_p & s_Ca2_cyt_m
+# rx00535
+s_BACoA_cyt_m, s_3O3PPCoA_per_m & s_KAT_per_pa
+# rx01001
+s_BAG3_cyt_pa, s_AtMC4_cyt_pa & s_BAG3_cyt_p
+# rx00529
+s_BAK1BRI1_cyt_ca, s_BAK1_cyt_p & s_BRI1_cyt_p & s_Brassinolide_cyt_m
+# rx00237
+s_BAK1FLS2flg22_x_ca, s_BAK1_cyt_p & s_flg22_cyt_pa
+# rx00784, rx00798
+s_BAK1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00813, rx00824
+s_BAP1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00814, rx00825
+s_BAP2_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00676
+s_BAS1_cyt_p, s_BAS1_cyt_p & !(s_VPg_cyt_p)
+# rx00537, rx00538
+s_BA_cyt_m, s_BA_per_m | s_AAO_cyt_pa & s_BD_cyt_m
+# rx00536
+s_BA_per_m, s_BACoA_per_m & s_DHNAT2_per_pa
+# rx00998
+s_BB_cyt_m, s_BB_per_m
+# rx00687
+s_BCCP1_cyt_p, s_BCCP1_cyt_p & !(s_VPg_cyt_p)
+# rx00539, rx01009
+s_BD_cyt_m, s_CACoA_per_m & s_CHY1_per_pa | s_AAO_cyt_pa & s_BA_cyt_m
+# rx00750
+s_BGLU18_cyt_pa, s_BGLU18_cyt_p & s_Drought_cyt_ab
+# rx00450
+s_BGLU30_cyt_p, s_ORA59_nuc_pa
+# rx00513
+s_BIK1PEPR1PEP1_cyt_c, s_BIK1_cyt_pa & s_PEPR1PEP1_cyt_c
+# rx00793, rx00801
+s_BIK1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00238, rx00445
+s_BIK1_cyt_pa, s_BAK1FLS2flg22_x_ca & s_BIK1_cyt_p | s_BIK1_cyt_p & s_SIK1_cyt_pa
+# rx00812, rx00823
+s_BON1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00491
+s_BSK_cyt_pa, s_BAK1BRI1_cyt_ca & s_BSK_cyt_p
+# rx00492, rx00735, rx00736, rx00744
+s_BSU1_cyt_pa, s_BSK_cyt_pa & s_BSU1_cyt_p | s_BIK1_cyt_pa & s_BSU1_cyt_p | s_BSU1_cyt_p & s_CDG1_cyt_pa | s_BRI1_cyt_pa & s_BSU1_cyt_p
+# rx00999
+s_BS_cyt_m, s_BBH_er_pa & s_BB_cyt_m
+# rx00411
+s_BT4_cyt_pa, s_ERF11_nuc_pa
+# rx00494
+s_BZR2_nuc_pa, s_ASK_cyt_pa & s_BZR2_nuc_p
+# rx00996
+s_Benzylalcohol_per_m, s_ADH_per_pa & s_BACoA_per_m
+# rx00689
+s_CAC2_cyt_p, s_CAC2_cyt_p & !(s_VPg_cyt_p)
+# rx00532, rx00533
+s_CACoA_per_m, s_BZO1_cyt_pa & s_CA_per_m | s_4CL_per_pa & s_CA_per_m
+# rx00184
+s_CAMTA3_cyt_pa, s_CAMTA3_cyt_p & s_CMLCa2_cyt_ca
+# rx00150
+s_CAMTA3_nuc_pa, s_CAMTA3_nuc_pa & !(s_SR1IP1_nuc_pa)
+# rx00310, rx00311, rx00701
+s_CAT_per_pa, s_CAT_per_p & s_CMLCa2_cyt_ca & ( !(s_LSD1_cyt_p) & !(s_SA_cyt_m) )
+# rx00926, rx00927, rx00928, rx00929, rx00930, rx00931, rx00938
+s_CAX1_cyt_pa, s_CAX1_cyt_p & s_CBL2CIPK3_cyt_ca | s_CAX1_cyt_p & s_CBL2CIPK9_cyt_ca | s_CAX1_cyt_p & s_CBL2CIPK26_cyt_ca | s_CAX1_cyt_p & s_CBL3CIPK3_cyt_ca | s_CAX1_cyt_p & s_CBL3CIPK9_cyt_ca | s_CAX1_cyt_p & s_CBL3CIPK26_cyt_ca | s_BIK1_cyt_pa & s_CAX1_cyt_p
+# rx00932, rx00933, rx00934, rx00935, rx00936, rx00937, rx00939
+s_CAX3_cyt_pa, s_CAX3_cyt_p & s_CBL2CIPK3_cyt_ca | s_CAX3_cyt_p & s_CBL2CIPK9_cyt_ca | s_CAX3_cyt_p & s_CBL2CIPK26_cyt_ca | s_CAX3_cyt_p & s_CBL3CIPK3_cyt_ca | s_CAX3_cyt_p & s_CBL3CIPK9_cyt_ca | s_BIK1_cyt_pa & s_CAX3_cyt_p
+# rx00076
+s_CA_chl_m, s_PAL_chl_pa & s_Phe_chl_m
+# rx00531
+s_CA_per_m, s_CA_cyt_m & s_CTS_per_pa
+# rx00985
+s_CBL10Ca2_cyt_ca, s_CBL10_cyt_pa & s_Ca2_cyt_m
+# rx00789
+s_CBL1CIPK1_cyt_c, s_CBL1_cyt_p & s_CIPK1_cyt_p
+# rx00828
+s_CBL1CIPK23_cyt_c, s_CBL1_cyt_p & s_CIPK23_cyt_p
+# rx00888
+s_CBL2CIPK23_cyt_c, s_CBL2_cyt_p & s_CIPK23_cyt_p
+# rx00878
+s_CBL2CIPK26Ca2_cyt_c, s_CBL2Ca2_cyt_c & s_CIPK26_cyt_p
+# rx00889
+s_CBL2CIPK26_cyt_c, s_CBL2_cyt_p & s_CIPK26_cyt_p
+# rx00875
+s_CBL2CIPK3Ca2_cyt_c, s_CBL2Ca2_cyt_c & s_CIPK3_cyt_p
+# rx00886
+s_CBL2CIPK3_cyt_c, s_CBL2_cyt_p & s_CIPK3_cyt_p
+# rx00876
+s_CBL2CIPK9Ca2_cyt_c, s_CBL2Ca2_cyt_c & s_CIPK9_cyt_p
+# rx00887
+s_CBL2CIPK9_cyt_c, s_CBL2_cyt_p & s_CIPK9_cyt_p
+# rx00861
+s_CBL2Ca2_cyt_c, s_CBL2_cyt_p & s_Ca2_cyt_m
+# rx00892
+s_CBL3CIPK23_cyt_c, s_CBL3_cyt_p & s_CIPK23_cyt_p
+# rx00883
+s_CBL3CIPK26Ca2_cyt_c, s_CBL3Ca2_cyt_c & s_CIPK26_cyt_p
+# rx00893
+s_CBL3CIPK26_cyt_c, s_CBL3_cyt_p & s_CIPK26_cyt_p
+# rx00881
+s_CBL3CIPK3Ca2_cyt_c, s_CBL3Ca2_cyt_c & s_CIPK3_cyt_p
+# rx00890
+s_CBL3CIPK3_cyt_c, s_CBL3_cyt_p & s_CIPK3_cyt_p
+# rx00882
+s_CBL3CIPK9Ca2_cyt_c, s_CBL3Ca2_cyt_c & s_CIPK9_cyt_p
+# rx00891
+s_CBL3CIPK9_cyt_c, s_CBL3_cyt_p & s_CIPK9_cyt_p
+# rx00862
+s_CBL3Ca2_cyt_c, s_CBL3_cyt_p & s_Ca2_cyt_m
+# rx00914
+s_CBL4CIPK24_cyt_ca, s_CBL4_cyt_pa & s_CIPK24_cyt_pa
+# rx00913
+s_CBL4Ca2_cyt_ca, s_CBL4_cyt_pa & s_Ca2_cyt_m
+# rx00790
+s_CBL9CIPK1_cyt_c, s_CBL9_cyt_p & s_CIPK1_cyt_p
+# rx00829
+s_CBL9CIPK23_cyt_c, s_CBL9_cyt_p & s_CIPK23_cyt_p
+# rx00183
+s_CBP60G_nuc_pa, s_CBP60G_nuc_p & s_CMLCa2_cyt_ca
+# rx00501
+s_CDKNPR1_cyt_c, s_CDK_nuc_p & s_NPR1_nuc_pa & s_SA_cyt_m
+# rx00726
+s_CDKRAP26_nuc_c, s_CDK_nuc_pa & s_RAP26_cyt_pa
+# rx00504
+s_CDKTGA_cyt_c, s_CDK_nuc_p & s_TGA_nuc_pa
+# rx00502
+s_CDKWRKY618_cyt_c, s_CDK_nuc_p & s_WRKY618_cyt_p
+# rx00797, rx00805
+s_CDPK_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00169, rx00732
+s_CDPK_cyt_pa, s_CDPK_cyt_p & s_Ca2_cyt_m
+# rx00967
+s_CIPK16AKT1_cyt_ca, s_AKT1_cyt_pa & s_CIPK16_cyt_pa
+# rx00973
+s_CIPK16CBL1_cyt_ca, s_CBL1_cyt_pa & s_CIPK16_cyt_pa
+# rx00974
+s_CIPK16CBL2_cyt_ca, s_CBL2_cyt_pa & s_CIPK16_cyt_pa
+# rx00975
+s_CIPK16CBL3_cyt_ca, s_CBL3_cyt_pa & s_CIPK16_cyt_pa
+# rx00976
+s_CIPK16CBL9_cyt_ca, s_CBL9_cyt_pa & s_CIPK16_cyt_pa
+# rx00978
+s_CIPK23AIP1_cyt_ca, s_AIP1_cyt_pa & s_CIPK23_cyt_pa
+# rx00968
+s_CIPK23AKT1_cyt_ca, s_AKT1_cyt_pa & s_CIPK23_cyt_pa
+# rx00983
+s_CIPK24CBL10_cyt_ca, s_CBL10_cyt_pa & s_CIPK24_cyt_pa
+# rx00966
+s_CIPK6AKT1_cyt_ca, s_AKT1_cyt_pa & s_CIPK6_cyt_pa
+# rx00969
+s_CIPK6CBL1_cyt_ca, s_CBL1_cyt_pa & s_CIPK6_cyt_pa
+# rx00970
+s_CIPK6CBL2_cyt_ca, s_CBL2_cyt_pa & s_CIPK6_cyt_pa
+# rx00971
+s_CIPK6CBL3_cyt_ca, s_CBL3_cyt_pa & s_CIPK6_cyt_pa
+# rx00972
+s_CIPK6CBL9_cyt_ca, s_CBL9_cyt_pa & s_CIPK6_cyt_pa
+# rx00981
+s_CIPK8CBL10_cyt_ca, s_CBL10_cyt_pa & s_CIPK8_cyt_pa
+# rx00979
+s_CIPK8CBL1_cyt_ca, s_CBL1_cyt_pa & s_CIPK8_cyt_pa
+# rx00980
+s_CIPK8CBL5_cyt_ca, s_CBL5_cyt_pa & s_CIPK8_cyt_pa
+# rx00200, rx00214, rx00585, rx00636
+s_CI_cyt_p, s_potyvirus_cyt_f & ( !(s_AGO1_cyt_pa) & !(s_PSAK_cyt_p) & !(s_VPg_cyt_p) )
+# rx00317
+s_CLA_cyt_m, s_CL_cyt_m & s_MAX1_cyt_pa
+# rx00049
+s_CLH_cyt_pa, s_MYC2_nuc_pa
+# rx00683
+s_CLPR3_cyt_p, s_CLPR3_cyt_p & !(s_VPg_cyt_p)
+# rx00316
+s_CL_cyt_m, s_9cis10apobetacarotenal_cyt_m & s_CCD_cyt_pa
+# rx00738
+s_CML12_cyt_pa, s_CML12_cyt_p & s_Ca2_cyt_m
+# rx00173
+s_CMLCa2_cyt_ca, s_CML_cyt_p & s_Ca2_cyt_m
+# rx00219
+s_CMLHCPro_cyt_ca, s_CML_cyt_pa & s_HCPro_cyt_pa
+# rx00699
+s_CNGC2_cyt_pa, s_CNGC2_cyt_p & s_Heat_cyt_ab
+# rx00600, rx00614
+s_CO2deficiency_chl_pra, s_CO2deficiency_chl_pr & s_Stomatalclosure_cyt_pra | s_CO2deficiency_chl_pr & s_Waterlogging_cyt_ab
+# rx00043
+s_COI1JAIleSCF_cyt_ca, s_COI1_nuc_pa & s_JAIle_cyt_m
+# rx00196
+s_COI1_cyt_p, s_COI1_cyt_p & !(s_CMLCa2_nuc_ca)
+# rx00730, rx00925
+s_COI1_cyt_pa, s_COI1_cyt_p & s_HSP70HSP90SGT1_cyt_ca | s_COI1_cyt_p & s_HOP3_cyt_pa
+# rx00232
+s_COI1_nuc_pa, s_COI1_nuc_pa & !(s_RBC_cyt_pa)
+# rx00231
+s_COOBE1_cyt_ca, s_CO_cyt_pa & s_OBE1_cyt_p
+# rx00612, rx00613
+s_CO_cyt_pa, s_CO_cyt_pa & ( !(s_SOC1_cyt_pa) & !(s_DELLA_cyt_pa) )
+# rx00201
+s_CPIP_cyt_pa, s_CPIP_cyt_pa & !(s_CP_cyt_p)
+# rx00960
+s_CPK12GRF8_cyt_ca, s_CPK12_cyt_pa & s_GRF8_cyt_pa
+# rx00961
+s_CPK12_nuc_pa, s_CPK12_cyt_pa & s_PA_cyt_m
+# rx00275
+s_CPS_cyt_pa, s_CPS_cyt_pa & !(s_vsiRNA34327_cyt_nc)
+# rx00201, rx00584, rx00641
+s_CP_cyt_p, s_potyvirus_cyt_f & ( !(s_CPIP_cyt_pa) & !(s_VPg_cyt_p) )
+# rx00170, rx00194, rx00215
+s_CRT_cyt_pa, s_CRT_cyt_p & s_Ca2_cyt_m & ( !(s_Ca2_cyt_m) & !(s_HCPro_cyt_pa) )
+# rx00006
+s_CTRETR_er_c, s_CTR_cyt_pa & s_ETR_er_pa
+# rx00007
+s_CTRETR_er_ca, s_CTRETR_er_c & s_RTE1_ga_pa
+# rx00496
+s_CYCD33_nuc_p, s_BZR2_nuc_pa
+# rx00452
+s_CYP81F4_cyt_pa, s_ORA59_nuc_pa
+# rx00194, rx00602, rx00603, rx00700, rx00943
+s_Ca2_cyt_m, ( s_Ca2_x_m & s_OSCA13_cyt_pa | s_Ca2_x_m & s_OSCA1_cyt_pa | s_CNGC2_cyt_pa & s_Ca2_x_m | s_Ca2_x_m & s_NRG11_cyt_pa ) & !(s_CRT_cyt_pa)
+# rx00869, rx00870
+s_Ca2_vac_m, s_CAX1_cyt_pa & s_Ca2_cyt_m | s_CAX3_cyt_pa & s_Ca2_cyt_m
+# rx00004
+s_Cu2_er_m, s_Cu2_cyt_m & s_HMA_er_pa
+# rx00319
+s_D14MAX2SCF_cyt_ca, s_D14_cyt_pa & s_MAX2_cyt_pa
+# rx00318, rx00903
+s_D14_cyt_pa, s_D14_cyt_p & s_SL_cyt_m | s_D14_cyt_p & s_MeCLA_cyt_m
+# rx00292, rx00297
+s_DELLAGAGID1_cyt_ca, s_DELLA_nuc_p & s_GAGID1_cyt_ca & !(s_GIDSCF_cyt_ca)
+# rx00842, rx00844
+s_DELLA_cyt_p, s_ABI4_cyt_pa | s_ABI4RGL2_cyt_ca
+# rx00159, rx00162
+s_DELLA_nuc_p, s_DELLA_nuc_p & ( !(s_JAZ_nuc_pa) & !(s_MYC2_nuc_pa) )
+# rx00163
+s_DELLA_nuc_pa, s_MYC2_nuc_pa
+# rx00321
+s_DMAPP_cyt_m, s_HMBDP_cyt_m & s_ISPH_cyt_pa
+# rx00460
+s_DOPAL_cyt_m, s_ELI5_cyt_pa & s_LDopa_cyt_m & s_Phe_cyt_m
+# rx00753
+s_DPA_cyt_m, s_PAR_cyt_pa & s_Phaseicacid_cyt_m
+# rx00453
+s_DR4_cyt_pa, s_ORA59_nuc_pa
+# rx00204, rx00895, rx00897
+s_DXPS2_cyt_p, ( s_HY5_cyt_pa | s_PIF1_cyt_pa ) & !(s_HCPro_cyt_pa)
+# rx00896, rx00899
+s_DXR_cyt_p, s_HY5_cyt_pa | s_PIF1_cyt_pa
+# rx00343, rx00344
+s_DZ_cyt_m, s_DZribotide_cyt_m & s_LOG_cyt_pa | s_DZriboside_cyt_m
+# rx00348
+s_DZglucosides_cyt_m, s_DZ_cyt_m & s_UDPGlc_cyt_m & s_UGT_cyt_pa
+# rx00645, rx00651
+s_DZriboside_cyt_m, s_DZ_cyt_m | s_DZribotide_cyt_m
+# rx00342, rx00345, rx00379
+s_DZribotide_cyt_m, s_APT_cyt_pa & s_DZ_cyt_m | s_ADK_cyt_pa & s_DZriboside_cyt_m | s_tZribotide_cyt_m
+# rx00016
+s_EBFSCF_cyt_ca, s_EBF_nuc_pa
+# rx00012, rx00013
+s_EBF_nuc_pa, s_EIN3like_nuc_pa & !(s_EIN5_nuc_pa)
+# rx00218
+s_EDF2_cyt_p, s_EDF2_cyt_p & !(s_HCPro_cyt_pa)
+# rx00090
+s_EDS1MPK3PAD4_cyt_ca, s_EDS1PAD4_nuc_ca & s_MPK36_cyt_pa
+# rx00054
+s_EDS1PAD4SAG_nuc_ca, s_EDS1PAD4_nuc_ca & s_SAGs_nuc_p
+# rx00087, rx00088, rx00089
+s_EDS1PAD4_nuc_ca, s_EDS1_nuc_pa & s_PAD4_nuc_pa & ( !(s_NPR1_nuc_pa) & !(s_MPK4_cyt_pa) )
+# rx00991
+s_EDS1WRKY18_nuc_ca, s_EDS1_nuc_pa & s_WRKY618_nuc_pa
+# rx00771, rx00773
+s_EDS1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00148, rx00524
+s_EDS1_cyt_pa, s_EDS1_cyt_pa & ( !(s_CAMTA3_nuc_pa) & !(s_EIJP1_cyt_pa) )
+# rx00523
+s_EDS1_nuc_pa, s_EDS1_cyt_pa
+# rx00760, rx00761
+s_EDS5_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00521, rx00522
+s_EIF4E1_cyt_p, s_EIF4E1_cyt_p & ( !(s_VPg_cyt_p) & !(s_HCPro_cyt_pa) )
+# rx00456
+s_EIJP1_cyt_pa, s_EIJP1_chl_pa
+# rx00009, rx00010, rx00525
+s_EIN2_er_pa, s_EIN2_er_p & s_ETPSCF_cyt_ca & ( !(s_CTRETR_er_ca) & !(s_TOR_cyt_pa) )
+# rx00430
+s_EIN2_nuc_pa, s_EIN2_er_pa
+# rx00711
+s_EIN3NPR1_cyt_c, s_EIN3like_cyt_p & s_NPR1_cyt_p
+# rx00018
+s_EIN3likeJAZ_nuc_ca, s_EIN3like_nuc_pa & s_JAZ_nuc_pa
+# rx00186
+s_EIN3like_nuc_p, s_EIN3like_nuc_p & !(s_CAMTA3_nuc_pa)
+# rx00015, rx00017, rx00235
+s_EIN3like_nuc_pa, ( s_EIN2_nuc_pa & s_EIN3like_nuc_p | s_EIN3like_nuc_p & s_MPK36_cyt_pa ) & !(s_EBFSCF_cyt_ca)
+# rx00785
+s_ELF3_cyt_pa, s_ELF3_cyt_pa & !(s_Heat_cyt_ab)
+# rx00734
+s_ENDO1_cyt_p, s_NAC92_nuc_pa
+# rx00454
+s_ERF016_cyt_pa, s_ORA59_nuc_pa
+# rx00154
+s_ERF096_cyt_pa, s_ORA59_nuc_pa
+# rx00144
+s_ERF104_cyt_pa, s_ERF104_cyt_p & s_MPK36_cyt_pa
+# rx00146
+s_ERF105_cyt_pa, s_ERF105_cyt_p & s_MPK36_cyt_pa
+# rx00715
+s_ERF11_cyt_p, s_HY5_nuc_pa
+# rx00436
+s_ERF1_cyt_p, s_ORA59_nuc_pa
+# rx00158, rx00206
+s_ERF1_cyt_pa, s_EIN3like_nuc_pa & !(s_JAM_nuc_pa)
+# rx00142
+s_ERF5_cyt_pa, s_ERF5_cyt_p & s_MPK36_cyt_pa
+# rx00136
+s_ERF6_nuc_pa, s_ERF6_nuc_p & s_MPK36_cyt_pa
+# rx00019
+s_ERFEDF_nuc_pa, s_EIN3like_nuc_pa
+# rx00834, rx00962, rx00963, rx00964
+s_ERFVII_cyt_pa, s_ERFVII_cyt_p & s_MPK36_cyt_pa | s_CPK12_cyt_pa & s_ERFVII_cyt_p
+# rx00122
+s_ESP_cyt_p, s_ESP_cyt_p & !(s_WRKY53_nuc_pa)
+# rx00008
+s_ETETR_cyt_ca, s_ETR_er_pa & s_ET_cyt_m
+# rx00011
+s_ETPSCF_cyt_ca, s_ETP_cyt_p
+# rx00005
+s_ETR_er_pa, s_Cu2_er_m & s_ETR_er_p
+# rx00003, rx00616
+s_ET_cyt_m, s_ACC_cyt_m & s_ACO_cyt_pa | s_ET_cyt_m & s_Waterlogging_cyt_ab
+# rx00629
+s_FBA8_cyt_p, s_FBA8_cyt_p & !(s_VPg_cyt_p)
+# rx01011, rx01012
+s_FD_cyt_pa, s_CPK33_cyt_pa & s_FD_cyt_p | s_CDPK_cyt_pa & s_FD_cyt_p
+# rx00782
+s_FKBP42CAM_cyt_c, s_CAM1_cyt_p & s_FKBP42_cyt_p
+# rx00775
+s_FKBP42HSP90_cyt_c, s_FKBP42_cyt_p & s_HSP90_cyt_p
+# rx00827
+s_FKBP62HSP901_cyt_c, s_HSF_cyt_pa & s_HSP90_cyt_p
+# rx00441
+s_FKBP65_cyt_pa, s_ORA59_nuc_pa
+# rx00764, rx00768
+s_FMO1_cyt_p, s_SARD1_cyt_pa | s_CBP60G_nuc_pa
+# rx00668
+s_FQR1_cyt_p, s_FQR1_cyt_p & !(s_VPg_cyt_p)
+# rx00267
+s_GA12_cyt_m, s_KAO12_cyt_pa & s_entKaurenoicacid_cyt_m
+# rx00269
+s_GA20_cyt_m, s_GA12_cyt_m & s_GA20ox_cyt_pa
+# rx00276
+s_GA20ox_cyt_pa, s_GA20ox_cyt_pa & !(s_vsiRNA12986_cyt_nc)
+# rx00274
+s_GA34_cyt_m, s_C19GA2ox_cyt_pa & s_GA_cyt_m
+# rx00273
+s_GA8_cyt_m, s_C19GA2ox_cyt_pa & s_GA_cyt_m
+# rx00268
+s_GA9_cyt_m, s_GA12_cyt_m & s_GA20ox_cyt_pa
+# rx00283
+s_GAGID1_cyt_ca, s_GA_cyt_m & s_GID_nuc_pa
+# rx00703
+s_GAIGI_nuc_c, s_DELLA_nuc_p & s_GI_nuc_p
+# rx00667
+s_GAPC2_cyt_p, s_GAPC2_cyt_p & !(s_VPg_cyt_p)
+# rx00270, rx00271
+s_GA_cyt_m, s_GA3ox_cyt_pa & s_GA9_cyt_m | s_GA20_cyt_m & s_GA3ox_cyt_pa
+# rx00301
+s_GAmethylester_cyt_m, s_GAMT12_cyt_pa & s_GA_cyt_m
+# rx00792, rx00800
+s_GB1_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00477
+s_GBF4_nuc_pa, s_GBF4_nuc_p & s_SNRK2_cyt_pa
+# rx00675
+s_GER3_cyt_p, s_GER3_cyt_p & !(s_VPg_cyt_p)
+# rx00465
+s_GH37_nuc_p, s_ARF_nuc_pa
+# rx00295
+s_GIDSCF_cyt_ca, s_GID_nuc_pa
+# rx00704
+s_GIPIF4_cyt_c, s_GI_cyt_p & s_PIF4_cyt_p
+# rx00059
+s_GPAphid2RANGAP_cyt_ca, s_GPAphid2_cyt_p & s_RANGAP_cyt_pa
+# rx00688
+s_GRF6_cyt_p, s_GRF6_cyt_p & !(s_VPg_cyt_p)
+# rx00164
+s_GRX480_nuc_pa, s_GRX480_nuc_p & s_ROS_cyt_m
+# rx00630
+s_GSTF9_cyt_p, s_GSTF9_cyt_p & !(s_VPg_cyt_p)
+# rx00690
+s_GST_cyt_p, s_GST_cyt_p & !(s_VPg_cyt_p)
+# rx00149, rx00234
+s_GST_cyt_pa, s_GST_cyt_p & s_ROS_cyt_m & !(s_SA_cyt_m)
+# rx00548, rx00911
+s_Growth_cyt_pra, s_Growth_cyt_pr & s_TORC1_cyt_ca | s_Growth_cyt_pr & s_UDPGlc_cyt_m
+# rx00199, rx00204, rx00205, rx00207, rx00211, rx00212, rx00213, rx00215, rx00218, rx00220, rx00522, rx00581, rx00582
+s_HCPro_cyt_pa, s_potyvirus_cyt_f & ( !(s_AGO1_cyt_pa) & !(s_DXPS2_cyt_p) & !(s_ATPB_cyt_p) & !(s_MIND1_cyt_p) & !(s_PAA2_cyt_p) & !(s_PBB2_cyt_p) & !(s_PBE1_cyt_p) & !(s_CRT_cyt_pa) & !(s_EDF2_cyt_p) & !(s_TDX_cyt_p) & !(s_EIF4E1_cyt_p) & !(s_mevsiRNA_cyt_nc) )
+# rx00580
+s_HEN1_cyt_pa, s_HEN1_cyt_pa & !(s_HCPro_cyt_pa)
+# rx00747
+s_HSFA1b_cyt_pa, s_HSFA1b_cyt_p & s_Heat_cyt_ab
+# rx00835
+s_HSFA1dPIF4_cyt_c, s_HSFA1d_cyt_p & s_PIF4_cyt_p
+# rx00576
+s_HSFA6b_cyt_pa, s_AREBABF_nuc_pa
+# rx00574, rx00618, rx00856
+s_HSF_cyt_pa, s_Heat_cyt_ab | s_PIF34_cyt_pa & s_PIF7_cyt_pa | s_HSF_cyt_p & s_MPK36_cyt_pa
+# rx00577
+s_HSP181CI_cyt_pa, s_HSFA6b_cyt_pa
+# rx00578
+s_HSP265MII_cyt_pa, s_HSFA6b_cyt_pa
+# rx00729
+s_HSP70HSP90SGT1_cyt_c, s_HSP90_cyt_p & s_SGT1_cyt_p
+# rx00053
+s_HSP90RAR1SGT1_cyt_ca, s_HSP90_cyt_p & s_SGT1_cyt_p
+# rx00575
+s_HSP_cyt_pa, s_HSF_cyt_pa
+# rx00631
+s_HUP54_cyt_p, s_HUP54_cyt_p & !(s_VPg_cyt_p)
+# rx00841
+s_HY5_cyt_pa, s_HY5_cyt_p & s_redlight_cyt_ab
+# rx00458
+s_IAAAsp_cyt_m, s_GH3_cyt_pa & s_IAA_cyt_m
+# rx00457
+s_IAAGlu_chl_m, s_IAA_chl_m & s_UGT84B1_chl_pa
+# rx00414, rx00417, rx00418, rx00434, rx00442, rx00448
+s_IAA_cyt_m, s_IPA_cyt_m & s_YUC_cyt_pa | s_IAN_cyt_m & s_NIT1_cyt_pa | s_AMI1_cyt_pa & s_IAM_cyt_m | s_IAAAla_cyt_m & s_IAR_cyt_pa | s_IAALeu_cyt_m & s_ILR1_cyt_pa | s_IAMT1_cyt_pa & s_MeIAA_cyt_m
+# rx00425
+s_IAM_cyt_m, s_Trp_cyt_m & s_iaaM_cyt_pa
+# rx00416
+s_IAOxNoxide_cyt_m, s_CYP83B1_cyt_pa & s_IAOx_cyt_m
+# rx00415
+s_IAOx_cyt_m, s_CYP79B2_cyt_pa & s_Trp_cyt_m
+# rx00187, rx00188, rx00189, rx00190, rx00240, rx00254, rx00255, rx00256, rx00428, rx00433, rx00509, rx00526
+s_ICS_chl_pa, ( s_WRKY8_nuc_pa | s_WRKY28_nuc_pa | s_WRKY48_nuc_pa | s_CBP60G_nuc_pa | s_NAC019_nuc_pa | s_NAC055_nuc_pa | s_NAC072_nuc_pa | s_SARD1_nuc_pa | s_TCP8_nuc_pa | s_MYC2_nuc_pa | s_NPR1TGA_nuc_ca ) & !(s_EIN3like_nuc_pa)
+# rx00992
+s_ICS_nuc_p, s_EDS1WRKY18_nuc_ca
+# rx00413
+s_IPA_cyt_m, s_TAA1_cyt_pa & s_Trp_cyt_m
+# rx00681
+s_IPP2_cyt_p, s_IPP2_cyt_p & !(s_VPg_cyt_p)
+# rx00708
+s_IPT1345678_cyt_p, s_IPT1345678_cyt_p & !(s_MYB2_nuc_pa)
+# rx00901
+s_ISPH_cyt_p, s_PIF1_cyt_pa
+# rx00020
+s_Ile_cyt_m, s_OMR1_cyt_pa & s_Thr_cyt_m
+# rx00723
+s_InsP5_cyt_m, s_ITPK1_cyt_pa & s_InsP4_cyt_m
+# rx00724
+s_InsP6_cyt_m, s_IPK1_cyt_pa & s_InsP5_cyt_m
+# rx00725
+s_InsP7_cyt_m, s_ITPK1_cyt_pa & s_InsP6_cyt_m
+# rx00728
+s_InsP8_cyt_m, s_InsP7_cyt_m & s_VIH1_cyt_pa
+# rx00514
+s_IsoChor9Glu_cyt_m, s_Glu_cyt_m & s_IsoChor_cyt_m & s_PBS3_cyt_pa
+# rx00069
+s_IsoChor_chl_m, s_Chor_chl_m & s_ICS_chl_pa
+# rx00517
+s_IsoChor_cyt_m, s_EDS5_chl_pa & s_IsoChor_chl_m
+# rx00037
+s_JACoA_per_m, s_KAT_per_pa & s_OPC4CoA_per_m
+# rx00041
+s_JAIle_cyt_m, s_Ile_cyt_m & s_JAR_cyt_pa & s_JA_cyt_m
+# rx00877, rx00879, rx00880
+s_JAM_cyt_pa, s_JAM_cyt_pa & ( !(s_MYC2_cyt_pa) & !(s_MYC3_cyt_pa) & !(s_MYC4_cyt_pa) )
+# rx00872, rx00873, rx00874
+s_JAZ_cyt_pa, s_JAZ_cyt_pa & !(s_JAM_cyt_pa)
+# rx00044, rx00046, rx00128, rx00159, rx00233
+s_JAZ_nuc_pa, s_MYC2_nuc_pa & ( !(s_COI1JAIleSCF_cyt_ca) & !(s_WRKY57_nuc_pa) & !(s_DELLA_nuc_p) & !(s_RBC_cyt_pa) )
+# rx00039, rx00696
+s_JA_cyt_m, s_JAT2_per_pa & s_JA_per_m | s_MES10_cyt_pa & s_MeJA_cyt_m
+# rx00038
+s_JA_per_m, s_ACH_per_pa & s_JACoA_per_m
+# rx00050
+s_JR1_cyt_pa, s_MYC2_nuc_pa
+# rx00742
+s_KRP1_cyt_pa, s_Ca2_cyt_m & s_KRP1_cyt_p
+# rx00455
+s_LECRK19_cyt_pa, s_LECRK19_cyt_p & s_eATP_x_m
+# rx00669
+s_LHB1B1_cyt_p, s_LHB1B1_cyt_p & !(s_VPg_cyt_p)
+# rx00595
+s_LMet_cyt_m, s_Lhomocys_cyt_m & s_MS_cyt_pa
+# rx00028, rx00634
+s_LOX_cyt_p, s_MYC2_nuc_pa & !(s_VPg_cyt_p)
+# rx00027
+s_LOX_cyt_pa, s_LOX_cyt_p & s_MPK4_cyt_pa
+# rx00310
+s_LSD1_cyt_p, s_LSD1_cyt_p & !(s_CAT_per_pa)
+# rx00540
+s_Larogenate_cyt_m, s_PA_cyt_pa & s_Prep_cyt_m
+# rx00594
+s_Lhomocys_cyt_m, s_SAHH_cyt_pa & s_SAH_cyt_m
+# rx00563
+s_Lycopene_cyt_m, s_ZDS1_cyt_pa & s_alltransNeurosporene_cyt_m
+# rx00794, rx00802
+s_MAPKKK8_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00604, rx00737
+s_MAPKKK8_cyt_pa, s_BIK1_cyt_pa & s_MAPKKK8_cyt_p | s_BSU1_cyt_pa & s_MAPKKK8_cyt_p
+# rx00014
+s_MDA_chl_m, s_ALA_chl_m & s_ROS_chl_m
+# rx00680
+s_MED37E_cyt_p, s_MED37E_cyt_p & !(s_VPg_cyt_p)
+# rx00207
+s_MIND1_cyt_p, s_MIND1_cyt_p & !(s_HCPro_cyt_pa)
+# rx00949, rx00950
+s_MIZ1_cyt_pa, s_MIZ1_cyt_pa & !(s_CDPK_cyt_pa)
+# rx00424, rx00906
+s_MKK1_cyt_pa, s_MKD1_cyt_pa & s_MKK1_cyt_p | s_MAPKKK8_cyt_pa & s_MKK1_cyt_p
+# rx00907
+s_MKK2_cyt_pa, s_MAPKKK8_cyt_pa & s_MKK2_cyt_p
+# rx00795, rx00803
+s_MKK45_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00507, rx00625
+s_MKK45_cyt_pa, s_MYC2_nuc_pa | s_MAPKKK8_cyt_pa & s_MKK45_cyt_p
+# rx00242
+s_MKS1WRKY33_cyt_ca, s_MKS1_cyt_p & s_WRKY33_nuc_p
+# rx00811, rx00822
+s_MLO2_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00796, rx00804
+s_MPK36_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00166, rx00497, rx00851
+s_MPK36_cyt_pa, s_MPK36_cyt_p & s_WAK1_cyt_pa | s_MKK45_cyt_pa & s_MPK36_cyt_p | s_Heat_cyt_ab & s_MPK36_cyt_p
+# rx00714, rx00908
+s_MPK4_cyt_pa, s_MKK1_cyt_pa & s_MPK4_cyt_p | s_MKK2_cyt_pa & s_MPK4_cyt_p
+# rx00691
+s_MPPBETA_cyt_p, s_MPPBETA_cyt_p & !(s_VPg_cyt_p)
+# rx00567
+s_MSL_cyt_pa, s_MSL_cyt_p & s_Waterlogging_cyt_ab
+# rx00672
+s_MTI2011_cyt_p, s_MTI2011_cyt_p & !(s_VPg_cyt_p)
+# rx00435
+s_MVK_cyt_pa, s_LECRK19_cyt_pa & s_MVK_cyt_p
+# rx00153
+s_MYB113_cyt_pa, s_ORA59_nuc_pa
+# rx00305
+s_MYB334465_cyt_p, s_MYB334465_cyt_p & !(s_miR159AB_cyt_nc)
+# rx00243, rx00302
+s_MYB334465_cyt_pa, s_MPK36_cyt_pa & s_MYB334465_cyt_p | s_GA_cyt_m
+# rx01004, rx01006
+s_MYC2_cyt_pa, s_MYC2_cyt_p & s_PP2AB1_cyt_pa & !(s_EDR1_cyt_pa)
+# rx00047, rx00162, rx00432, rx00459
+s_MYC2_nuc_pa, s_MYC2_nuc_pa & ( !(s_JAZ_nuc_pa) & !(s_DELLA_nuc_p) & !(s_NPR1_cyt_pa) & !(s_PYL_cyt_p) )
+# rx00444
+s_MYC3_cyt_pa, s_MYC3_cyt_pa & !(s_NPR1_cyt_pa)
+# rx00446
+s_MYC4_cyt_pa, s_MYC4_cyt_pa & !(s_NPR1_cyt_pa)
+# rx00902, rx00909
+s_MeCLA_cyt_m, s_CLAMT_cyt_pa & s_CLA_cyt_m & !(s_D14_cyt_pa)
+# rx00040
+s_MeJA_cyt_m, s_JA_cyt_m & s_JMT_cyt_pa
+# rx00083
+s_MeSA_cyt_m, s_SAMC_cyt_pa & s_SA_cyt_m
+# rx00439
+s_NAC019TCP8_nuc_c, s_NAC019_nuc_pa & s_TCP8_nuc_pa
+# rx00850, rx00854, rx00858
+s_NAC019_cyt_p, s_AREBABF_nuc_pa | s_MYB2_cyt_pa | s_ORA59_cyt_pa
+# rx00251
+s_NAC019_nuc_pa, s_MYC2_nuc_pa
+# rx00157
+s_NAC032_cyt_pa, s_ORA59_nuc_pa & s_SCL14TGA_nuc_ca
+# rx00852, rx00857, rx00860
+s_NAC055_cyt_p, s_MYB2_cyt_pa | s_ORA59_cyt_pa | s_HY5_cyt_pa
+# rx00252, rx00607
+s_NAC055_nuc_pa, s_MYC2_nuc_pa | s_AREBABF_nuc_pa
+# rx00848, rx00849, rx00859, rx00863
+s_NAC072_cyt_p, s_AREBABF_nuc_pa | s_ORA59_cyt_pa | s_DREB1D_cyt_pa
+# rx00253
+s_NAC072_nuc_pa, s_MYC2_nuc_pa
+# rx00733
+s_NAC92_cyt_pa, s_CDPK_cyt_pa & s_NAC92_cyt_p
+# rx00712
+s_NAC92_nuc_p, s_EIN3NPR1_nuc_ca
+# rx00709, rx00748
+s_NCED_cyt_p, s_ATAF1_nuc_pa | s_NGA1_nuc_pa
+# rx00993, rx00994
+s_NCED_nuc_p, s_EDS1WRKY18_nuc_ca | s_WRKY618_nuc_pa
+# rx00055
+s_NDR1RIN4_cyt_ca, s_NDR1_cyt_p & s_RIN4_cyt_p
+# rx00100
+s_NIMIN_nuc_p, s_NIMIN_nuc_p & !(s_NPR1_nuc_pa)
+# rx00639
+s_NIaPro_cyt_p, s_NIaPro_cyt_p & !(s_VPg_cyt_p)
+# rx00640
+s_NIb_cyt_p, s_NIb_cyt_p & !(s_VPg_cyt_p)
+# rx00988
+s_NPR1CUL3A_cyt_ca, s_CUL3A_cyt_pa & s_NPR1_cyt_pa & s_SA_cyt_m
+# rx00986
+s_NPR1EDS1_cyt_c, s_EDS1_cyt_pa & s_NPR1_cyt_pa & s_SA_cyt_m
+# rx00094
+s_NPR1NPR1_cyt_ca, s_GSNO_cyt_pa & s_NPR1_cyt_p
+# rx00099
+s_NPR1TGA_nuc_c, s_NPR1_nuc_pa & s_TGA_nuc_pa
+# rx00544
+s_NPR1TGA_nuc_ca, s_EDS1PAD4SAG_nuc_ca & s_NPR1TGA_nuc_c
+# rx00500
+s_NPR1WRKY18_cyt_c, s_NPR1_nuc_pa & s_SA_cyt_m & s_WRKY618_cyt_p
+# rx00096, rx00309, rx00762, rx00763
+s_NPR1_cyt_p, s_NPR1NPR1_cyt_ca & s_TRXH_cyt_pa | s_WRKY618_nuc_pa | s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00114, rx00444, rx00446
+s_NPR1_cyt_pa, s_NPR1_cyt_p & s_SA_cyt_m & ( !(s_MYC3_cyt_pa) & !(s_MYC4_cyt_pa) )
+# rx00097, rx00100, rx00422, rx00423, rx00511
+s_NPR1_nuc_pa, ( s_MOS_nuc_pa & s_NPR1_cyt_pa & s_SNRK2_cyt_pa | s_NPR1_nuc_p & s_TCP81415_nuc_pa ) & ( !(s_NIMIN_nuc_p) & !(s_NPR3_nuc_pa & s_SA_cyt_m) & !(s_NPR4_nuc_pa & s_SA_cyt_m) )
+# rx00995
+s_NRG11EDS1_nuc_ca, s_EDS1_nuc_pa & s_NRG11_nuc_pa & s_TNLeffector_cyt_pa
+# rx00940
+s_NRG11_cyt_pa, s_NRG11_cyt_p & s_TNL_cyt_pa
+# rx00809, rx00817
+s_NUDT6_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00810, rx00821
+s_NUDT7_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00515, rx00516
+s_NpyruvoylLGlu_cyt_m, s_EPS1_cyt_pa & s_IsoChor9Glu_cyt_m | s_IsoChor9Glu_cyt_m
+# rx00615
+s_O2deficiency_cyt_pr, s_Waterlogging_cyt_ab
+# rx00230
+s_OBE1WRKY11_cyt_ca, s_OBE1_cyt_p & s_WRKY11_cyt_p
+# rx00229
+s_OBE1WRKY17_cyt_ca, s_OBE1_cyt_p & s_WRKY17_cyt_p
+# rx00226
+s_OBE1_cyt_p, s_OBE1_cyt_p & !(s_VPg_cyt_p)
+# rx00620
+s_OBE2_cyt_p, s_OBE2_cyt_p & !(s_VPg_cyt_p)
+# rx00036
+s_OPC4CoA_per_m, s_MFP_per_pa & s_OPC6CoA_per_m
+# rx00035
+s_OPC6CoA_per_m, s_ACX_per_pa & s_OPC8CoA_per_m
+# rx00034
+s_OPC8CoA_per_m, s_OPC8_per_m & s_OPCL1_per_pa
+# rx00033
+s_OPC8_per_m, s_OPDA_per_m & s_OPR_per_pa
+# rx00030
+s_OPDA_chl_m, s_1213EOT_chl_m & s_AOC_chl_pa
+# rx00396
+s_OPDA_cyt_m, s_JASSY_cyt_pa & s_OPDA_chl_m
+# rx00031
+s_OPDA_per_m, s_CTS_per_pa & s_OPDA_cyt_m
+# rx00209
+s_OPR_per_pa, s_TGA_nuc_pa
+# rx00151, rx00250
+s_ORA59_nuc_pa, s_ORA59_nuc_pa & ( !(s_ERF1_nuc_pa & s_GRX480_nuc_pa & s_TGA_nuc_pa) & !(s_MYC2_nuc_pa) )
+# rx00601
+s_OSCA13_cyt_pa, s_BIK1_cyt_pa & s_OSCA13_cyt_p
+# rx00568
+s_OSCA1_cyt_pa, s_Drought_cyt_ab & s_OSCA1_cyt_p
+# rx00635
+s_P1_cyt_p, s_P1_cyt_p & !(s_VPg_cyt_p)
+# rx00221, rx00583
+s_P3_cyt_pa, s_potyvirus_cyt_f & !(s_RBC_cyt_pa)
+# rx00606
+s_P5CS1_cyt_pa, s_CAU1_cyt_pa & s_NAC055_nuc_pa
+# rx00706
+s_P5C_cyt_m, s_Glu_cyt_m & s_P5CS1_cyt_pa
+# rx00211
+s_PAA2_cyt_p, s_PAA2_cyt_p & !(s_HCPro_cyt_pa)
+# rx00460
+s_PAA_cyt_m, s_ELI5_cyt_pa & s_LDopa_cyt_m & s_Phe_cyt_m
+# rx00621
+s_PAB2_cyt_p, s_PAB2_cyt_p & !(s_VPg_cyt_p)
+# rx00622
+s_PAB4_cyt_p, s_PAB4_cyt_p & !(s_VPg_cyt_p)
+# rx00623
+s_PAB8_cyt_p, s_PAB8_cyt_p & !(s_VPg_cyt_p)
+# rx00772, rx00774
+s_PAD4_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00161
+s_PAD4_nuc_pa, s_WRKY33_nuc_pa
+# rx00624
+s_PA_cyt_m, s_PLDALPHA1_cyt_pa & s_phospholipids_cyt_m
+# rx00212
+s_PBB2_cyt_p, s_PBB2_cyt_p & !(s_HCPro_cyt_pa)
+# rx00213
+s_PBE1_cyt_p, s_PBE1_cyt_p & !(s_HCPro_cyt_pa)
+# rx00740
+s_PBP1_cyt_pa, s_Ca2_cyt_m & s_PBP1_cyt_p
+# rx00767, rx00770
+s_PBS3_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00025, rx00135, rx00155
+s_PDF12_cyt_pa, s_ERFEDF_nuc_pa | s_ERF6_nuc_pa | s_ORA59_nuc_pa
+# rx00512
+s_PEPR1PEP1_cyt_c, s_PEPR_cyt_p & s_PEP_cyt_p
+# rx00510
+s_PEPR_cyt_p, s_PEPR_cyt_p & !(s_MYC2_nuc_pa)
+# rx01003
+s_PEP_cyt_pa, s_AtMC4_cyt_pa & s_PEP_cyt_p
+# rx00836
+s_PHYA_cyt_pa, s_PHYA_cyt_p & s_redlight_cyt_ab
+# rx00917
+s_PHYBPIF3_nuc_c, s_PHYB_nuc_pa & s_PIF34_nuc_pa
+# rx00826, rx00837, rx00989, rx00990
+s_PHYB_cyt_pa, ( s_PHYB_cyt_p & s_redlight_cyt_ab | s_CDPK_cyt_pa & s_PHYB_cyt_p | s_CPK12_cyt_pa & s_PHYB_cyt_p ) & !(s_Heat_cyt_ab)
+# rx00839, rx00840
+s_PIF34_cyt_pa, s_PIF34_cyt_pa & ( !(s_PHYA_cyt_pa) & !(s_PHYB_cyt_pa) )
+# rx00505
+s_PIF34_nuc_pa, s_PIF34_nuc_pa & !(s_DELLA_nuc_pa)
+# rx00786
+s_PIF4_cyt_p, s_PIF4_cyt_p & !(s_ELF3_nuc_pa)
+# rx00573
+s_PIF7_cyt_pa, s_Heat_cyt_ab
+# rx00628
+s_PORA_cyt_p, s_PORA_cyt_p & !(s_VPg_cyt_p)
+# rx00627
+s_PORB_cyt_p, s_PORB_cyt_p & !(s_VPg_cyt_p)
+# rx01005
+s_PP2AB1_cyt_pa, s_MPK15_cyt_pa & s_PP2AB1_cyt_p
+# rx00475
+s_PP2C_cyt_pa, s_PP2C_cyt_pa & !(s_PYL_cyt_pa)
+# rx00051
+s_PR13_cyt_pa, s_MYC2_nuc_pa
+# rx00941
+s_PR1_cyt_p, s_WRKY50_nuc_pa
+# rx00101, rx00210, rx00394
+s_PR1_cyt_pa, ( s_NPR1TGA_nuc_ca | s_ARRB_nuc_pa ) & !(s_EIN2_cyt_pa)
+# rx00884
+s_PR1cholesterol_cyt_c, s_PR1_cyt_p & s_cholesterol_cyt_m
+# rx00102
+s_PR2_cyt_pa, s_NPR1TGA_nuc_ca
+# rx00663
+s_PR3like_cyt_p, s_PR3like_cyt_p & !(s_VPg_cyt_p)
+# rx00673
+s_PR5_cyt_p, s_PR5_cyt_p & !(s_VPg_cyt_p)
+# rx00103
+s_PR5_cyt_pa, s_NPR1TGA_nuc_ca
+# rx00214
+s_PSAK_cyt_p, s_PSAK_cyt_p & !(s_CI_cyt_p)
+# rx00666
+s_PSB33_cyt_p, s_PSB33_cyt_p & !(s_VPg_cyt_p)
+# rx00678
+s_PSBP1_cyt_p, s_PSBP1_cyt_p & !(s_VPg_cyt_p)
+# rx00633
+s_PSBR_cyt_p, s_PSBR_cyt_p & !(s_VPg_cyt_p)
+# rx00806, rx00815, rx00818
+s_PUB13_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00459
+s_PYL_cyt_p, s_PYL_cyt_p & !(s_MYC2_nuc_pa)
+# rx00474, rx00545
+s_PYL_cyt_pa, s_ABA_cyt_m & s_PYL_cyt_p & !(s_TORC1_cyt_ca)
+# rx00752
+s_Phaseicacid_cyt_m, s_8OHABA_cyt_m
+# rx00541
+s_Phe_chl_m, s_ADT_chl_pa & s_Larogenate_chl_m
+# rx00695
+s_Phenolicsproduction_cyt_pr, s_pCoumaricacid_cyt_m
+# rx00912
+s_Photosynthesis_chl_pra, s_Photosynthesis_chl_pra & !(s_CO2deficiency_chl_pra)
+# rx00550
+s_Phytoene_cyt_m, s_GeranylgeranylPP_cyt_m
+# rx00885
+s_Phytophthora_cyt_f, s_Phytophthora_cyt_f & s_cholesterol_cyt_m
+# rx00073
+s_Prep_chl_m, s_CM_chl_pa & s_Chor_chl_m
+# rx00707
+s_Prolineaccumulation_cyt_pr, s_P5C_cyt_m & s_PROC1_cyt_pa
+# rx00057
+s_RANGAPRx_cyt_ca, s_RANGAP_cyt_pa & s_Rx_cyt_p
+# rx00727
+s_RAP26SNRK2_cyt_c, s_RAP26_cyt_pa & s_SNRK2_cyt_pa
+# rx00421
+s_RAPTOR2_cyt_pa, s_RAPTOR2_cyt_pa & !(s_SNRK2_cyt_pa)
+# rx00677
+s_RBC_cyt_p, s_RBC_cyt_p & !(s_VPg_cyt_p)
+# rx00221, rx00232, rx00233
+s_RBC_cyt_pa, s_RBC_cyt_pa & ( !(s_P3_cyt_pa) & !(s_COI1_nuc_pa) & !(s_JAZ_nuc_pa) )
+# rx00702
+s_RBOH_ap_p, s_ERFVII_nuc_pa
+# rx00174, rx00239, rx00427, rx00449, rx00451
+s_RBOH_ap_pa, s_CDPK_cyt_pa & s_RBOH_ap_p | s_Ca2_cyt_m & s_RBOH_ap_p | s_BIK1_cyt_pa & s_RBOH_ap_p | s_LECRK19_cyt_pa & s_RBOH_ap_p | s_RBOH_ap_p & s_SIK1_cyt_pa
+# rx00679
+s_RCA_cyt_p, s_RCA_cyt_p & !(s_VPg_cyt_p)
+# rx00605
+s_RD29_cyt_pa, s_AREBABF_nuc_pa
+# rx00447
+s_RDR16_cyt_pa, s_CAMTA3_cyt_pa
+# rx00520
+s_REM12_cyt_p, s_REM12_cyt_p & !(s_VPg_cyt_p)
+# rx00227
+s_RH8_cyt_p, s_RH8_cyt_p & !(s_VPg_cyt_p)
+# rx00508
+s_RIN4_cyt_p, s_MYC2_nuc_pa
+# rx00593
+s_RISCvsiRNA_cyt_ca, s_AGO1_cyt_pa & s_mevsiRNA_cyt_nc
+# rx00134
+s_ROS_chl_m, s_CO2deficiency_chl_pra & s_e_chl_m
+# rx00133, rx00260, rx00261, rx00262
+s_ROS_cyt_m, s_ROS_cyt_m & ( !(s_AOX_cyt_pa) & !(s_CAT_per_pa) & !(s_APX_cyt_pa) & !(s_GPX_cyt_pa) )
+# rx00131
+s_ROS_mit_m, s_SOD_mit_pa
+# rx00132
+s_ROS_x_m, s_O2_x_m & s_RBOH_ap_pa
+# rx00671
+s_RPS12C_cyt_p, s_RPS12C_cyt_p & !(s_VPg_cyt_p)
+# rx00107
+s_Rgenepotyvirus_cyt_ca, s_TNL_cyt_pa & s_potyvirus_cyt_f
+# rx00419
+s_SAAsp_cyt_m, s_GH3_cyt_pa & s_SA_cyt_m
+# rx00257, rx00258, rx00259
+s_SAGT_cyt_pa, s_NAC019_nuc_pa | s_NAC055_nuc_pa | s_NAC072_nuc_pa
+# rx00086
+s_SAG_vac_m, s_SAGT_cyt_pa & s_SA_cyt_m
+# rx00127
+s_SAGs_nuc_pa, s_SAGs_nuc_pa & !(s_WRKY57_nuc_pa)
+# rx00198
+s_SAHH_er_pa, s_SAHH_er_pa & !(s_HCPro_cyt_pa)
+# rx00592
+s_SAH_cyt_m, s_HEN1_cyt_pa & s_SAMe_cyt_m & s_vsiRNA_cyt_nc
+# rx00197
+s_SAMS_er_pa, s_SAMS_er_pa & !(s_HCPro_cyt_pa)
+# rx00001
+s_SAMe_cyt_m, s_LMet_cyt_m & s_SAMS_cyt_pa
+# rx00437
+s_SARD1TCP8_nuc_c, s_SARD1_nuc_pa & s_TCP8_nuc_pa
+# rx00466
+s_SAUR41_cyt_pa, s_ARF_nuc_pa
+# rx00056, rx00515, rx00516, rx01000
+s_SA_cyt_m, s_MES_cyt_pa & s_MeSA_cyt_m | s_EPS1_cyt_pa & s_IsoChor9Glu_cyt_m | s_IsoChor9Glu_cyt_m | s_BSE_cyt_pa & s_BS_cyt_m
+# rx00156
+s_SCL14TGA_nuc_ca, s_SCL14_nuc_p & s_TGA_nuc_pa
+# rx00126
+s_SEN4_cyt_pa, s_SEN4_cyt_pa & !(s_WRKY57_nuc_pa)
+# rx00791, rx00799
+s_SERK4_cyt_p, s_SARD1_nuc_pa | s_CBP60G_cyt_pa
+# rx00664
+s_SERPIN1_cyt_p, s_SERPIN1_cyt_p & !(s_VPg_cyt_p)
+# rx00551
+s_SL_cyt_m, s_CL_cyt_m
+# rx00476, rx00866, rx00915, rx00918, rx00919, rx00923, rx00924, rx00952, rx00953, rx00957, rx00958
+s_SNRK2_cyt_pa, ( s_CPK27_cyt_pa & s_SNRK2_cyt_p | s_CPK3_cyt_pa & s_SNRK2_cyt_p | s_CDPK_cyt_pa & s_SNRK2_cyt_p ) & ( !(s_PP2C_cyt_pa) & !(s_SPCH_cyt_pa) )
+# rx00571
+s_SOC1_cyt_pa, s_AREBABF_nuc_pa
+# rx00746
+s_SOD_cyt_p, s_SOD_cyt_p & !(s_miR398b_cyt_mi)
+# rx00982, rx00984
+s_SOS1_cyt_pa, s_CBL4CIPK24_cyt_ca & s_SOS1_cyt_p | s_CIPK24CBL10_cyt_ca & s_SOS1_cyt_p
+# rx00864, rx00916, rx00921, rx00955
+s_SRK2D_cyt_pa, ( s_CPK3_cyt_pa & s_SRK2D_cyt_p | s_CDPK_cyt_pa & s_SRK2D_cyt_p ) & !(s_SPCH_cyt_pa)
+# rx00865, rx00922, rx00951, rx00956
+s_SRK2I_cyt_pa, s_CDPK_cyt_pa & s_SRK2I_cyt_p & !(s_SPCH_cyt_pa)
+# rx00920, rx00946, rx00954, rx00959
+s_SnRK210_cyt_pa, s_CPK3_cyt_pa & s_SnRK210_cyt_p | s_CDPK_cyt_pa & s_SnRK210_cyt_p
+# rx00599
+s_Stomatalclosure_cyt_pra, s_SNRK2_cyt_pa & s_Stomatalclosure_cyt_pr
+# rx00111
+s_TAS3_cyt_nc, s_MIR390_cyt_mi
+# rx00438
+s_TCP8WRKY28_nuc_c, s_TCP8_nuc_pa & s_WRKY28_nuc_p
+# rx00220
+s_TDX_cyt_p, s_TDX_cyt_p & !(s_HCPro_cyt_pa)
+# rx00670
+s_TIP12_cyt_p, s_TIP12_cyt_p & !(s_VPg_cyt_p)
+# rx00731
+s_TIR1_cyt_pa, s_SGT1_cyt_pa & s_TIR1_cyt_p
+# rx00462
+s_TIR1_nuc_pa, s_IAA_cyt_m & s_TIR1_nuc_p
+# rx00420
+s_TORC1_cyt_ca, s_RAPTOR2_cyt_p & s_TOR_cyt_pa
+# rx00965
+s_TPK1_cyt_pa, s_CPK3_cyt_pa & s_TPK1_cyt_p
+# rx00095
+s_TRXH_cyt_pa, s_ROS_cyt_m & s_TRXH_cyt_p
+# rx00662
+s_TUBA2_cyt_p, s_TUBA2_cyt_p & !(s_VPg_cyt_p)
+# rx00617
+s_Thermotolerance_cyt_pr, s_HSFA6b_cyt_pa
+# rx00429
+s_Thiohydroximate_cyt_m, s_SUR1_cyt_pa & s_Salkylthiohydroximate_cyt_m
+# rx00064
+s_Trichomeinitiation_nuc_pra, s_WDbHLHMYB_nuc_ca
+# rx00542
+s_Tyr_cyt_m, s_Larogenate_cyt_m & s_TYRAAT12_cyt_pa
+# rx00910
+s_UDPGlc_cyt_m, s_Photosynthesis_chl_pra
+# rx00755
+s_UGT79B2_cyt_p, s_DREB1B_cyt_pa
+# rx00756
+s_UGT79B3_cyt_p, s_DREB1B_cyt_pa
+# rx00443
+s_UTR1_cyt_pa, s_ORA59_nuc_pa
+# rx00632
+s_VDAC2_cyt_p, s_VDAC2_cyt_p & !(s_VPg_cyt_p)
+# rx00226, rx00227, rx00520, rx00521, rx00586, rx00619, rx00620, rx00621, rx00622, rx00623, rx00627, rx00628, rx00629, rx00630, rx00631, rx00632, rx00633, rx00634, rx00635, rx00636, rx00638, rx00639, rx00640, rx00641, rx00662, rx00663, rx00664, rx00665, rx00666, rx00667, rx00668, rx00669, rx00670, rx00671, rx00672, rx00673, rx00674, rx00675, rx00676, rx00677, rx00678, rx00679, rx00680, rx00681, rx00682, rx00683, rx00686, rx00687, rx00688, rx00689, rx00690, rx00691, rx00692
+s_VPg_cyt_p, s_potyvirus_cyt_f & ( !(s_OBE1_cyt_p) & !(s_RH8_cyt_p) & !(s_REM12_cyt_p) & !(s_EIF4E1_cyt_p) & !(s_PUB15_cyt_pa) & !(s_OBE2_cyt_p) & !(s_PAB2_cyt_p) & !(s_PAB4_cyt_p) & !(s_PAB8_cyt_p) & !(s_PORB_cyt_p) & !(s_PORA_cyt_p) & !(s_FBA8_cyt_p) & !(s_GSTF9_cyt_p) & !(s_HUP54_cyt_p) & !(s_VDAC2_cyt_p) & !(s_PSBR_cyt_p) & !(s_LOX_cyt_p) & !(s_P1_cyt_p) & !(s_CI_cyt_p) & !(s_6K2_cyt_p) & !(s_NIaPro_cyt_p) & !(s_NIb_cyt_p) & !(s_CP_cyt_p) & !(s_TUBA2_cyt_p) & !(s_PR3like_cyt_p) & !(s_SERPIN1_cyt_p) & !(s_clpP1_cyt_p) & !(s_PSB33_cyt_p) & !(s_GAPC2_cyt_p) & !(s_FQR1_cyt_p) & !(s_LHB1B1_cyt_p) & !(s_TIP12_cyt_p) & !(s_RPS12C_cyt_p) & !(s_MTI2011_cyt_p) & !(s_PR5_cyt_p) & !(s_AT3G17020_cyt_p) & !(s_GER3_cyt_p) & !(s_BAS1_cyt_p) & !(s_RBC_cyt_p) & !(s_PSBP1_cyt_p) & !(s_RCA_cyt_p) & !(s_MED37E_cyt_p) & !(s_IPP2_cyt_p) & !(s_ABCF1_cyt_p) & !(s_CLPR3_cyt_p) & !(s_psbB_cyt_p) & !(s_BCCP1_cyt_p) & !(s_GRF6_cyt_p) & !(s_CAC2_cyt_p) & !(s_GST_cyt_p) & !(s_MPPBETA_cyt_p) & !(s_ATPC1_cyt_p) )
+# rx00052
+s_VSP_cyt_pa, s_MYC2_nuc_pa
+# rx00557
+s_Violaxanthin_cyt_m, s_Antheraxanthin_cyt_m & s_ZEP_cyt_pa
+# rx00165
+s_WAK1_cyt_pa, s_OG_cyt_m & s_WAK1_cyt_p
+# rx00062
+s_WDbHLHMYB_nuc_ca, s_WDbHLHMYB_nuc_ca & !(s_JAZ_nuc_pa)
+# rx00181
+s_WRKY28_nuc_pa, s_CDPK_cyt_pa & s_WRKY28_nuc_p
+# rx00125
+s_WRKY30WRKY53_cyt_ca, s_WRKY30_cyt_p & s_WRKY53_nuc_pa
+# rx00160
+s_WRKY33_nuc_p, s_WRKY33_nuc_pa
+# rx00138
+s_WRKY33_nuc_pa, s_MPK36_cyt_pa & s_WRKY33_nuc_p
+# rx00807, rx00816, rx00819
+s_WRKY40_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00245, rx00246, rx00247
+s_WRKY46_nuc_pa, s_WRKY8_nuc_pa | s_WRKY28_nuc_pa | s_WRKY48_nuc_pa
+# rx00182
+s_WRKY48_nuc_pa, s_CDPK_cyt_pa & s_WRKY48_nuc_p
+# rx00942
+s_WRKY50TGA2_cyt_ca, s_TGA_cyt_pa & s_WRKY50_cyt_pa
+# rx00122, rx00123, rx00124
+s_WRKY53_nuc_pa, s_MAPKKK8_nuc_pa & ( !(s_ESP_cyt_p) & !(s_UPL5_cyt_pa) )
+# rx00128, rx00130
+s_WRKY57_nuc_pa, s_WRKY57_nuc_pa & ( !(s_JAZ_nuc_pa) & !(s_AUXIAA_nuc_pa) )
+# rx00808, rx00820
+s_WRKY60_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00987
+s_WRKY70Ub_cyt_c, s_NPR1CUL3_cyt_ca & s_WRKY70_cyt_pa
+# rx00758, rx00759
+s_WRKY70_cyt_p, s_SARD1_nuc_pa | s_CBP60G_nuc_pa
+# rx00098, rx00244
+s_WRKY70_cyt_pa, s_NPR1TGA_nuc_ca | s_MYB334465_nuc_pa
+# rx00180
+s_WRKY8_nuc_pa, s_CDPK_cyt_pa & s_WRKY8_nuc_p
+# rx00495
+s_XTH_nuc_p, s_BZR2_nuc_pa
+# rx00554
+s_Xanthoxin_cyt_m, s_9cisViolaxanthin_cyt_m & s_NCED_cyt_pa
+# rx00410
+s_YUC_cyt_pa, s_MYC2_nuc_pa
+# rx00556, rx00559
+s_Zeaxanthin_cyt_m, s_Antheraxanthin_cyt_m & s_VDE1_cyt_pa | s_BETAOHASE_cyt_pa & s_betaCryptoxanthin_cyt_m
+# rx00564
+s_alltransNeurosporene_cyt_m, s_ZDS1_cyt_pa & s_alltranszetaCarotene_cyt_m
+# rx00566
+s_alltransPhytofluene_cyt_m, s_PDS_cyt_pa & s_Phytoene_cyt_m
+# rx00565
+s_alltranszetaCarotene_cyt_m, s_PDS_cyt_pa & s_alltransPhytofluene_cyt_m
+# rx00478
+s_bZIP21_nuc_pa, s_NPR1_nuc_pa & s_bZIP21_nuc_p
+# rx00561
+s_betaCarotene_cyt_m, s_LCY1_cyt_pa & s_gammaCarotene_cyt_m
+# rx00560
+s_betaCryptoxanthin_cyt_m, s_BETAOHASE_cyt_pa & s_betaCarotene_cyt_m
+# rx00331, rx00332, rx00334
+s_cZ_cyt_m, ( s_LOG_cyt_pa & s_cZribotide_cyt_m | s_cZriboside_cyt_m ) & !(s_CKX_cyt_pa)
+# rx00336
+s_cZglucosides_cyt_m, s_UDPGlc_cyt_m & s_UGT_cyt_pa & s_cZ_cyt_m
+# rx00646, rx00652
+s_cZriboside_cyt_m, s_cZ_cyt_m | s_cZribotide_cyt_m
+# rx00329, rx00333, rx00642
+s_cZribotide_cyt_m, s_cisprenyltRNA_cyt_m | s_ADK_cyt_pa & s_cZriboside_cyt_m | s_APT_cyt_pa & s_cZ_cyt_m
+# rx00328
+s_cisprenyltRNA_cyt_m, s_prenyltRNA_cyt_m
+# rx00665
+s_clpP1_cyt_p, s_clpP1_cyt_p & !(s_VPg_cyt_p)
+# rx00264
+s_entCopalylPP_cyt_m, s_CPS_cyt_pa & s_GeranylgeranylPP_cyt_m
+# rx00265
+s_entKaurene_cyt_m, s_KS_cyt_pa & s_entCopalylPP_cyt_m
+# rx00266
+s_entKaurenoicacid_cyt_m, s_KO_cyt_pa & s_entKaurene_cyt_m
+# rx00528
+s_flg22_cyt_pa, s_trichousbacteria_cyt_f
+# rx00562
+s_gammaCarotene_cyt_m, s_LCY1_cyt_pa & s_Lycopene_cyt_m
+# rx00367, rx00368, rx00370
+s_iP_cyt_m, ( s_LOG_cyt_pa & s_iPribotide_cyt_m | s_iPriboside_cyt_m ) & !(s_CKX_cyt_pa)
+# rx00372
+s_iPglucosides_cyt_m, s_UDPGlc_cyt_m & s_UGT_cyt_pa & s_iP_cyt_m
+# rx00643, rx00647
+s_iPriboside_cyt_m, s_iP_cyt_m | s_iPribotide_cyt_m
+# rx00322, rx00366, rx00369
+s_iPribotide_cyt_m, s_DMAPP_cyt_m & s_IPT1345678_cyt_pa | s_APT_cyt_pa & s_iP_cyt_m | s_ADK_cyt_pa & s_iPriboside_cyt_m
+# rx00581, rx00592
+s_mevsiRNA_cyt_nc, s_HEN1_cyt_pa & s_SAMe_cyt_m & s_vsiRNA_cyt_nc & !(s_HCPro_cyt_pa)
+# rx00588
+s_miR168_nuc_mi, s_HCPro_nuc_pa
+# rx00745
+s_miR398b_cyt_mi, s_HSFA1b_nuc_pa
+# rx00754
+s_oxIAA_cyt_m, s_DAO1_cyt_pa & s_IAA_cyt_m
+# rx00543
+s_pCoumaricacid_cyt_m, s_CA_cyt_m & s_CYP73A5_cyt_pa
+# rx01007
+s_pCoumaroylCoA_cyt_m, s_4CL_cyt_pa & s_pCoumaricacid_cyt_m
+# rx00080, rx00115
+s_potyvirus_cyt_f, s_potyvirus_cyt_f & ( !(s_Trichomeinitiation_nuc_pra) & !(s_RISCvsiRNA_cyt_ca) )
+# rx00323
+s_prenyltRNA_cyt_m, s_DMAPP_cyt_m & s_IPT29_cyt_pa & s_tRNAadenine_cyt_m
+# rx00686
+s_psbB_cyt_p, s_psbB_cyt_p & !(s_VPg_cyt_p)
+# rx00355, rx00356, rx00358
+s_tZ_cyt_m, ( s_LOG_cyt_pa & s_tZribotide_cyt_m | s_tZriboside_cyt_m ) & !(s_CKX_cyt_pa)
+# rx00360
+s_tZglucoside_cyt_m, s_UDPGlc_cyt_m & s_UGT_cyt_pa & s_tZ_cyt_m
+# rx00644, rx00648
+s_tZriboside_cyt_m, s_tZ_cyt_m | s_tZribotide_cyt_m
+# rx00354, rx00357, rx00376
+s_tZribotide_cyt_m, s_APT_cyt_pa & s_tZ_cyt_m | s_ADK_cyt_pa & s_tZriboside_cyt_m | s_CYP735A1A2_cyt_pa & s_iPribotide_cyt_m
+# rx00590, rx00596
+s_viraldsRNA_cyt_nc, s_potyvirus_cyt_f | s_RDR16_cyt_pa & s_vsiRNA_cyt_nc
+# rx00591
+s_vsiRNA_cyt_nc, s_DCL24_cyt_pa & s_viraldsRNA_cyt_nc
+# inputs: no rule from PSS, they keep their value
+s_4CL_cyt_pa, s_4CL_cyt_pa
+s_4CL_per_pa, s_4CL_per_pa
+s_6K2VPg_cyt_c, s_6K2VPg_cyt_c
+s_AAO_cyt_pa, s_AAO_cyt_pa
+s_ABA2_cyt_pa, s_ABA2_cyt_pa
+s_ABAGE_er_m, s_ABAGE_er_m
+s_ABCF1VPg_cyt_c, s_ABCF1VPg_cyt_c
+s_ABI4RGL2_cyt_ca, s_ABI4RGL2_cyt_ca
+s_ABI4_cyt_p, s_ABI4_cyt_p
+s_ABI4_cyt_pa, s_ABI4_cyt_pa
+s_ABI4_nuc_pa, s_ABI4_nuc_pa
+s_ABI5HY5_cyt_ca, s_ABI5HY5_cyt_ca
+s_ACH_per_pa, s_ACH_per_pa
+s_ACO_cyt_pa, s_ACO_cyt_pa
+s_ACS_cyt_pa, s_ACS_cyt_pa
+s_ACX_per_p, s_ACX_per_p
+s_ADH_per_pa, s_ADH_per_pa
+s_ADK_cyt_pa, s_ADK_cyt_pa
+s_ADT_chl_pa, s_ADT_chl_pa
+s_AGO15710CI_cyt_ca, s_AGO15710CI_cyt_ca
+s_AGO15710HCPro_cyt_ca, s_AGO15710HCPro_cyt_ca
+s_AHK234_er_p, s_AHK234_er_p
+s_AHP_cyt_p, s_AHP_cyt_p
+s_AIP1_cyt_pa, s_AIP1_cyt_pa
+s_AKT1_cyt_pa, s_AKT1_cyt_pa
+s_AMI1_cyt_pa, s_AMI1_cyt_pa
+s_AOC_chl_pa, s_AOC_chl_pa
+s_AOS_chl_pa, s_AOS_chl_pa
+s_AOX_cyt_pa, s_AOX_cyt_pa
+s_APT_cyt_pa, s_APT_cyt_pa
+s_AREBABF_nuc_p, s_AREBABF_nuc_p
+s_AREBABF_nuc_pa, s_AREBABF_nuc_pa
+s_ARRB_nuc_p, s_ARRB_nuc_p
+s_AT3G17020VPg_cyt_c, s_AT3G17020VPg_cyt_c
+s_ATAF1_nuc_pa, s_ATAF1_nuc_pa
+s_ATG13A_cyt_p, s_ATG13A_cyt_p
+s_ATG1A_cyt_p, s_ATG1A_cyt_p
+s_ATPBHCPro_cyt_ca, s_ATPBHCPro_cyt_ca
+s_ATPC1VPg_cyt_c, s_ATPC1VPg_cyt_c
+s_AUXIAAWRKY57_cyt_ca, s_AUXIAAWRKY57_cyt_ca
+s_AtMC4_cyt_p, s_AtMC4_cyt_p
+s_BACoA_per_m, s_BACoA_per_m
+s_BAG3_cyt_p, s_BAG3_cyt_p
+s_BAS1VPg_cyt_c, s_BAS1VPg_cyt_c
+s_BBH_er_pa, s_BBH_er_pa
+s_BB_per_m, s_BB_per_m
+s_BCCP1VPg_cyt_c, s_BCCP1VPg_cyt_c
+s_BETAOHASE_cyt_pa, s_BETAOHASE_cyt_pa
+s_BGLU18_cyt_p, s_BGLU18_cyt_p
+s_BGLU18_er_pa, s_BGLU18_er_pa
+s_BRAHMA_cyt_pa, s_BRAHMA_cyt_pa
+s_BRI1_cyt_p, s_BRI1_cyt_p
+s_BRI1_cyt_pa, s_BRI1_cyt_pa
+s_BSE_cyt_pa, s_BSE_cyt_pa
+s_BSK_cyt_p, s_BSK_cyt_p
+s_BSU1_cyt_p, s_BSU1_cyt_p
+s_BZO1_cyt_pa, s_BZO1_cyt_pa
+s_BZR2_nuc_p, s_BZR2_nuc_p
+s_Brassinolide_cyt_m, s_Brassinolide_cyt_m
+s_C19GA2ox_cyt_pa, s_C19GA2ox_cyt_pa
+s_CAC2VPg_cyt_c, s_CAC2VPg_cyt_c
+s_CAM1_cyt_p, s_CAM1_cyt_p
+s_CAMTA3_cyt_p, s_CAMTA3_cyt_p
+s_CATLSD1_cyt_ca, s_CATLSD1_cyt_ca
+s_CAT_per_p, s_CAT_per_p
+s_CAU1_cyt_pa, s_CAU1_cyt_pa
+s_CAX1_cyt_p, s_CAX1_cyt_p
+s_CAX3_cyt_p, s_CAX3_cyt_p
+s_CA_cyt_m, s_CA_cyt_m
+s_CBL10_cyt_pa, s_CBL10_cyt_pa
+s_CBL1_cyt_p, s_CBL1_cyt_p
+s_CBL1_cyt_pa, s_CBL1_cyt_pa
+s_CBL2CIPK26_cyt_ca, s_CBL2CIPK26_cyt_ca
+s_CBL2CIPK3_cyt_ca, s_CBL2CIPK3_cyt_ca
+s_CBL2CIPK9_cyt_ca, s_CBL2CIPK9_cyt_ca
+s_CBL2_cyt_p, s_CBL2_cyt_p
+s_CBL2_cyt_pa, s_CBL2_cyt_pa
+s_CBL3CIPK26_cyt_ca, s_CBL3CIPK26_cyt_ca
+s_CBL3CIPK3_cyt_ca, s_CBL3CIPK3_cyt_ca
+s_CBL3CIPK9_cyt_ca, s_CBL3CIPK9_cyt_ca
+s_CBL3_cyt_p, s_CBL3_cyt_p
+s_CBL3_cyt_pa, s_CBL3_cyt_pa
+s_CBL4_cyt_pa, s_CBL4_cyt_pa
+s_CBL5_cyt_pa, s_CBL5_cyt_pa
+s_CBL9_cyt_p, s_CBL9_cyt_p
+s_CBL9_cyt_pa, s_CBL9_cyt_pa
+s_CBP60G_cyt_pa, s_CBP60G_cyt_pa
+s_CBP60G_nuc_p, s_CBP60G_nuc_p
+s_CCD_cyt_pa, s_CCD_cyt_pa
+s_CDG1_cyt_pa, s_CDG1_cyt_pa
+s_CDK_nuc_p, s_CDK_nuc_p
+s_CDK_nuc_pa, s_CDK_nuc_pa
+s_CHY1_per_pa, s_CHY1_per_pa
+s_CIPK16_cyt_pa, s_CIPK16_cyt_pa
+s_CIPK1_cyt_p, s_CIPK1_cyt_p
+s_CIPK23_cyt_p, s_CIPK23_cyt_p
+s_CIPK23_cyt_pa, s_CIPK23_cyt_pa
+s_CIPK24_cyt_pa, s_CIPK24_cyt_pa
+s_CIPK26_cyt_p, s_CIPK26_cyt_p
+s_CIPK3_cyt_p, s_CIPK3_cyt_p
+s_CIPK6_cyt_pa, s_CIPK6_cyt_pa
+s_CIPK8_cyt_pa, s_CIPK8_cyt_pa
+s_CIPK9_cyt_p, s_CIPK9_cyt_p
+s_CIPSAK_cyt_ca, s_CIPSAK_cyt_ca
+s_CIVPg_cyt_c, s_CIVPg_cyt_c
+s_CKX_cyt_pa, s_CKX_cyt_pa
+s_CLAMT_cyt_pa, s_CLAMT_cyt_pa
+s_CLPP1VPg_cyt_c, s_CLPP1VPg_cyt_c
+s_CLPR3VPg_cyt_c, s_CLPR3VPg_cyt_c
+s_CML12_cyt_p, s_CML12_cyt_p
+s_CMLCa2_nuc_ca, s_CMLCa2_nuc_ca
+s_CML_cyt_p, s_CML_cyt_p
+s_CML_cyt_pa, s_CML_cyt_pa
+s_CM_chl_pa, s_CM_chl_pa
+s_CNGC2_cyt_p, s_CNGC2_cyt_p
+s_CO2deficiency_chl_pr, s_CO2deficiency_chl_pr
+s_COI1RBC_cyt_ca, s_COI1RBC_cyt_ca
+s_CPCPIP_cyt_ca, s_CPCPIP_cyt_ca
+s_CPK12_cyt_pa, s_CPK12_cyt_pa
+s_CPK27_cyt_pa, s_CPK27_cyt_pa
+s_CPK33_cyt_pa, s_CPK33_cyt_pa
+s_CPK3_cyt_pa, s_CPK3_cyt_pa
+s_CPVPg_cyt_c, s_CPVPg_cyt_c
+s_CRTCa2_cyt_ca, s_CRTCa2_cyt_ca
+s_CRTHCPro_cyt_ca, s_CRTHCPro_cyt_ca
+s_CRT_cyt_p, s_CRT_cyt_p
+s_CTR_cyt_pa, s_CTR_cyt_pa
+s_CTS_per_pa, s_CTS_per_pa
+s_CUL3A_cyt_pa, s_CUL3A_cyt_pa
+s_CYP707A3_cyt_pa, s_CYP707A3_cyt_pa
+s_CYP735A1A2_cyt_pa, s_CYP735A1A2_cyt_pa
+s_CYP73A5_cyt_pa, s_CYP73A5_cyt_pa
+s_CYP79B2_cyt_pa, s_CYP79B2_cyt_pa
+s_CYP83B1_cyt_pa, s_CYP83B1_cyt_pa
+s_CYP94_cyt_pa, s_CYP94_cyt_pa
+s_Ca2_x_m, s_Ca2_x_m
+s_Chor_chl_m, s_Chor_chl_m
+s_Cu2_cyt_m, s_Cu2_cyt_m
+s_D14_cyt_p, s_D14_cyt_p
+s_D27_cyt_pa, s_D27_cyt_pa
+s_DAD1_chl_pa, s_DAD1_chl_pa
+s_DAO1_cyt_pa, s_DAO1_cyt_pa
+s_DCL24_cyt_pa, s_DCL24_cyt_pa
+s_DELLAJAZ_nuc_ca, s_DELLAJAZ_nuc_ca
+s_DELLAMYC_nuc_ca, s_DELLAMYC_nuc_ca
+s_DELLA_cyt_pa, s_DELLA_cyt_pa
+s_DHNAT2_per_pa, s_DHNAT2_per_pa
+s_DREB1B_cyt_pa, s_DREB1B_cyt_pa
+s_DREB1D_cyt_pa, s_DREB1D_cyt_pa
+s_DXPS2HCPro_cyt_ca, s_DXPS2HCPro_cyt_ca
+s_Drought_cyt_ab, s_Drought_cyt_ab
+s_EDF2HCPro_cyt_ca, s_EDF2HCPro_cyt_ca
+s_EDR1_cyt_pa, s_EDR1_cyt_pa
+s_EDS5_chl_pa, s_EDS5_chl_pa
+s_EIF4EHCPro_cyt_c, s_EIF4EHCPro_cyt_c
+s_EIF4EVPg_cyt_c, s_EIF4EVPg_cyt_c
+s_EIJP1_chl_pa, s_EIJP1_chl_pa
+s_EIN2_cyt_pa, s_EIN2_cyt_pa
+s_EIN2_er_p, s_EIN2_er_p
+s_EIN3NPR1_nuc_ca, s_EIN3NPR1_nuc_ca
+s_EIN3like_cyt_p, s_EIN3like_cyt_p
+s_EIN5_nuc_pa, s_EIN5_nuc_pa
+s_ELF3_cyt_p, s_ELF3_cyt_p
+s_ELF3_nuc_pa, s_ELF3_nuc_pa
+s_ELI5_cyt_pa, s_ELI5_cyt_pa
+s_EPS1_cyt_pa, s_EPS1_cyt_pa
+s_ERF104_cyt_p, s_ERF104_cyt_p
+s_ERF105_cyt_p, s_ERF105_cyt_p
+s_ERF11_nuc_pa, s_ERF11_nuc_pa
+s_ERF1_nuc_pa, s_ERF1_nuc_pa
+s_ERF5_cyt_p, s_ERF5_cyt_p
+s_ERF6_nuc_p, s_ERF6_nuc_p
+s_ERFVII_cyt_p, s_ERFVII_cyt_p
+s_ERFVII_nuc_pa, s_ERFVII_nuc_pa
+s_ERF_nuc_pa, s_ERF_nuc_pa
+s_ESPWRKY53_cyt_ca, s_ESPWRKY53_cyt_ca
+s_ETP_cyt_p, s_ETP_cyt_p
+s_ETR_er_p, s_ETR_er_p
+s_FBA8VPg_cyt_c, s_FBA8VPg_cyt_c
+s_FD_cyt_p, s_FD_cyt_p
+s_FKBP42_cyt_p, s_FKBP42_cyt_p
+s_FQR1VPg_cyt_c, s_FQR1VPg_cyt_c
+s_GA3ox_cyt_pa, s_GA3ox_cyt_pa
+s_GAMT12_cyt_pa, s_GAMT12_cyt_pa
+s_GAPC2VPg_cyt_c, s_GAPC2VPg_cyt_c
+s_GBF4_nuc_p, s_GBF4_nuc_p
+s_GER3VPg_cyt_c, s_GER3VPg_cyt_c
+s_GH3_cyt_pa, s_GH3_cyt_pa
+s_GID_nuc_pa, s_GID_nuc_pa
+s_GI_cyt_p, s_GI_cyt_p
+s_GI_nuc_p, s_GI_nuc_p
+s_GPAphid2_cyt_p, s_GPAphid2_cyt_p
+s_GPX_cyt_pa, s_GPX_cyt_pa
+s_GRF6VPg_cyt_c, s_GRF6VPg_cyt_c
+s_GRF8_cyt_pa, s_GRF8_cyt_pa
+s_GRX480_nuc_p, s_GRX480_nuc_p
+s_GSNO_cyt_pa, s_GSNO_cyt_pa
+s_GSTF2VPg_cyt_c, s_GSTF2VPg_cyt_c
+s_GSTF9VPg_cyt_c, s_GSTF9VPg_cyt_c
+s_GeranylgeranylPP_cyt_m, s_GeranylgeranylPP_cyt_m
+s_Glu_cyt_m, s_Glu_cyt_m
+s_Growth_cyt_pr, s_Growth_cyt_pr
+s_HCProMIND1_cyt_ca, s_HCProMIND1_cyt_ca
+s_HCProPAA2_cyt_ca, s_HCProPAA2_cyt_ca
+s_HCProPBB2_cyt_ca, s_HCProPBB2_cyt_ca
+s_HCProPBE1_cyt_ca, s_HCProPBE1_cyt_ca
+s_HCProTDX_cyt_ca, s_HCProTDX_cyt_ca
+s_HCPro_nuc_pa, s_HCPro_nuc_pa
+s_HCProvsiRNA_cyt_mr, s_HCProvsiRNA_cyt_mr
+s_HEN1_cyt_p, s_HEN1_cyt_p
+s_HMA_er_pa, s_HMA_er_pa
+s_HMBDP_cyt_m, s_HMBDP_cyt_m
+s_HOP3_cyt_pa, s_HOP3_cyt_pa
+s_HSFA1b_cyt_p, s_HSFA1b_cyt_p
+s_HSFA1b_nuc_pa, s_HSFA1b_nuc_pa
+s_HSFA1d_cyt_p, s_HSFA1d_cyt_p
+s_HSF_cyt_p, s_HSF_cyt_p
+s_HSP70HSP90SGT1_cyt_ca, s_HSP70HSP90SGT1_cyt_ca
+s_HSP90_cyt_p, s_HSP90_cyt_p
+s_HUP54VPg_cyt_c, s_HUP54VPg_cyt_c
+s_HY5_cyt_p, s_HY5_cyt_p
+s_HY5_nuc_pa, s_HY5_nuc_pa
+s_Heat_cyt_ab, s_Heat_cyt_ab
+s_IAAAla_cyt_m, s_IAAAla_cyt_m
+s_IAALeu_cyt_m, s_IAALeu_cyt_m
+s_IAA_chl_m, s_IAA_chl_m
+s_IAMT1_cyt_pa, s_IAMT1_cyt_pa
+s_IAN_cyt_m, s_IAN_cyt_m
+s_IAR_cyt_pa, s_IAR_cyt_pa
+s_IDD14_nuc_p, s_IDD14_nuc_p
+s_ILR1_cyt_pa, s_ILR1_cyt_pa
+s_IPK1_cyt_pa, s_IPK1_cyt_pa
+s_IPP2VPg_cyt_c, s_IPP2VPg_cyt_c
+s_IPT1345678_cyt_pa, s_IPT1345678_cyt_pa
+s_IPT29_cyt_pa, s_IPT29_cyt_pa
+s_ISPH_cyt_pa, s_ISPH_cyt_pa
+s_ITPK1_cyt_pa, s_ITPK1_cyt_pa
+s_InsP4_cyt_m, s_InsP4_cyt_m
+s_JAM_cyt_p, s_JAM_cyt_p
+s_JAM_nuc_pa, s_JAM_nuc_pa
+s_JAR_cyt_pa, s_JAR_cyt_pa
+s_JASSY_cyt_pa, s_JASSY_cyt_pa
+s_JAT2_per_pa, s_JAT2_per_pa
+s_JAZRBC_cyt_ca, s_JAZRBC_cyt_ca
+s_JAZWRKY57_cyt_ca, s_JAZWRKY57_cyt_ca
+s_JAZ_cyt_p, s_JAZ_cyt_p
+s_JMT_cyt_pa, s_JMT_cyt_pa
+s_KAO12_cyt_pa, s_KAO12_cyt_pa
+s_KAT_per_pa, s_KAT_per_pa
+s_KO_cyt_pa, s_KO_cyt_pa
+s_KRP1_cyt_p, s_KRP1_cyt_p
+s_KS_cyt_pa, s_KS_cyt_pa
+s_LCY1_cyt_pa, s_LCY1_cyt_pa
+s_LDopa_cyt_m, s_LDopa_cyt_m
+s_LECRK19_cyt_p, s_LECRK19_cyt_p
+s_LHB1B1VPg_cyt_c, s_LHB1B1VPg_cyt_c
+s_LOG_cyt_pa, s_LOG_cyt_pa
+s_LOX2VPg_cyt_c, s_LOX2VPg_cyt_c
+s_LOX_chl_pa, s_LOX_chl_pa
+s_Larogenate_chl_m, s_Larogenate_chl_m
+s_MAPKKK8_nuc_pa, s_MAPKKK8_nuc_pa
+s_MAX1_cyt_pa, s_MAX1_cyt_pa
+s_MAX2_cyt_pa, s_MAX2_cyt_pa
+s_MED37EVPg_cyt_c, s_MED37EVPg_cyt_c
+s_MES10_cyt_pa, s_MES10_cyt_pa
+s_MES_cyt_pa, s_MES_cyt_pa
+s_MFP_per_pa, s_MFP_per_pa
+s_MIR390_cyt_mi, s_MIR390_cyt_mi
+s_MIZ1_cyt_p, s_MIZ1_cyt_p
+s_MKD1_cyt_pa, s_MKD1_cyt_pa
+s_MKK1_cyt_p, s_MKK1_cyt_p
+s_MKK2_cyt_p, s_MKK2_cyt_p
+s_MKS1_cyt_p, s_MKS1_cyt_p
+s_MOS_nuc_pa, s_MOS_nuc_pa
+s_MPK15_cyt_pa, s_MPK15_cyt_pa
+s_MPK4_cyt_p, s_MPK4_cyt_p
+s_MPPBETAVPg_cyt_c, s_MPPBETAVPg_cyt_c
+s_MSL_cyt_p, s_MSL_cyt_p
+s_MS_cyt_pa, s_MS_cyt_pa
+s_MTI2011VPg_cyt_c, s_MTI2011VPg_cyt_c
+s_MVA_cyt_m, s_MVA_cyt_m
+s_MVK_cyt_p, s_MVK_cyt_p
+s_MYB2_cyt_pa, s_MYB2_cyt_pa
+s_MYB2_nuc_pa, s_MYB2_nuc_pa
+s_MYB334465_nuc_pa, s_MYB334465_nuc_pa
+s_MYC2_cyt_p, s_MYC2_cyt_p
+s_MYC2_nuc_p, s_MYC2_nuc_p
+s_MYC3NPR1_cyt_p, s_MYC3NPR1_cyt_p
+s_MYC4NPR1_cyt_p, s_MYC4NPR1_cyt_p
+s_MYCPYL_nuc_c, s_MYCPYL_nuc_c
+s_MeIAA_cyt_m, s_MeIAA_cyt_m
+s_NAC92_cyt_p, s_NAC92_cyt_p
+s_NAC92_nuc_pa, s_NAC92_nuc_pa
+s_NCED_cyt_pa, s_NCED_cyt_pa
+s_NDR1_cyt_p, s_NDR1_cyt_p
+s_NGA1_nuc_pa, s_NGA1_nuc_pa
+s_NIMINNPR1_nuc_ca, s_NIMINNPR1_nuc_ca
+s_NIT1_cyt_pa, s_NIT1_cyt_pa
+s_NIaProVPg_cyt_c, s_NIaProVPg_cyt_c
+s_NIbVPg_cyt_c, s_NIbVPg_cyt_c
+s_NPR1CUL3_cyt_ca, s_NPR1CUL3_cyt_ca
+s_NPR1_nuc_p, s_NPR1_nuc_p
+s_NPR3_nuc_pa, s_NPR3_nuc_pa
+s_NPR4_nuc_pa, s_NPR4_nuc_pa
+s_NRG11_cyt_p, s_NRG11_cyt_p
+s_NRG11_nuc_pa, s_NRG11_nuc_pa
+s_O2_x_m, s_O2_x_m
+s_OBE1VPg_cyt_ca, s_OBE1VPg_cyt_ca
+s_OBE2VPg_cyt_c, s_OBE2VPg_cyt_c
+s_OG_cyt_m, s_OG_cyt_m
+s_OMR1_cyt_pa, s_OMR1_cyt_pa
+s_OPCL1_per_pa, s_OPCL1_per_pa
+s_ORA59_cyt_pa, s_ORA59_cyt_pa
+s_OSCA13_cyt_p, s_OSCA13_cyt_p
+s_OSCA1_cyt_p, s_OSCA1_cyt_p
+s_P1VPg_cyt_c, s_P1VPg_cyt_c
+s_P3RBC_cyt_ca, s_P3RBC_cyt_ca
+s_PABP2VPg_cyt_c, s_PABP2VPg_cyt_c
+s_PABP4VPg_cyt_c, s_PABP4VPg_cyt_c
+s_PABP8VPg_cyt_c, s_PABP8VPg_cyt_c
+s_PAL_chl_pa, s_PAL_chl_pa
+s_PAR_cyt_pa, s_PAR_cyt_pa
+s_PA_cyt_pa, s_PA_cyt_pa
+s_PBP1_cyt_p, s_PBP1_cyt_p
+s_PBS3_cyt_pa, s_PBS3_cyt_pa
+s_PDS_cyt_pa, s_PDS_cyt_pa
+s_PEP_cyt_p, s_PEP_cyt_p
+s_PHYA_cyt_p, s_PHYA_cyt_p
+s_PHYB_cyt_p, s_PHYB_cyt_p
+s_PHYB_nuc_pa, s_PHYB_nuc_pa
+s_PIF1_cyt_pa, s_PIF1_cyt_pa
+s_PIF34_cyt_p, s_PIF34_cyt_p
+s_PIF34_nuc_p, s_PIF34_nuc_p
+s_PLDALPHA1_cyt_pa, s_PLDALPHA1_cyt_pa
+s_PORAVPg_cyt_c, s_PORAVPg_cyt_c
+s_PORBVPg_cyt_c, s_PORBVPg_cyt_c
+s_PP2AB1_cyt_p, s_PP2AB1_cyt_p
+s_PP2C_cyt_p, s_PP2C_cyt_p
+s_PR3VPg_cyt_c, s_PR3VPg_cyt_c
+s_PR5VPg_cyt_c, s_PR5VPg_cyt_c
+s_PROC1_cyt_pa, s_PROC1_cyt_pa
+s_PSB33VPg_cyt_c, s_PSB33VPg_cyt_c
+s_PSBBVPg_cyt_c, s_PSBBVPg_cyt_c
+s_PSBP1VPg_cyt_c, s_PSBP1VPg_cyt_c
+s_PSBRVPg_cyt_c, s_PSBRVPg_cyt_c
+s_PUB15_cyt_pa, s_PUB15_cyt_pa
+s_Phe_cyt_m, s_Phe_cyt_m
+s_Photosynthesis_chl_pr, s_Photosynthesis_chl_pr
+s_Prep_cyt_m, s_Prep_cyt_m
+s_RANGAP_cyt_pa, s_RANGAP_cyt_pa
+s_RAP26_cyt_pa, s_RAP26_cyt_pa
+s_RAPTOR2_cyt_p, s_RAPTOR2_cyt_p
+s_RBCLVPg_cyt_c, s_RBCLVPg_cyt_c
+s_RCAVPg_cyt_c, s_RCAVPg_cyt_c
+s_REM12VPg_cyt_c, s_REM12VPg_cyt_c
+s_RH8VPg_cyt_ca, s_RH8VPg_cyt_ca
+s_RPS12CVPg_cyt_c, s_RPS12CVPg_cyt_c
+s_RTE1_ga_pa, s_RTE1_ga_pa
+s_Rx_cyt_p, s_Rx_cyt_p
+s_SAGs_nuc_p, s_SAGs_nuc_p
+s_SAHH_cyt_pa, s_SAHH_cyt_pa
+s_SAHH_er_p, s_SAHH_er_p
+s_SAMC_cyt_pa, s_SAMC_cyt_pa
+s_SAMS_cyt_pa, s_SAMS_cyt_pa
+s_SAMS_er_p, s_SAMS_er_p
+s_SARD1_cyt_pa, s_SARD1_cyt_pa
+s_SARD1_nuc_pa, s_SARD1_nuc_pa
+s_SCL14_nuc_p, s_SCL14_nuc_p
+s_SERPIN1VPg_cyt_c, s_SERPIN1VPg_cyt_c
+s_SGT1_cyt_p, s_SGT1_cyt_p
+s_SGT1_cyt_pa, s_SGT1_cyt_pa
+s_SIK1_cyt_pa, s_SIK1_cyt_pa
+s_SNRK2_cyt_p, s_SNRK2_cyt_p
+s_SOD_mit_pa, s_SOD_mit_pa
+s_SOS1_cyt_p, s_SOS1_cyt_p
+s_SPCH_cyt_pa, s_SPCH_cyt_pa
+s_SR1IP1_nuc_pa, s_SR1IP1_nuc_pa
+s_SRK2D_cyt_p, s_SRK2D_cyt_p
+s_SRK2I_cyt_p, s_SRK2I_cyt_p
+s_SUR1_cyt_pa, s_SUR1_cyt_pa
+s_Salkylthiohydroximate_cyt_m, s_Salkylthiohydroximate_cyt_m
+s_SnRK210_cyt_p, s_SnRK210_cyt_p
+s_Stomatalclosure_cyt_pr, s_Stomatalclosure_cyt_pr
+s_TAA1_cyt_pa, s_TAA1_cyt_pa
+s_TCP81415_nuc_pa, s_TCP81415_nuc_pa
+s_TCP8_nuc_pa, s_TCP8_nuc_pa
+s_TGA_cyt_pa, s_TGA_cyt_pa
+s_TGA_nuc_pa, s_TGA_nuc_pa
+s_TIP12VPg_cyt_c, s_TIP12VPg_cyt_c
+s_TIR1_cyt_p, s_TIR1_cyt_p
+s_TIR1_nuc_p, s_TIR1_nuc_p
+s_TNL_cyt_pa, s_TNL_cyt_pa
+s_TNLeffector_cyt_pa, s_TNLeffector_cyt_pa
+s_TOR_cyt_pa, s_TOR_cyt_pa
+s_TPK1_cyt_p, s_TPK1_cyt_p
+s_TRXH_cyt_p, s_TRXH_cyt_p
+s_TUA2VPg_cyt_c, s_TUA2VPg_cyt_c
+s_TYRAAT12_cyt_pa, s_TYRAAT12_cyt_pa
+s_Thr_cyt_m, s_Thr_cyt_m
+s_Trp_cyt_m, s_Trp_cyt_m
+s_UGT84B1_chl_pa, s_UGT84B1_chl_pa
+s_UGT_cyt_pa, s_UGT_cyt_pa
+s_UPL5_cyt_pa, s_UPL5_cyt_pa
+s_VDAC2VPg_cyt_c, s_VDAC2VPg_cyt_c
+s_VDE1_cyt_pa, s_VDE1_cyt_pa
+s_VIH1_cyt_pa, s_VIH1_cyt_pa
+s_VISO_cyt_pa, s_VISO_cyt_pa
+s_WAK1_cyt_p, s_WAK1_cyt_p
+s_WDbHLHMYB_nuc_c, s_WDbHLHMYB_nuc_c
+s_WRKY11_cyt_p, s_WRKY11_cyt_p
+s_WRKY17_cyt_p, s_WRKY17_cyt_p
+s_WRKY28_nuc_p, s_WRKY28_nuc_p
+s_WRKY30_cyt_p, s_WRKY30_cyt_p
+s_WRKY48_nuc_p, s_WRKY48_nuc_p
+s_WRKY50_cyt_pa, s_WRKY50_cyt_pa
+s_WRKY50_nuc_pa, s_WRKY50_nuc_pa
+s_WRKY618_cyt_p, s_WRKY618_cyt_p
+s_WRKY618_nuc_pa, s_WRKY618_nuc_pa
+s_WRKY8_nuc_p, s_WRKY8_nuc_p
+s_Waterlogging_cyt_ab, s_Waterlogging_cyt_ab
+s_ZDS1_cyt_pa, s_ZDS1_cyt_pa
+s_ZEP_cyt_pa, s_ZEP_cyt_pa
+s_bZIP21_nuc_p, s_bZIP21_nuc_p
+s_cholesterol_cyt_m, s_cholesterol_cyt_m
+s_eATP_x_m, s_eATP_x_m
+s_e_chl_m, s_e_chl_m
+s_iaaM_cyt_pa, s_iaaM_cyt_pa
+s_miR159AB_cyt_nc, s_miR159AB_cyt_nc
+s_miR168_cyt_mi, s_miR168_cyt_mi
+s_phospholipids_chl_m, s_phospholipids_chl_m
+s_phospholipids_cyt_m, s_phospholipids_cyt_m
+s_redlight_cyt_ab, s_redlight_cyt_ab
+s_tRNAadenine_cyt_m, s_tRNAadenine_cyt_m
+s_trichousbacteria_cyt_f, s_trichousbacteria_cyt_f
+s_vsiRNA12986_cyt_nc, s_vsiRNA12986_cyt_nc
+s_vsiRNA34327_cyt_nc, s_vsiRNA34327_cyt_nc
