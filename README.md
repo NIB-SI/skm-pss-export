@@ -4,7 +4,7 @@ Export models from the Plant Stress Signalling (PSS) Neo4j knowledge graph to va
 
 
 
-![How pss-export works: collect reactions from PSS (with filters), then write SBML, TabularQual or networks](docs/pss-export-overview.svg)
+![How pss-export works: collect reactions from PSS (with filters), then write the networks (reaction graph, interaction and gene networks, FAIDARE) or the models (SBML, TabularQual, BoolNet, SBGN-ML), optionally with model fixes](docs/pss-export-overview.svg)
 
 (Figure source: `docs/make_overview_svg.py`.)
 

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 750" width="1400" height="750" font-family="Helvetica, Arial, sans-serif">
 <title>How pss-export works</title>
 <defs>
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b7b"/></marker>
@@ -13,42 +13,50 @@
     .edge-label { font-size: 10px; fill: #44525e; text-anchor: middle; }
   </style>
 </defs>
-<rect width="1400" height="600" fill="#ffffff"/>
-<rect x="15" y="35" width="250" height="330" rx="12" class="group" stroke-dasharray="6,4"/><text x="27" y="53" class="group-label">Used through</text>
+<rect width="1400" height="750" fill="#ffffff"/>
+<rect x="15" y="35" width="250" height="420" rx="12" class="group" stroke-dasharray="6,4"/><text x="27" y="53" class="group-label">Used through</text>
 <rect x="285" y="35" width="230" height="330" rx="12" class="group" stroke-dasharray="6,4"/><text x="297" y="53" class="group-label">Inputs</text>
-<rect x="535" y="35" width="290" height="540" rx="12" class="group" /><text x="547" y="53" class="group-label">1. Collect: collect_reactions(…)</text>
-<rect x="845" y="35" width="300" height="540" rx="12" class="group" /><text x="857" y="53" class="group-label">2. Write: create_…()</text>
-<rect x="1165" y="35" width="220" height="540" rx="12" class="group" stroke-dasharray="6,4"/><text x="1177" y="53" class="group-label">Outputs</text>
+<rect x="535" y="35" width="290" height="695" rx="12" class="group" /><text x="547" y="53" class="group-label">1. Collect: collect_reactions(…)</text>
+<rect x="845" y="35" width="300" height="695" rx="12" class="group" /><text x="857" y="53" class="group-label">2. Write: create_…()</text>
+<rect x="1165" y="35" width="220" height="695" rx="12" class="group" stroke-dasharray="6,4"/><text x="1177" y="53" class="group-label">Outputs</text>
+<rect x="852" y="58" width="286" height="370" rx="12" class="group" stroke-dasharray="6,4"/><text x="864" y="76" class="group-label">Networks: everything</text>
+<rect x="852" y="440" width="286" height="280" rx="12" class="group" stroke-dasharray="6,4"/><text x="864" y="458" class="group-label">Models: nodes_to_ignore left out</text>
 <rect x="30" y="60" width="220" height="70" rx="8" fill="#fdeee8" class="box" />
 <text x="140.0" y="78" class="title">CLI: pss-export</text>
-<text x="140.0" y="93" class="small">to-sbml, to-tabularqual, to-reaction-graph,</text>
-<text x="140.0" y="106" class="small">to-interaction-network, to-gene-network,</text>
-<text x="140.0" y="119" class="small">formats</text>
+<text x="140.0" y="93" class="small">to-sbml, to-tabularqual, to-sbgn,</text>
+<text x="140.0" y="106" class="small">to-reaction-graph[-json], to-faidare,</text>
+<text x="140.0" y="119" class="small">to-interaction-network, to-gene-network</text>
 <rect x="30" y="150" width="220" height="70" rx="8" fill="#fdeee8" class="box" />
 <text x="140.0" y="168" class="title">Format registry</text>
 <text x="140.0" y="183" class="small">pss_export.formats: titles, descriptions,</text>
-<text x="140.0" y="196" class="small">files, access</text>
+<text x="140.0" y="196" class="small">files, access, model fixes</text>
 <text x="140.0" y="209" class="small">(e.g. for the SKM web app)</text>
-<rect x="30" y="250" width="220" height="90" rx="8" fill="#fdeee8" class="box" />
-<text x="140.0" y="268" class="title">Python: PSSAdapter</text>
-<text x="140.0" y="283" class="small">collect_reactions()</text>
-<text x="140.0" y="296" class="small">create_sbml(), create_…()</text>
-<text x="140.0" y="309" class="small">export(key, files…)</text>
+<rect x="30" y="245" width="220" height="90" rx="8" fill="#fdeee8" class="box" />
+<text x="140.0" y="263" class="title">Python: PSSAdapter</text>
+<text x="140.0" y="278" class="small">collect_reactions()</text>
+<text x="140.0" y="291" class="small">with_model_fixes()</text>
+<text x="140.0" y="304" class="small">create_sbml(), create_…()</text>
+<text x="140.0" y="317" class="small">export(key, files…, model_fixes)</text>
+<rect x="30" y="365" width="220" height="70" rx="8" fill="#fdeee8" class="box" />
+<text x="140.0" y="383" class="title">scripts/export_pss.py</text>
+<text x="140.0" y="398" class="small">the reference exports in pss/:</text>
+<text x="140.0" y="411" class="small">every format but FAIDARE,</text>
+<text x="140.0" y="424" class="small">public, Arabidopsis</text>
 <path d="M300,68 v64 a100.0,8 0 0 0 200,0 v-64" fill="#e8f0fa" class="box"/><ellipse cx="400.0" cy="68" rx="100.0" ry="8" fill="#e8f0fa" class="box"/>
 <text x="400.0" y="92" class="title">PSS (Neo4j)</text>
 <text x="400.0" y="107" class="small">reactions, participants,</text>
 <text x="400.0" y="120" class="small">entities, annotations</text>
-<path d="M300,270 h188 l12,12 v68 h-200 z" fill="#fdf6e3" class="box"/><path d="M488,270 v12 h12" fill="none" class="box"/>
-<text x="400.0" y="288" class="title">pss_reaction_definitions.py</text>
-<text x="400.0" y="303" class="small">reaction and edge types,</text>
-<text x="400.0" y="316" class="small">participant roles,</text>
-<text x="400.0" y="329" class="small">subtypes (keys of the SBO tables)</text>
 <path d="M300,160 h188 l12,12 v78 h-200 z" fill="#fdf6e3" class="box"/><path d="M488,160 v12 h12" fill="none" class="box"/>
 <text x="400.0" y="178" class="title">pss_export_config.yaml</text>
 <text x="400.0" y="193" class="small">species, nodes_to_ignore</text>
 <text x="400.0" y="206" class="small">SBO: forms, roles,</text>
 <text x="400.0" y="219" class="small">subtypes, mechanisms</text>
 <text x="400.0" y="232" class="small">interaction_rules</text>
+<path d="M300,270 h188 l12,12 v68 h-200 z" fill="#fdf6e3" class="box"/><path d="M488,270 v12 h12" fill="none" class="box"/>
+<text x="400.0" y="288" class="title">pss_reaction_definitions.py</text>
+<text x="400.0" y="303" class="small">reaction and edge types,</text>
+<text x="400.0" y="316" class="small">participant roles,</text>
+<text x="400.0" y="329" class="small">subtypes (keys of the SBO tables)</text>
 <rect x="550" y="60" width="260" height="100" rx="8" fill="#e8f0fa" class="box" />
 <text x="680.0" y="78" class="title">PSSCollector (Cypher)</text>
 <text x="680.0" y="93" class="small">filters: access (public / restricted),</text>
@@ -63,69 +71,105 @@
 <text x="680.0" y="262" class="small">· roles, reaction SBO, mechanism SBO</text>
 <text x="680.0" y="275" class="small">node annotations: links, homologues</text>
 <text x="680.0" y="288" class="small">metadata: version, access, species</text>
-<rect x="550" y="340" width="260" height="55" rx="8" fill="#ffffff" class="box" stroke-dasharray="5,3"/>
-<text x="680.0" y="358" class="title">model_fixes (optional)</text>
-<text x="680.0" y="373" class="small">active forms, transport reactions</text>
-<path d="M550,450 h248 l12,12 v58 h-260 z" fill="#fdf6e3" class="box"/><path d="M798,450 v12 h12" fill="none" class="box"/>
-<text x="680.0" y="468" class="title">annotation_registry.yaml</text>
-<text x="680.0" y="483" class="small">databases → qualifier,</text>
-<text x="680.0" y="496" class="small">identifiers.org prefix</text>
-<rect x="860" y="60" width="270" height="55" rx="8" fill="#ffffff" class="box" />
-<text x="995.0" y="78" class="title">Reaction graph</text>
-<text x="995.0" y="93" class="small">entities and reactions, one edge per participant</text>
-<rect x="860" y="140" width="270" height="70" rx="8" fill="#ffffff" class="box" />
-<text x="995.0" y="158" class="title">Interaction network</text>
-<text x="995.0" y="173" class="small">entity → entity influences</text>
-<text x="995.0" y="186" class="small">(positive / negative / unknown),</text>
-<text x="995.0" y="199" class="small">by interaction_rules</text>
-<rect x="860" y="250" width="270" height="55" rx="8" fill="#ffffff" class="box" />
-<text x="995.0" y="268" class="title">Gene network</text>
-<text x="995.0" y="283" class="small">functional clusters → genes in the species</text>
-<rect x="860" y="375" width="270" height="70" rx="8" fill="#ffffff" class="box" />
-<text x="995.0" y="393" class="title">SBML</text>
-<text x="995.0" y="408" class="small">species per compartment, SBO terms,</text>
-<text x="995.0" y="421" class="small">RDF annotations, notes, metadata</text>
-<rect x="860" y="470" width="270" height="70" rx="8" fill="#ffffff" class="box" />
-<text x="995.0" y="488" class="title">TabularQual</text>
-<text x="995.0" y="503" class="small">species, Boolean transition rules,</text>
-<text x="995.0" y="516" class="small">model information</text>
-<path d="M1180,60 h178 l12,12 v43 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,60 v12 h12" fill="none" class="box"/>
-<text x="1275.0" y="78" class="title">edges.tsv + nodes.tsv</text>
-<text x="1275.0" y="93" class="small">extended SIF</text>
-<path d="M1180,147 h178 l12,12 v43 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,147 v12 h12" fill="none" class="box"/>
-<text x="1275.0" y="165" class="title">edges.tsv + nodes.tsv</text>
-<text x="1275.0" y="180" class="small">extended SIF</text>
-<path d="M1180,250 h178 l12,12 v43 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,250 v12 h12" fill="none" class="box"/>
-<text x="1275.0" y="268" class="title">edges.tsv + nodes.tsv</text>
-<text x="1275.0" y="283" class="small">extended SIF, per species</text>
-<path d="M1180,382 h178 l12,12 v43 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,382 v12 h12" fill="none" class="box"/>
-<text x="1275.0" y="400" class="title">model.xml</text>
-<text x="1275.0" y="415" class="small">SBML L3V2</text>
-<path d="M1180,477 h178 l12,12 v43 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,477 v12 h12" fill="none" class="box"/>
-<text x="1275.0" y="495" class="title">model.xlsx</text>
-<text x="1275.0" y="510" class="small">TabularQual</text>
+<rect x="550" y="345" width="260" height="85" rx="8" fill="#ffffff" class="box" stroke-dasharray="5,3"/>
+<text x="680.0" y="363" class="title">Model fixes (opt-in)</text>
+<text x="680.0" y="378" class="small">with_model_fixes(): a fixed copy for the</text>
+<text x="680.0" y="391" class="small">&quot;with model fixes&quot; variant of the models:</text>
+<text x="680.0" y="404" class="small">active forms, transport reactions,</text>
+<text x="680.0" y="417" class="small">activation from the inactive form</text>
+<path d="M550,560 h248 l12,12 v58 h-260 z" fill="#fdf6e3" class="box"/><path d="M798,560 v12 h12" fill="none" class="box"/>
+<text x="680.0" y="578" class="title">annotation_registry.yaml</text>
+<text x="680.0" y="593" class="small">databases → qualifier,</text>
+<text x="680.0" y="606" class="small">identifiers.org prefix</text>
+<rect x="862" y="82" width="266" height="50" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="100" class="title">Reaction graph</text>
+<text x="995.0" y="115" class="small">entities and reactions, one edge per participant</text>
+<rect x="862" y="150" width="266" height="45" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="168" class="title">Reaction graph (JSON)</text>
+<text x="995.0" y="183" class="small">the same graph: the PSS Explorer&#x27;s data</text>
+<rect x="862" y="215" width="266" height="60" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="233" class="title">Interaction network</text>
+<text x="995.0" y="248" class="small">entity → entity influences (positive /</text>
+<text x="995.0" y="261" class="small">negative / unknown), by interaction_rules</text>
+<rect x="862" y="295" width="266" height="50" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="313" class="title">Gene network</text>
+<text x="995.0" y="328" class="small">functional clusters → genes in the species</text>
+<rect x="862" y="365" width="266" height="50" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="383" class="title">FAIDARE</text>
+<text x="995.0" y="398" class="small">an entry per gene and species (all species)</text>
+<rect x="862" y="465" width="266" height="60" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="483" class="title">SBML</text>
+<text x="995.0" y="498" class="small">species per compartment, SBO terms,</text>
+<text x="995.0" y="511" class="small">RDF annotations, notes, metadata</text>
+<rect x="862" y="545" width="266" height="70" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="563" class="title">Boolean model</text>
+<text x="995.0" y="578" class="small">a rule per species: any activation</text>
+<text x="995.0" y="591" class="small">and no inhibition (TabularQual, BoolNet)</text>
+<rect x="862" y="635" width="266" height="70" rx="8" fill="#ffffff" class="box" />
+<text x="995.0" y="653" class="title">SBGN-ML</text>
+<text x="995.0" y="668" class="small">Process Description, Graphviz layout,</text>
+<text x="995.0" y="681" class="small">compartments, annotations;</text>
+<text x="995.0" y="694" class="small">a variant for Newt</text>
+<path d="M1180,82 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,82 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="100" class="title">edges.tsv + nodes.tsv</text>
+<text x="1275.0" y="115" class="small">extended SIF</text>
+<path d="M1180,148 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,148 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="166" class="title">graph.json</text>
+<text x="1275.0" y="181" class="small">nodes and edges</text>
+<path d="M1180,220 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,220 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="238" class="title">edges.tsv + nodes.tsv</text>
+<text x="1275.0" y="253" class="small">extended SIF</text>
+<path d="M1180,295 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,295 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="313" class="title">edges.tsv + nodes.tsv</text>
+<text x="1275.0" y="328" class="small">extended SIF, per species</text>
+<path d="M1180,365 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,365 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="383" class="title">entries.json</text>
+<text x="1275.0" y="398" class="small">FAIDARE data discovery</text>
+<path d="M1180,470 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,470 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="488" class="title">model.xml</text>
+<text x="1275.0" y="503" class="small">SBML L3V2</text>
+<path d="M1180,530 h178 l12,12 v33 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,530 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="548" class="title">model.xlsx</text>
+<text x="1275.0" y="563" class="small">TabularQual</text>
+<path d="M1180,585 h178 l12,12 v33 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,585 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="603" class="title">model.bnet + nodes.tsv</text>
+<text x="1275.0" y="618" class="small">BoolNet</text>
+<path d="M1180,645 h178 l12,12 v38 h-190 z" fill="#f3eefa" class="box"/><path d="M1358,645 v12 h12" fill="none" class="box"/>
+<text x="1275.0" y="663" class="title">map.sbgn</text>
+<text x="1275.0" y="678" class="small">SBGN-ML (or for Newt)</text>
 <path d="M140.0,130 L140.0,150" class="edge" marker-end="url(#arrow)"/>
 <text x="170" y="145" class="edge-label">calls</text>
-<path d="M140.0,220 L140.0,250" class="edge" marker-end="url(#arrow)"/>
-<text x="180" y="243" class="edge-label">export(key)</text>
-<path d="M250,260.0 L522,260.0 L522,130 L550,130" class="edge" marker-end="url(#arrow)"/>
-<text x="400" y="256" class="edge-label">collect_reactions()</text>
+<path d="M140.0,220 L140.0,245" class="edge" marker-end="url(#arrow)"/>
+<text x="180" y="239" class="edge-label">export(key)</text>
+<path d="M140.0,365 L140.0,335" class="edge" marker-end="url(#arrow)"/>
+<text x="180" y="357" class="edge-label">export(key)</text>
+<path d="M250,255.0 L522,255.0 L522,130 L550,130" class="edge" marker-end="url(#arrow)"/>
+<text x="400" y="266" class="edge-label">collect_reactions()</text>
 <path d="M500,100.0 L550,100.0" class="edge" marker-end="url(#arrow)"/>
 <path d="M500,205.0 L538,205.0 L538,150 L550,150" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
 <path d="M680.0,160 L680.0,190" class="edge" marker-end="url(#arrow)"/>
 <path d="M500,310.0 L530,310.0 L530,285 L550,285" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
-<path d="M680.0,315 L680.0,340" class="edge" stroke-dasharray="5,3" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
-<path d="M810,252.5 L832,252.5 L832,75.5 L860,75.5" class="edge" marker-end="url(#arrow)"/>
-<path d="M810,252.5 L832,252.5 L832,163.0 L860,163.0" class="edge" marker-end="url(#arrow)"/>
-<path d="M810,252.5 L832,252.5 L832,398.0 L860,398.0" class="edge" marker-end="url(#arrow)"/>
-<path d="M810,252.5 L832,252.5 L832,493.0 L860,493.0" class="edge" marker-end="url(#arrow)"/>
-<path d="M995.0,210 L995.0,250" class="edge" marker-end="url(#arrow)"/>
-<text x="1060" y="232" class="edge-label">same edges, expanded</text>
-<path d="M810,473.0 L848,473.0 L848,426.0 L860,426.0" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
-<path d="M810,497.0 L848,497.0 L848,521.0 L860,521.0" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
-<path d="M1130,87.5 L1180,87.5" class="edge" marker-end="url(#arrow)"/>
-<path d="M1130,175.0 L1180,175.0" class="edge" marker-end="url(#arrow)"/>
-<path d="M1130,277.5 L1180,277.5" class="edge" marker-end="url(#arrow)"/>
-<path d="M1130,410.0 L1180,410.0" class="edge" marker-end="url(#arrow)"/>
-<path d="M1130,505.0 L1180,505.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M680.0,315 L680.0,345" class="edge" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,95.0 L862,95.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,233.0 L862,233.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,378.0 L862,378.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,483.0 L862,483.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,568.0 L862,568.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,252.5 L832,252.5 L832,658.0 L862,658.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M810,387.5 L840,387.5 L840,446 L852,446" class="edge" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+<path d="M995.0,132 L995.0,150" class="edge" marker-end="url(#arrow)"/>
+<path d="M995.0,275 L995.0,295" class="edge" marker-end="url(#arrow)"/>
+<text x="1060" y="288" class="edge-label">same edges, expanded</text>
+<path d="M810,595.0 L848,595.0 L848,515.0 L862,515.0" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
+<path d="M810,595.0 L848,595.0 L848,600.0 L862,600.0" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
+<path d="M810,595.0 L848,595.0 L848,690.0 L862,690.0" class="edge" stroke-dasharray="2,4" marker-end="url(#arrow)"/>
+<path d="M1128,107.0 L1180,107.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,172.5 L1180,172.5" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,245.0 L1180,245.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,320.0 L1180,320.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,390.0 L1180,390.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,495.0 L1180,495.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,670.0 L1180,670.0" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,568.0 L1155,568.0 L1155,552.5 L1180,552.5" class="edge" marker-end="url(#arrow)"/>
+<path d="M1128,592.0 L1155,592.0 L1155,607.5 L1180,607.5" class="edge" marker-end="url(#arrow)"/>
 </svg>

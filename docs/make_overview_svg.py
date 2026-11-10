@@ -2,7 +2,7 @@
 from pathlib import Path
 from html import escape
 
-W, H = 1400, 600
+W, H = 1400, 750
 FILL = {"use": "#fdeee8", "in": "#e8f0fa", "cfg": "#fdf6e3", "data": "#eef6ee", "write": "#ffffff", "out": "#f3eefa"}
 parts = []
 
@@ -53,52 +53,67 @@ def top(b, dx=0): x, y, w, h = b; return (x + w/2 + dx, y)
 
 
 # columns
-group(15, 35, 250, 330, "Used through")
+group(15, 35, 250, 420, "Used through")
 group(285, 35, 230, 330, "Inputs")
-group(535, 35, 290, 540, "1. Collect: collect_reactions(…)", dashed=False)
-group(845, 35, 300, 540, "2. Write: create_…()", dashed=False)
-group(1165, 35, 220, 540, "Outputs")
+group(535, 35, 290, 695, "1. Collect: collect_reactions(…)", dashed=False)
+group(845, 35, 300, 695, "2. Write: create_…()", dashed=False)
+group(1165, 35, 220, 695, "Outputs")
+group(852, 58, 286, 370, "Networks: everything")
+group(852, 440, 286, 280, "Models: nodes_to_ignore left out")
 
-cli = box(30, 60, 220, 70, "CLI: pss-export", ["to-sbml, to-tabularqual, to-reaction-graph,", "to-interaction-network, to-gene-network,", "formats"], "use")
-reg = box(30, 150, 220, 70, "Format registry", ["pss_export.formats: titles, descriptions,", "files, access", "(e.g. for the SKM web app)"], "use")
-api = box(30, 250, 220, 90, "Python: PSSAdapter", ["collect_reactions()", "create_sbml(), create_…()", "export(key, files…)"], "use")
+cli = box(30, 60, 220, 70, "CLI: pss-export", ["to-sbml, to-tabularqual, to-sbgn,", "to-reaction-graph[-json], to-faidare,", "to-interaction-network, to-gene-network"], "use")
+reg = box(30, 150, 220, 70, "Format registry", ["pss_export.formats: titles, descriptions,", "files, access, model fixes", "(e.g. for the SKM web app)"], "use")
+api = box(30, 245, 220, 90, "Python: PSSAdapter", ["collect_reactions()", "with_model_fixes()", "create_sbml(), create_…()", "export(key, files…, model_fixes)"], "use")
+scr = box(30, 365, 220, 70, "scripts/export_pss.py", ["the reference exports in pss/:", "every format but FAIDARE,", "public, Arabidopsis"], "use")
 
 pss = cylinder(300, 60, 200, 80, "PSS (Neo4j)", ["reactions, participants,", "entities, annotations"])
-defs = box(300, 270, 200, 80, "pss_reaction_definitions.py", ["reaction and edge types,", "participant roles,", "subtypes (keys of the SBO tables)"], "cfg", note=True)
 cfg = box(300, 160, 200, 90, "pss_export_config.yaml", ["species, nodes_to_ignore", "SBO: forms, roles,", "subtypes, mechanisms", "interaction_rules"], "cfg", note=True)
+defs = box(300, 270, 200, 80, "pss_reaction_definitions.py", ["reaction and edge types,", "participant roles,", "subtypes (keys of the SBO tables)"], "cfg", note=True)
 
 col = box(550, 60, 260, 100, "PSSCollector (Cypher)", ["filters: access (public / restricted),", "reactions or pathways, species (all", "functional clusters have genes);", "nodes_to_ignore: models only"], "in")
 dat = box(550, 190, 260, 125, "Collected data", ["Reaction: type, effect, mechanism, links", "· participants (as collected)", "· substrates / products / modifiers", "· roles, reaction SBO, mechanism SBO", "node annotations: links, homologues", "metadata: version, access, species"], "data")
-fix = box(550, 340, 260, 55, "model_fixes (optional)", ["active forms, transport reactions"], "write", dashed=True)
-ann = box(550, 450, 260, 70, "annotation_registry.yaml", ["databases → qualifier,", "identifiers.org prefix"], "cfg", note=True)
+fix = box(550, 345, 260, 85, "Model fixes (opt-in)", ["with_model_fixes(): a fixed copy for the", "\"with model fixes\" variant of the models:", "active forms, transport reactions,", "activation from the inactive form"], "write", dashed=True)
+ann = box(550, 560, 260, 70, "annotation_registry.yaml", ["databases → qualifier,", "identifiers.org prefix"], "cfg", note=True)
 
-rg   = box(860, 60, 270, 55, "Reaction graph", ["entities and reactions, one edge per participant"])
-inet = box(860, 140, 270, 70, "Interaction network", ["entity → entity influences", "(positive / negative / unknown),", "by interaction_rules"])
-gnet = box(860, 250, 270, 55, "Gene network", ["functional clusters → genes in the species"])
-sbml = box(860, 375, 270, 70, "SBML", ["species per compartment, SBO terms,", "RDF annotations, notes, metadata"])
-tq   = box(860, 470, 270, 70, "TabularQual", ["species, Boolean transition rules,", "model information"])
+rg   = box(862, 82, 266, 50, "Reaction graph", ["entities and reactions, one edge per participant"])
+rgj  = box(862, 150, 266, 45, "Reaction graph (JSON)", ["the same graph: the PSS Explorer's data"])
+inet = box(862, 215, 266, 60, "Interaction network", ["entity → entity influences (positive /", "negative / unknown), by interaction_rules"])
+gnet = box(862, 295, 266, 50, "Gene network", ["functional clusters → genes in the species"])
+fd   = box(862, 365, 266, 50, "FAIDARE", ["an entry per gene and species (all species)"])
+sbml = box(862, 465, 266, 60, "SBML", ["species per compartment, SBO terms,", "RDF annotations, notes, metadata"])
+bm   = box(862, 545, 266, 70, "Boolean model", ["a rule per species: any activation", "and no inhibition (TabularQual, BoolNet)"])
+sbgn = box(862, 635, 266, 70, "SBGN-ML", ["Process Description, Graphviz layout,", "compartments, annotations;", "a variant for Newt"])
 
-o_rg = box(1180, 60, 190, 55, "edges.tsv + nodes.tsv", ["extended SIF"], "out", note=True)
-o_in = box(1180, 147, 190, 55, "edges.tsv + nodes.tsv", ["extended SIF"], "out", note=True)
-o_gn = box(1180, 250, 190, 55, "edges.tsv + nodes.tsv", ["extended SIF, per species"], "out", note=True)
-o_sb = box(1180, 382, 190, 55, "model.xml", ["SBML L3V2"], "out", note=True)
-o_tq = box(1180, 477, 190, 55, "model.xlsx", ["TabularQual"], "out", note=True)
+o_rg  = box(1180, 82, 190, 50, "edges.tsv + nodes.tsv", ["extended SIF"], "out", note=True)
+o_rgj = box(1180, 148, 190, 50, "graph.json", ["nodes and edges"], "out", note=True)
+o_in  = box(1180, 220, 190, 50, "edges.tsv + nodes.tsv", ["extended SIF"], "out", note=True)
+o_gn  = box(1180, 295, 190, 50, "edges.tsv + nodes.tsv", ["extended SIF, per species"], "out", note=True)
+o_fd  = box(1180, 365, 190, 50, "entries.json", ["FAIDARE data discovery"], "out", note=True)
+o_sb  = box(1180, 470, 190, 50, "model.xml", ["SBML L3V2"], "out", note=True)
+o_tq  = box(1180, 530, 190, 45, "model.xlsx", ["TabularQual"], "out", note=True)
+o_bn  = box(1180, 585, 190, 45, "model.bnet + nodes.tsv", ["BoolNet"], "out", note=True)
+o_sg  = box(1180, 645, 190, 50, "map.sbgn", ["SBGN-ML (or for Newt)"], "out", note=True)
 
 arrow([bottom(cli), top(reg)], "calls", label_at=(170, 145))
-arrow([bottom(reg), top(api)], "export(key)", label_at=(180, 243))
-arrow([right(api, -35), (522, right(api, -35)[1]), (522, 130), (550, 130)], "collect_reactions()", label_at=(400, 256))
+arrow([bottom(reg), top(api)], "export(key)", label_at=(180, 239))
+arrow([top(scr), bottom(api)], "export(key)", label_at=(180, 357))
+arrow([right(api, -35), (522, right(api, -35)[1]), (522, 130), (550, 130)], "collect_reactions()", label_at=(400, 266))
 arrow([right(pss), (550, right(pss)[1])])
 arrow([right(cfg), (538, right(cfg)[1]), (538, 150), (550, 150)], dotted=True)
 arrow([bottom(col), top(dat)])
 arrow([right(defs), (530, right(defs)[1]), (530, 285), (550, 285)], dotted=True)
-arrow([bottom(dat), top(fix)], dashed=True, both=True)
-for w in (rg, inet, sbml, tq):
+arrow([bottom(dat), top(fix)], dashed=True)
+for w in (rg, inet, fd, sbml, bm, sbgn):
     arrow([right(dat), (832, right(dat)[1]), (832, left(w, -12)[1]), left(w, -12)])
-arrow([bottom(inet), top(gnet)], "same edges, expanded", label_at=(1060, 232))
-arrow([right(ann, -12), (848, right(ann, -12)[1]), (848, left(sbml, 16)[1]), left(sbml, 16)], dotted=True)
-arrow([right(ann, 12), (848, right(ann, 12)[1]), (848, left(tq, 16)[1]), left(tq, 16)], dotted=True)
-for w, o in ((rg, o_rg), (inet, o_in), (gnet, o_gn), (sbml, o_sb), (tq, o_tq)):
+arrow([right(fix), (840, right(fix)[1]), (840, 446), (852, 446)], dashed=True)
+arrow([bottom(rg), top(rgj)])
+arrow([bottom(inet), top(gnet)], "same edges, expanded", label_at=(1060, 288))
+for w in (sbml, bm, sbgn):
+    arrow([right(ann), (848, right(ann)[1]), (848, left(w, 20)[1]), left(w, 20)], dotted=True)
+for w, o in ((rg, o_rg), (rgj, o_rgj), (inet, o_in), (gnet, o_gn), (fd, o_fd), (sbml, o_sb), (sbgn, o_sg)):
     arrow([right(w), (o[0], right(w)[1])])
+arrow([right(bm, -12), (1155, right(bm, -12)[1]), (1155, right(o_tq)[1] - 0), (1180, right(o_tq)[1])])
+arrow([right(bm, 12), (1155, right(bm, 12)[1]), (1155, right(o_bn)[1]), (1180, right(o_bn)[1])])
 
 svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="Helvetica, Arial, sans-serif">
 <title>How pss-export works</title>
