@@ -2,6 +2,15 @@
 
 Versions are tagged `v<version>` (e.g. `v0.2.0`); the SKM web app pins a tag.
 
+## Unreleased
+
+- SBML with `--include-genes` (`include_genes=True`): the gene of a transcription/translation is a modifier with
+  the role template (SBO:0000645), after the regulators, no longer a reactant (it was consumed by its own
+  transcription). Breaking for tools that read the gene as the reactant (e.g. rate laws with `S` = the gene).
+  `Reaction.templates` holds the genes; the default export (without genes) is unchanged.
+- Model fixes: genes are never transported between compartments (a modelling rule; a gene in two compartments is
+  a data error).
+
 ## 0.2.1 (2026-11-09)
 
 Boolean models (TabularQual, BoolNet): corrected rules, and a new model fix.

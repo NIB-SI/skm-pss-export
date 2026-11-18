@@ -38,6 +38,9 @@ class Reaction:
         self.substrates = []
         self.products = []
         self.modifiers = []
+        # the genes of transcription/translation (include_genes): not consumed, so not substrates; SBML writes them
+        # as modifiers with the role template, SBGN as necessary stimulation (SBGN PD L1, Fig. 2.42)
+        self.templates = []
 
         # every participant as collected (incl. conditions and gene templates), with its edge type:
         # for the networks (the reaction graph is lossless); the lists above are the ones the models use
@@ -76,9 +79,10 @@ class Reaction:
 
             # the participants of the models (SBML, TabularQual, ...): copies, as model fixes change them
             if edge_type in edge_types.INPUTS:
-                if self.reaction_type in reaction_classes.TRANSCRIPTIONAL_TRANSLATIONAL and not self.include_genes:
+                if self.reaction_type in reaction_classes.TRANSCRIPTIONAL_TRANSLATIONAL:
+                    if self.include_genes:
+                        self.add_template(copy(participant))
                     continue
-                    # TODO handle transcription and translation reactions differently
                 self.add_substrate(copy(participant))
             elif output:
                 self.add_product(copy(participant))
@@ -125,10 +129,10 @@ class Reaction:
         empties a side that had participants (all substrates, or all products), the models leave out the whole
         reaction (in_model = False). The networks keep all participants. Returns why the reaction is left out,
         or None. '''
-        before = (self.substrates, self.products, self.modifiers)
-        self.substrates, self.products, self.modifiers = [
+        before = (self.substrates, self.products, self.modifiers, self.templates)
+        self.substrates, self.products, self.modifiers, self.templates = [
             [p for p in side if p.name not in names] for side in before]
-        if not (self.substrates or self.products or self.modifiers) and any(before):
+        if not (self.substrates or self.products or self.modifiers or self.templates) and any(before):
             reason = "all its edges are to ignored nodes"
         elif (before[0] and not self.substrates) or (before[1] and not self.products):
             reason = "all its substrates or products are ignored nodes"
@@ -145,6 +149,9 @@ class Reaction:
 
     def add_modifier(self, modifier):
         self.modifiers.append(modifier)
+
+    def add_template(self, template):
+        self.templates.append(template)
 
     def has_modifiers(self):
         return len(self.modifiers) > 0

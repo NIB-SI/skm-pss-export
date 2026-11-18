@@ -316,7 +316,8 @@ class ModelFixer:
         for reaction in self.pss_adapter.reactions.values():
             if not reaction.in_model:
                 continue
-            all_species.update(key(s) for s in reaction.substrates + reaction.products + reaction.modifiers)
+            all_species.update(key(s) for s in reaction.substrates + reaction.products + reaction.modifiers
+                               + reaction.templates)
             if reaction.reaction_effect == 'activation':
                 activated.update(key(s) for s in reaction.products)
             elif reaction.reaction_effect == 'inhibition':
@@ -559,6 +560,11 @@ class ModelFixer:
         for form, form_species in forms_dict.items():
 
             console.print(f"[bold blue]\nConsidering form '{form}'")
+
+            if form == 'gene':
+                # a modelling rule: genes are not transported (a gene in two compartments is a data error)
+                self.console.print("[dark_orange]Genes are not transported, no fix suggested.")
+                continue
 
             locations = {
                 s: subgraph.nodes[s].get('compartment')

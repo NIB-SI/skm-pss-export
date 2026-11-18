@@ -7,6 +7,7 @@ from libsbml import (SBMLDocument, writeSBMLToFile, writeSBMLToString,
                     CVTerm, BIOLOGICAL_QUALIFIER, MODEL_QUALIFIER)
 
 from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesReference, Reaction
+from ..pss.pss_reaction_definitions import participant_roles
 from ..annotations.annotation_manager import annotation_manager
 from ..utils import MODEL_FIXES_NOTE
 
@@ -382,3 +383,7 @@ class SBML(SBMLDocument, IDTracker):
         # (modifier)-[modifies]->(reaction)
         for species in reaction.modifiers:
             self.create_modifier_reference(species, role=reaction.modifier_role, reaction=rxn)
+
+        # (5) gene templates (include_genes): modifiers, as they are not consumed; after the regulators
+        for species in reaction.templates:
+            self.create_modifier_reference(species, role=participant_roles.TEMPLATE, reaction=rxn)
