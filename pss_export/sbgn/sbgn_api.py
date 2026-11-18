@@ -224,10 +224,8 @@ class SBGN(IDTracker):
         reaction_id = reaction.reaction_id
         self.set_reaction_id(reaction, reaction_id)
         substrates = list(reaction.substrates)
-        templates = []
+        templates = list(reaction.templates)
         if reaction.reaction_type in reaction_classes.TRANSCRIPTIONAL_TRANSLATIONAL:
-            templates = [s for s in substrates if s.form == 'gene']
-            substrates = [s for s in substrates if s.form != 'gene']
             if not self.pss_adapter.include_genes:
                 # the models leave the gene templates out: SBGN shows them, as necessary stimulation
                 ignore = set(self.pss_adapter.nodes_to_ignore or [])

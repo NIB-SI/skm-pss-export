@@ -144,7 +144,7 @@ pss-export to-sbml output-model-fixes.sbml \
 
 The model fixes connect parts of the models that PSS leaves disconnected: translation products are made in the
 active form (when the inactive form is not used), transport reactions are added between compartments where a
-node is made and used, and an active form that is only switched off (deactivated, degraded, bound; never activated)
+node is made and used (not for genes: they are not transported), and an active form that is only switched off (deactivated, degraded, bound; never activated)
 gets an activation from its inactive form when that is in the model (else, in the Boolean models, it is never
 switched on again). They are not in PSS: the models (SBML, TabularQual) come in two variants, without (exactly
 PSS, the default) and with model fixes, both from one collection (`PSSAdapter.with_model_fixes()` makes the fixed
@@ -164,6 +164,14 @@ https://github.com/draeger-lab/SBMLsqueezer, e.g.
 ```bash
 java -jar  /path..to..jar/SBMLsqueezer-2.2.jar --sbml-in-file output.sbml  --sbml-out-file output-squeezed
 ```
+
+#### Genes and transcription
+
+By default the genes are left out: a transcription or translation makes its product from nothing (no reactants),
+with the regulators as modifiers. With `--include-genes` (`collect_reactions(include_genes=True)`), the gene is a
+modifier with the role *template* (SBO:0000645), after the regulators: it is needed, not consumed (SBGN PD Level 1,
+Fig. 2.42: the gene as necessary stimulation of a process from source and sink). The Boolean rules leave the gene
+out either way.
 
 #### Known limitations
 

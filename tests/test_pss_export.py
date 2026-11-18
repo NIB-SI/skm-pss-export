@@ -712,6 +712,61 @@ class TestSBMLExport:
         assert pss_export_config.node_role_to_SBO["transporter"] == "0000013"
 
 
+class TestGeneTemplates:
+    """ With include_genes, the gene of a transcription/translation is a template: not consumed, so a modifier in
+    SBML (role template, after the regulators), not a substrate (SBGN PD L1, Fig. 2.42: source -> mRNA) """
+
+    @staticmethod
+    def gene(name):
+        node = {"name": name}
+        return FakePath(FakeEdge("SUBSTRATE", node, REACTION_NODE,
+                                 source_location="nucleus", source_form="gene"), node)
+
+    def _build(self, include_genes, ignore=None, gene="WRKY33",
+               reaction_type=rdef.reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_REPRESSION):
+        collector = PSSCollector(None, include_genes=include_genes, nodes_to_ignore=ignore)
+        return collector._build_reaction("rx00002", {"reaction_type": reaction_type},
+                                         [self.gene(gene), modifier("TF"), product("WRKY33")])
+
+    def test_gene_is_a_template(self):
+        r = self._build(include_genes=True)
+        assert r.substrates == [] and [t.name for t in r.templates] == ["WRKY33"]
+        assert [m.name for m in r.modifiers] == ["TF"]
+
+    def test_without_genes(self):
+        r = self._build(include_genes=False)
+        assert r.substrates == [] and r.templates == []
+
+    def test_ignored_template_keeps_reaction(self):
+        r = self._build(include_genes=True, ignore=["G"], gene="G")
+        assert r.templates == [] and r.in_model
+
+    def test_subtype_unchanged(self):
+        assert self._build(True).reaction_subtype == self._build(False).reaction_subtype
+
+    def test_boolean_rule_without_the_gene(self):
+        from pss_export.boolean.boolean import transcriptional_translational_repression
+        r = self._build(include_genes=True)
+        for i, s in enumerate(r.modifiers + r.products + r.templates):
+            s.set_id(f"s_{i}_{s.form}")
+        assert transcriptional_translational_repression(r) == {"s_1_protein": "!(s_0_protein_active)"}
+
+    def test_sbml_template_is_a_modifier(self):
+        import libsbml
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        a.access, a.species, a.export_datetime, a.nodes = "public", "ath", "2026-11-18T12:00:00", {}
+        a.include_genes = True
+        r = self._build(include_genes=True)
+        a.reactions, a.reaction_ids = {"rx00002": r}, ["rx00002"]
+        doc = libsbml.readSBMLFromString(a.create_sbml(filename=None))
+        assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
+        rxn = doc.getModel().getReaction("rx00002")
+        assert rxn.getNumReactants() == 0 and rxn.getNumProducts() == 1
+        modifiers = [rxn.getModifier(i) for i in range(rxn.getNumModifiers())]
+        assert [m.getSpecies() for m in modifiers] == ["s_TF_cyt_pa", "s_WRKY33_nuc_g"]
+        assert modifiers[1].getSBOTermID() == "SBO:" + pss_export_config.node_role_to_SBO["template"]
+
+
 class TestCLI:
     """The CLI commands run end to end (fake database, no reactions)."""
 
@@ -800,6 +855,32 @@ class TestModelFixTransport:
         assert reaction.reaction_type == rdef.reaction_types.TRANSLOCATION
         assert reaction.reaction_effect == "activation"
         assert reaction_rule_constructor(reaction) is not None
+
+
+class TestModelFixTransportGenes:
+    """ Genes are not transported (a modelling rule): not even a gene made in one compartment (a data error) and
+    used in another; other forms are """
+
+    def _fixes(self, form):
+        pytest.importorskip("matplotlib")
+        from types import SimpleNamespace
+        from pss_export.model_fixes.model_fixes import ModelFixer
+        made = ec.Reaction("rx1", rdef.reaction_types.UNKNOWN, {"reaction_effect": "activation"})
+        made.add_substrate(ec.Species("X", "metabolite", "cytoplasm"))
+        made.add_product(ec.Species("G", form, "cytoplasm"))
+        used = ec.Reaction("rx2", rdef.reaction_types.UNKNOWN, {"reaction_effect": "activation"})
+        used.add_substrate(ec.Species("G", form, "nucleus"))
+        used.add_product(ec.Species("Y", "metabolite", "nucleus"))
+        a = SimpleNamespace(reactions={"rx1": made, "rx2": used}, additional_reactions=[], include_genes=True,
+                            reaction_ids=["rx1", "rx2"], nodes={})
+        ModelFixer(a, apply_fixes=True).identify_model_fixes()
+        return [r for r in a.additional_reactions if r.startswith("transport_")]
+
+    def test_gene_not_transported(self):
+        assert self._fixes("gene") == []
+
+    def test_protein_transported(self):
+        assert self._fixes("protein_active") == ["transport_G_pa_cyt_to_nuc"]
 
 
 class TestModelFixActivation:

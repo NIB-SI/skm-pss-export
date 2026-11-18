@@ -50,7 +50,7 @@ class Graph:
                     idtracker.set_species_id(product, product_id)
                 G.add_edge(reaction.id, product_id, type='product')
 
-            for modifier in reaction.modifiers:
+            for modifier in reaction.modifiers + reaction.templates:
                 modifier_id, status = idtracker.get_species_id(modifier)
                 if status == 0:
                     G.add_node(modifier_id,

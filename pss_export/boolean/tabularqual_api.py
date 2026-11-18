@@ -216,6 +216,10 @@ class TabularQual(IDTracker):
             # print("TabularQual: modifier species:", species.name)
             self.get_tabularqual_species(species)
 
+        # gene templates (include_genes): species without a rule of their own, in no transition's rule (as before)
+        for species in reaction.templates:
+            self.get_tabularqual_species(species)
+
         rule_constructor = reaction_rule_constructor(reaction)
         if rule_constructor is None:
             print(f"TabularQual: {reaction.reaction_id}, could not construct reaction rule")
