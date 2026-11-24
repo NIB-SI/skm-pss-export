@@ -219,9 +219,12 @@ class PSSAdapter():
     def create_sbml(self,
                     filename=None,
                     entities_table=None,
-                    kinetic_laws=False):
+                    kinetic_laws=False,
+                    pathway_groups=True):
+        ''' The SBML model (Level 3 Version 2) of the collected reactions. pathway_groups: the pathways as groups
+        (SBML Groups package, not required to read the model); the species' pathway notes are written either way. '''
 
-        sbml = SBML(self, kinetic_laws=kinetic_laws)
+        sbml = SBML(self, kinetic_laws=kinetic_laws, pathway_groups=pathway_groups)
 
         for reaction_id in self.model_reaction_ids:
             sbml.add_reaction(self.reactions[reaction_id])
@@ -230,8 +233,11 @@ class PSSAdapter():
             print(reaction_id)
             sbml.add_reaction(self.reactions[reaction_id])
 
+        n_groups = sbml.add_pathway_groups()
+
         print("-" * 40)
         print("Number of species in SBML: ", len(sbml.species_ids))
+        print("Number of pathway groups in SBML: ", n_groups)
         print("Number of species types in SBML: ", len(sbml.species_types_ids))
         print("Number of compartments in SBML: ", len(sbml.compartment_ids))
         print("Number of reactions in SBML: ", len(sbml.reaction_ids))

@@ -60,8 +60,8 @@ FORMATS = {f.key: f for f in [
         key='sbml',
         title='[SBML](https://sbml.org)',
         description=('Systems Biology Markup Language (Level 3 Version 2): species per compartment, reactions with '
-                     'their participants, SBO terms and annotations. The automated export has no equations or kinetic '
-                     'parameters; for work on this, see [Generating dynamic large-scale systems-biology data from a '
+                     'their participants, SBO terms and annotations, and the pathways as groups (SBML Groups '
+                     'package). The automated export has no equations or kinetic parameters; for work on this, see [Generating dynamic large-scale systems-biology data from a '
                      'knowledge graph](https://github.com/R4d0slav/ThesisRepository).'),
         method='create_sbml',
         files=(FormatFile('filename', 'model', 'xml', 'application/sbml+xml'),),

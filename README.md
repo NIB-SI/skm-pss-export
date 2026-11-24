@@ -187,11 +187,30 @@ out either way.
 #### Known limitations
 
 - **Missing equations**: The SBML file does not contain reaction equations. Add them using SBMLsqueezer as shown above. See also [ThesisRepository](https://github.com/R4d0slav/ThesisRepository).
+- **No initial values**: The species have no initial amount or concentration (PSS has none); set them for a simulation. libSBML warns once per species (80601, modeling practice).
 - **Database consistency**: Continuous updates to the PSS database mean the model may not be fully connected or consistent with modeling assumptions.
 - **Disconnected molecules**: Some molecules may be disconnected in the SBML file if:
   - They occur in multiple compartments but lack transport reactions
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
+
+#### Pathways
+
+The PSS pathways (the entities' `pathway` and `all_pathways`, e.g. `Hormone - Jasmonate (JA)`) are SBML Level 3
+[Groups](https://sbml.org/documents/specifications/level-3/version-1/groups/): a group per pathway (kind
+`classification`, the pathway as its name, id e.g. `pathway_Hormone_Jasmonate_JA`) with the species of its entities
+as members, all forms and compartments. The package is not required (`groups:required="false"`): tools without it
+read the model without the groups. Reactions are in no group, as in PSS pathways belong to the entities. Each
+species also has the notes `pathway` (the main one) and `all pathways` (joined with `|`). Without the groups:
+`create_sbml(pathway_groups=False)` (CLI: `--no-pathway-groups`); the notes are written either way.
+
+#### Compartments
+
+SBML Level 3 has no compartment containment (Level 2's `outside` attribute was removed). The export records it as a
+`bqbiol:isPartOf` annotation pointing to the containing compartment's metaid (e.g. `#metaid_c_cyt`), set in
+`compartment_part_of` in `pss_export/pss/pss_export_config.yaml`: the organelles are part of the cytoplasm, the
+nucleolus of the nucleus, the apoplast of extracellular; cytoplasm and extracellular are part of no other. A
+containing compartment is added to the model with the one it contains.
 
 #### SBO terms
 

@@ -653,9 +653,11 @@ class TestSBMLExport:
         a.export_datetime = "2026-09-30T12:00:00"
         a.nodes = {
             "ABA": ec.Node("ABA", external_links=["CHEBI:2365", "kegg:C06082", "invented:x"],
-                           description="Abscisic acid <hormone>"),
+                           description="Abscisic acid <hormone>", pathway="Hormone - Abscisic acid (ABA)",
+                           all_pathways=["Hormone - Abscisic acid (ABA)", "Stress - Drought"]),
             "PYL[AT5G46790]": ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001",
-                                      homologues={"ath": ["AT5G46790"]}),
+                                      homologues={"ath": ["AT5G46790"]}, pathway="Hormone - Abscisic acid (ABA)",
+                                      all_pathways=["Hormone - Abscisic acid (ABA)"]),
         }
         r = ec.Reaction("rx00001", rdef.reaction_types.BINDING_OLIGOMERISATION,
                         {"evidence_sentence": "ABA binds PYL.", "external_links": ["doi:10.1/x"]})
@@ -739,6 +741,72 @@ class TestSBMLExport:
 
     def test_transporter_role_is_a_modifier_role(self):
         assert pss_export_config.node_role_to_SBO["transporter"] == "0000013"
+
+    def test_groups_package_not_required(self, model):
+        doc = model.getSBMLDocument()
+        assert doc.isPackageEnabled("groups")
+        assert not doc.getPackageRequired("groups")
+
+    def test_pathway_groups(self, model):
+        import libsbml
+        groups = model.getPlugin("groups")
+        found = {}
+        for i in range(groups.getNumGroups()):
+            g = groups.getGroup(i)
+            assert g.getKind() == libsbml.GROUP_KIND_CLASSIFICATION
+            found[g.getId()] = (g.getName(), [g.getMember(j).getIdRef() for j in range(g.getNumMembers())])
+        # sorted by label; ABA (two pathways) in both groups; the complex (no pathway) in none
+        assert found == {
+            "pathway_Hormone_Abscisic_acid_ABA": ("Hormone - Abscisic acid (ABA)", ["s_ABA_cyt_m", "s_PYL_cyt_p"]),
+            "pathway_Stress_Drought": ("Stress - Drought", ["s_ABA_cyt_m"]),
+        }
+        assert list(found) == sorted(found)
+
+    def test_pathway_notes(self, model):
+        notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
+        assert "pathway:Hormone - Abscisic acid (ABA)" in notes
+        assert "all pathways:Hormone - Abscisic acid (ABA)|Stress - Drought" in notes
+        assert "pathway" not in model.getSpecies("s_ABAPYL_cyt_c").getNotesString()
+
+    def test_without_pathway_groups(self, adapter):
+        ''' pathway_groups=False: no Groups package, the pathway notes stay '''
+        import libsbml
+        text = adapter.create_sbml(filename=None, pathway_groups=False)
+        doc = libsbml.readSBMLFromString(text)
+        assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
+        assert not doc.isPackageEnabled("groups") and "groups" not in text
+        assert "pathway:Hormone - Abscisic acid (ABA)" in doc.getModel().getSpecies("s_ABA_cyt_m").getNotesString()
+
+    def test_compartments_part_of(self, adapter):
+        ''' containment as bqbiol:isPartOf to the containing compartment (added to the model); no 'outside' '''
+        import libsbml
+        r = ec.Reaction("rx00002", rdef.reaction_types.TRANSLOCATION, {})
+        r.add_substrate(ec.Species("ABA", "metabolite", "apoplast"))
+        r.add_product(ec.Species("ABA", "metabolite", "nucleolus"))
+        adapter.reactions["rx00002"] = r
+        adapter.reaction_ids.append("rx00002")
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None)).getModel()
+
+        def part_of(comp_id):
+            c = model.getCompartment(comp_id)
+            return [cv.getResourceURI(i) for cv in c.getCVTerms()
+                    if cv.getBiologicalQualifierType() == libsbml.BQB_IS_PART_OF for i in range(cv.getNumResources())]
+
+        assert part_of("c_nucl") == ["#metaid_c_nuc"]
+        assert part_of("c_nuc") == ["#metaid_c_cyt"]
+        assert part_of("c_ap") == ["#metaid_c_x"]
+        assert part_of("c_cyt") == [] and part_of("c_x") == []
+        assert model.getCompartment("c_x").getMetaId() == "metaid_c_x"
+
+    def test_consistent_and_deterministic(self, adapter):
+        import libsbml
+        first = adapter.create_sbml(filename=None)
+        doc = libsbml.readSBMLFromString(first)
+        doc.checkConsistency()
+        errors = [doc.getError(i).getMessage() for i in range(doc.getNumErrors())
+                  if doc.getError(i).getSeverity() >= libsbml.LIBSBML_SEV_ERROR]
+        assert errors == []
+        assert adapter.create_sbml(filename=None) == first
 
 
 class TestGeneTemplates:

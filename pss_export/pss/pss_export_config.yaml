@@ -46,6 +46,19 @@ compartment_to_short:
   vacuole: 'vac'
   none: 'none'
 
+# Containment of the compartments (SBML: bqbiol:isPartOf annotations): compartment -> the compartment it is part
+# of. Cytoplasm and extracellular are part of no other; the apoplast is next to the cytoplasm, not around it.
+compartment_part_of:
+  chloroplast: cytoplasm
+  endoplasmic reticulum: cytoplasm
+  golgi apparatus: cytoplasm
+  mitochondrion: cytoplasm
+  nucleus: cytoplasm
+  nucleolus: nucleus
+  peroxisome: cytoplasm
+  vacuole: cytoplasm
+  apoplast: extracellular
+
 node_form_to_short:
   abiotic: 'ab'
   complex: 'c'
@@ -75,8 +88,12 @@ compartment_to_SBO: '0000410'
 node_form_to_SBO:
   # Following are children of 'material entity' ('correct' according to above issue)
   metabolite:       '0000247' # simple chemical
-  protein:          '0000297' # protein complex, alternative: 252-polypeptide chain
-  protein_active:   '0000297' # protein complex, alternative: 252-polypeptide chain
+  # proteins: SBO:0000297 'protein complex' ("one or more polypeptide chains possibly associated with simple
+  # chemicals"), the material type of a protein in SBGN PD Level 1 (Table 2.1, mt:prot). SBML L3V2 makes no
+  # recommendation, but one of its examples uses SBO:0000252 'polypeptide chain'. Some tools read 297 as a complex
+  # (MINERVA imports 297 as Complex, 252 as Protein).
+  protein:          '0000297' # protein complex (SBGN PD L1 mt:prot)
+  protein_active:   '0000297' # protein complex (SBGN PD L1 mt:prot)
   gene:             '0000243' # gene
   # process is an occurring entity, not a material entity: kept as it describes the PSS
   # process nodes, although SBML validators warn (see README, SBO terms)

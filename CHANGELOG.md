@@ -10,6 +10,11 @@ Versions are tagged `v<version>` (e.g. `v0.2.0`); the SKM web app pins a tag.
   `Reaction.templates` holds the genes; the default export (without genes) is unchanged.
 - Model fixes: genes are never transported between compartments (a modelling rule; a gene in two compartments is
   a data error).
+- SBML: the PSS pathways as groups (SBML Level 3 Groups package, not required): a group per pathway with the
+  species of its entities as members; the notes `pathway` and `all pathways` on each species. Optional:
+  `create_sbml(pathway_groups=False)`, CLI `--no-pathway-groups` (the notes stay).
+- SBML: compartment containment as `bqbiol:isPartOf` annotations (config `compartment_part_of`); the apoplast is
+  part of extracellular. The Level 2 `outside` call, which Level 3 ignores, is removed.
 - Several species: `collect_reactions(species=['ath', 'stu'], species_match='any'|'all')`, CLI `--species ath,stu
   --species-match any|all`: the reactions of any of the species (default; the single-species exports together) or of
   all of them (gene clusters with genes in each); the network node files then have a `<code>_homologues` column per

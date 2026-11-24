@@ -96,6 +96,8 @@ def cli():
 @click.option("--include-genes", is_flag=True, help="Include genes as species (transcription reactions).")
 @click.option("--entities-table", default=None, type=click.Path(), help="Path to also export a table of entities in model.")
 @click.option("--kinetic-laws", is_flag=True, help="Include kinetic laws (SBO term only) in SBML output.")
+@click.option("--pathway-groups/--no-pathway-groups", default=True, show_default=True,
+              help="The pathways as groups (SBML Groups package); the species' pathway notes are written either way.")
 def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
             model_id, model_name, model_description, model_version, creator,
             access, species, species_match, reactions,
@@ -105,7 +107,8 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
             verbose,
             include_genes,
             entities_table,
-            kinetic_laws):
+            kinetic_laws,
+            pathway_groups):
     """
     Export model to SBML.
     """
@@ -132,7 +135,8 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
 
         adapter.create_sbml(filename=filename,
                     entities_table=entities_table,
-                    kinetic_laws=kinetic_laws)
+                    kinetic_laws=kinetic_laws,
+                    pathway_groups=pathway_groups)
 
         if verbose:
             click.secho("SBML export complete.", fg="green")
