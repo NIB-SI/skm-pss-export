@@ -368,12 +368,32 @@ class TestCollectorAccess:
         assert args["pathways"] == ["Hormone - Abscisic acid (ABA)"]
 
     def test_species_filter(self):
-        where, args = PSSCollector(None, species="stu", nodes_to_ignore=None)._build_where_clause()
-        assert "FunctionalCluster" in where and args["homologues_key"] == "stu_homologues"
+        collector = PSSCollector(None, species="stu", nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert "FunctionalCluster" in where and args["homologues_keys"] == ["stu_homologues"]
+        assert collector.species == ("stu",)
+
+    @pytest.mark.parametrize("match", ["any", "all"])
+    def test_several_species_filter(self, match):
+        collector = PSSCollector(None, species=["ath", "stu"], species_match=match, nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert args["homologues_keys"] == ["ath_homologues", "stu_homologues"]
+        assert f"{match}(key IN $homologues_keys" in where
+        assert collector.species == ("ath", "stu")
+
+    def test_species_match_defaults_to_any_and_is_checked(self):
+        assert PSSCollector(None, species=["ath", "stu"], nodes_to_ignore=None).species_match == "any"
+        with pytest.raises(ValueError, match="species_match"):
+            PSSCollector(None, species=["ath", "stu"], species_match="some")
+
+    @pytest.mark.parametrize("species", [[], ["ath", "ath"], ["ath", "xyz"]])
+    def test_bad_species_lists_raise(self, species):
+        with pytest.raises(ValueError):
+            PSSCollector(None, species=species)
 
     def test_no_species_filter(self):
         where, args = PSSCollector(None, species=None, access="restricted", nodes_to_ignore=None)._build_where_clause()
-        assert "homologues_key" not in args and where == ""
+        assert "homologues_keys" not in args and where == ""
 
     def test_unknown_species_raises(self):
         with pytest.raises(ValueError, match="Unknown species"):
@@ -633,9 +653,11 @@ class TestSBMLExport:
         a.export_datetime = "2026-09-30T12:00:00"
         a.nodes = {
             "ABA": ec.Node("ABA", external_links=["CHEBI:2365", "kegg:C06082", "invented:x"],
-                           description="Abscisic acid <hormone>"),
+                           description="Abscisic acid <hormone>", pathway="Hormone - Abscisic acid (ABA)",
+                           all_pathways=["Hormone - Abscisic acid (ABA)", "Stress - Drought"]),
             "PYL[AT5G46790]": ec.Node("PYL[AT5G46790]", functional_cluster_id="fc00001",
-                                      homologues={"ath": ["AT5G46790"]}),
+                                      homologues={"ath": ["AT5G46790"]}, pathway="Hormone - Abscisic acid (ABA)",
+                                      all_pathways=["Hormone - Abscisic acid (ABA)"]),
         }
         r = ec.Reaction("rx00001", rdef.reaction_types.BINDING_OLIGOMERISATION,
                         {"evidence_sentence": "ABA binds PYL.", "external_links": ["doi:10.1/x"]})
@@ -683,6 +705,15 @@ class TestSBMLExport:
     def test_species_note(self, model):
         assert "species:Arabidopsis thaliana (ath)" in model.getNotesString()
 
+    @pytest.mark.parametrize("match, joiner", [("any", "or"), ("all", "and")])
+    def test_several_species(self, adapter, match, joiner):
+        """ several species: both in the note (any: or, all: and), TAIR links as ath is among them """
+        import libsbml
+        adapter.species, adapter.species_match = ("ath", "stu"), match
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None)).getModel()
+        assert f"species:Arabidopsis thaliana (ath) {joiner} Solanum tuberosum (stu)" in model.getNotesString()
+        assert "tair.name:AT5G46790" in libsbml.XMLNode.convertXMLNodeToString(model.getSpecies("s_PYL_cyt_p").getAnnotation())
+
     def test_species_notes_escaped(self, model):
         notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
         assert "description:Abscisic acid &lt;hormone&gt;" in notes
@@ -711,6 +742,127 @@ class TestSBMLExport:
     def test_transporter_role_is_a_modifier_role(self):
         assert pss_export_config.node_role_to_SBO["transporter"] == "0000013"
 
+    def test_groups_package_not_required(self, model):
+        doc = model.getSBMLDocument()
+        assert doc.isPackageEnabled("groups")
+        assert not doc.getPackageRequired("groups")
+
+    def test_pathway_groups(self, model):
+        import libsbml
+        groups = model.getPlugin("groups")
+        found = {}
+        for i in range(groups.getNumGroups()):
+            g = groups.getGroup(i)
+            assert g.getKind() == libsbml.GROUP_KIND_CLASSIFICATION
+            found[g.getId()] = (g.getName(), [g.getMember(j).getIdRef() for j in range(g.getNumMembers())])
+        # sorted by label; ABA (two pathways) in both groups; the complex (no pathway) in none
+        assert found == {
+            "pathway_Hormone_Abscisic_acid_ABA": ("Hormone - Abscisic acid (ABA)", ["s_ABA_cyt_m", "s_PYL_cyt_p"]),
+            "pathway_Stress_Drought": ("Stress - Drought", ["s_ABA_cyt_m"]),
+        }
+        assert list(found) == sorted(found)
+
+    def test_pathway_notes(self, model):
+        notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
+        assert "pathway:Hormone - Abscisic acid (ABA)" in notes
+        assert "all pathways:Hormone - Abscisic acid (ABA)|Stress - Drought" in notes
+        assert "pathway" not in model.getSpecies("s_ABAPYL_cyt_c").getNotesString()
+
+    def test_without_pathway_groups(self, adapter):
+        ''' pathway_groups=False: no Groups package, the pathway notes stay '''
+        import libsbml
+        text = adapter.create_sbml(filename=None, pathway_groups=False)
+        doc = libsbml.readSBMLFromString(text)
+        assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
+        assert not doc.isPackageEnabled("groups") and "groups" not in text
+        assert "pathway:Hormone - Abscisic acid (ABA)" in doc.getModel().getSpecies("s_ABA_cyt_m").getNotesString()
+
+    def test_compartments_part_of(self, adapter):
+        ''' containment as bqbiol:isPartOf to the containing compartment (added to the model); no 'outside' '''
+        import libsbml
+        r = ec.Reaction("rx00002", rdef.reaction_types.TRANSLOCATION, {})
+        r.add_substrate(ec.Species("ABA", "metabolite", "apoplast"))
+        r.add_product(ec.Species("ABA", "metabolite", "nucleolus"))
+        adapter.reactions["rx00002"] = r
+        adapter.reaction_ids.append("rx00002")
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None)).getModel()
+
+        def part_of(comp_id):
+            c = model.getCompartment(comp_id)
+            return [cv.getResourceURI(i) for cv in c.getCVTerms()
+                    if cv.getBiologicalQualifierType() == libsbml.BQB_IS_PART_OF for i in range(cv.getNumResources())]
+
+        assert part_of("c_nucl") == ["#metaid_c_nuc"]
+        assert part_of("c_nuc") == ["#metaid_c_cyt"]
+        assert part_of("c_ap") == ["#metaid_c_x"]
+        assert part_of("c_cyt") == [] and part_of("c_x") == []
+        assert model.getCompartment("c_x").getMetaId() == "metaid_c_x"
+
+    def test_consistent_and_deterministic(self, adapter):
+        import libsbml
+        first = adapter.create_sbml(filename=None)
+        doc = libsbml.readSBMLFromString(first)
+        doc.checkConsistency()
+        errors = [doc.getError(i).getMessage() for i in range(doc.getNumErrors())
+                  if doc.getError(i).getSeverity() >= libsbml.LIBSBML_SEV_ERROR]
+        assert errors == []
+        assert adapter.create_sbml(filename=None) == first
+
+
+class TestGeneTemplates:
+    """ With include_genes, the gene of a transcription/translation is a template: not consumed, so a modifier in
+    SBML (role template, after the regulators), not a substrate (SBGN PD L1, Fig. 2.42: source -> mRNA) """
+
+    @staticmethod
+    def gene(name):
+        node = {"name": name}
+        return FakePath(FakeEdge("SUBSTRATE", node, REACTION_NODE,
+                                 source_location="nucleus", source_form="gene"), node)
+
+    def _build(self, include_genes, ignore=None, gene="WRKY33",
+               reaction_type=rdef.reaction_types.TRANSCRIPTIONAL_TRANSLATIONAL_REPRESSION):
+        collector = PSSCollector(None, include_genes=include_genes, nodes_to_ignore=ignore)
+        return collector._build_reaction("rx00002", {"reaction_type": reaction_type},
+                                         [self.gene(gene), modifier("TF"), product("WRKY33")])
+
+    def test_gene_is_a_template(self):
+        r = self._build(include_genes=True)
+        assert r.substrates == [] and [t.name for t in r.templates] == ["WRKY33"]
+        assert [m.name for m in r.modifiers] == ["TF"]
+
+    def test_without_genes(self):
+        r = self._build(include_genes=False)
+        assert r.substrates == [] and r.templates == []
+
+    def test_ignored_template_keeps_reaction(self):
+        r = self._build(include_genes=True, ignore=["G"], gene="G")
+        assert r.templates == [] and r.in_model
+
+    def test_subtype_unchanged(self):
+        assert self._build(True).reaction_subtype == self._build(False).reaction_subtype
+
+    def test_boolean_rule_without_the_gene(self):
+        from pss_export.boolean.boolean import transcriptional_translational_repression
+        r = self._build(include_genes=True)
+        for i, s in enumerate(r.modifiers + r.products + r.templates):
+            s.set_id(f"s_{i}_{s.form}")
+        assert transcriptional_translational_repression(r) == {"s_1_protein": "!(s_0_protein_active)"}
+
+    def test_sbml_template_is_a_modifier(self):
+        import libsbml
+        a = PSSAdapter(neo4j_uri="bolt://x:7687", neo4j_user="", neo4j_password="")
+        a.access, a.species, a.export_datetime, a.nodes = "public", "ath", "2026-11-18T12:00:00", {}
+        a.include_genes = True
+        r = self._build(include_genes=True)
+        a.reactions, a.reaction_ids = {"rx00002": r}, ["rx00002"]
+        doc = libsbml.readSBMLFromString(a.create_sbml(filename=None))
+        assert doc.getNumErrors(libsbml.LIBSBML_SEV_ERROR) == 0
+        rxn = doc.getModel().getReaction("rx00002")
+        assert rxn.getNumReactants() == 0 and rxn.getNumProducts() == 1
+        modifiers = [rxn.getModifier(i) for i in range(rxn.getNumModifiers())]
+        assert [m.getSpecies() for m in modifiers] == ["s_TF_cyt_pa", "s_WRKY33_nuc_g"]
+        assert modifiers[1].getSBOTermID() == "SBO:" + pss_export_config.node_role_to_SBO["template"]
+
 
 class TestCLI:
     """The CLI commands run end to end (fake database, no reactions)."""
@@ -734,9 +886,10 @@ class TestCLI:
     def test_gene_network_needs_a_species(self, tmp_path):
         from click.testing import CliRunner
         from pss_export.cli import cli
-        result = CliRunner().invoke(cli, ["to-gene-network", str(tmp_path / "e.tsv"), str(tmp_path / "n.tsv"), "--species", "all",
-                                          "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
-        assert result.exit_code != 0 and "needs a species" in result.output
+        for species in ("all", "ath,stu"):
+            result = CliRunner().invoke(cli, ["to-gene-network", str(tmp_path / "e.tsv"), str(tmp_path / "n.tsv"), "--species", species,
+                                              "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
+            assert result.exit_code != 0 and "needs one species" in result.output
 
     @pytest.mark.parametrize("command, options", [("to-reaction-graph", []), ("to-interaction-network", []),
                                                   ("to-gene-network", ["--species", "stu"]),
@@ -800,6 +953,32 @@ class TestModelFixTransport:
         assert reaction.reaction_type == rdef.reaction_types.TRANSLOCATION
         assert reaction.reaction_effect == "activation"
         assert reaction_rule_constructor(reaction) is not None
+
+
+class TestModelFixTransportGenes:
+    """ Genes are not transported (a modelling rule): not even a gene made in one compartment (a data error) and
+    used in another; other forms are """
+
+    def _fixes(self, form):
+        pytest.importorskip("matplotlib")
+        from types import SimpleNamespace
+        from pss_export.model_fixes.model_fixes import ModelFixer
+        made = ec.Reaction("rx1", rdef.reaction_types.UNKNOWN, {"reaction_effect": "activation"})
+        made.add_substrate(ec.Species("X", "metabolite", "cytoplasm"))
+        made.add_product(ec.Species("G", form, "cytoplasm"))
+        used = ec.Reaction("rx2", rdef.reaction_types.UNKNOWN, {"reaction_effect": "activation"})
+        used.add_substrate(ec.Species("G", form, "nucleus"))
+        used.add_product(ec.Species("Y", "metabolite", "nucleus"))
+        a = SimpleNamespace(reactions={"rx1": made, "rx2": used}, additional_reactions=[], include_genes=True,
+                            reaction_ids=["rx1", "rx2"], nodes={})
+        ModelFixer(a, apply_fixes=True).identify_model_fixes()
+        return [r for r in a.additional_reactions if r.startswith("transport_")]
+
+    def test_gene_not_transported(self):
+        assert self._fixes("gene") == []
+
+    def test_protein_transported(self):
+        assert self._fixes("protein_active") == ["transport_G_pa_cyt_to_nuc"]
 
 
 class TestModelFixActivation:
@@ -909,3 +1088,35 @@ class TestFormats:
         from pss_export.cli import cli
         result = CliRunner().invoke(cli, ["formats"])
         assert result.exit_code == 0 and "gene-network" in result.output
+
+
+class TestSpeciesOption:
+    """ --species: one code, several comma-separated (see --species-match), or 'all' """
+
+    @pytest.mark.parametrize("value, expected", [("ath", "ath"), ("ath,stu", ["ath", "stu"]),
+                                                 ("stu, ath", ["stu", "ath"]), ("all", None)])
+    def test_parse(self, value, expected):
+        from pss_export.cli import parse_species
+        assert parse_species(None, None, value) == expected
+
+    @pytest.mark.parametrize("value", ["xyz", "ath,xyz", "ath,,stu", "ath,ath", "ath,all"])
+    def test_bad_values(self, value):
+        import click
+        from pss_export.cli import parse_species
+        with pytest.raises(click.BadParameter):
+            parse_species(None, None, value)
+
+    @pytest.mark.parametrize("value", ["any", "all"])
+    def test_species_match_option(self, value, monkeypatch):
+        """ --species-match reaches collect_reactions """
+        from click.testing import CliRunner
+        from pss_export import cli as cli_module
+        seen = {}
+        def collect(self, **kwargs):
+            seen.update(kwargs)
+            raise SystemExit(0)
+        monkeypatch.setattr(cli_module.PSSAdapter, "collect_reactions", collect)
+        CliRunner().invoke(cli_module.cli, ["to-interaction-network", "--species", "ath,stu", "--species-match", value,
+                                            "e.tsv", "n.tsv", "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u",
+                                            "--neo4j-password", "p"])
+        assert (seen["species"], seen["species_match"]) == (["ath", "stu"], value)

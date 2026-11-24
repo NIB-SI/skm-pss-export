@@ -60,3 +60,20 @@ class Config:
 
 pss_export_config = Config(filename=Path(__file__).with_name("pss_export_config.yaml"))
 pss_schema_config = Config(filename=Path(__file__).with_name("pss_schema_config.yaml"))
+
+
+def species_codes(species):
+    ''' The species to collect for as a tuple of codes of pss_schema_config.species, from a code, a list of codes
+    or None (no species filter, returned as None). Raises ValueError for an unknown or repeated code. '''
+    if species is None:
+        return None
+    codes = (species,) if isinstance(species, str) else tuple(species)
+    if not codes:
+        raise ValueError("No species given (None for no species filter)")
+    unknown = [code for code in codes if code not in pss_schema_config.species]
+    if unknown:
+        raise ValueError(f"Unknown species '{', '.join(unknown)}', one of: "
+                         f"{', '.join(pss_schema_config.species)} (or None)")
+    if len(set(codes)) < len(codes):
+        raise ValueError(f"Species given more than once: {', '.join(codes)}")
+    return codes

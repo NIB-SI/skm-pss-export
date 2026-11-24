@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from html import escape
 
@@ -7,12 +8,13 @@ from libsbml import (SBMLDocument, writeSBMLToFile, writeSBMLToString,
                     CVTerm, BIOLOGICAL_QUALIFIER, MODEL_QUALIFIER)
 
 from ..entity_classes import IDTracker, Node, Species, SpeciesType, SpeciesReference, Reaction
+from ..pss.pss_reaction_definitions import participant_roles
 from ..annotations.annotation_manager import annotation_manager
+from ..pss.config import pss_export_config
 from ..utils import MODEL_FIXES_NOTE
 
 SBML_LEVEL = 3
 SBML_VERSION = 2
-OUTSIDE_COMPARTMENTS = ['cytoplasm', 'extracellular']
 
 #-------------------------------------
 # libSBML helper stuff
@@ -61,7 +63,7 @@ def to_cvterm(annotation):
 
 class SBML(SBMLDocument, IDTracker):
 
-    def __init__(self, pss_adapter, kinetic_laws=False):
+    def __init__(self, pss_adapter, kinetic_laws=False, pathway_groups=True):
         '''
         Parameters
         ----------
@@ -71,13 +73,22 @@ class SBML(SBMLDocument, IDTracker):
         kinetic_laws : bool
             Give each reaction an (empty) kinetic law with the SBO term of
             its rate law type.
+        pathway_groups : bool
+            The pathways as groups (SBML Groups package, not required to
+            read the model). The species' pathway notes are written either way.
         '''
 
         self.kinetic_laws = kinetic_laws
+        self.pathway_groups = pathway_groups
         self.pss_adapter = pss_adapter
 
         SBMLDocument.__init__(self, SBML_LEVEL, SBML_VERSION)
         IDTracker.__init__(self)
+
+        if pathway_groups:
+            check(self.enablePackage(libsbml.GroupsExtension.getXmlnsL3V1V1(), 'groups', True), 'enable the groups package')
+            check(self.setPackageRequired('groups', False), 'set the groups package as not required')
+        self.pathway_members = {}  # {pathway label: {species ids}}
 
         # start the SBML model
         self.sbml_model = self.createModel()
@@ -204,7 +215,8 @@ class SBML(SBMLDocument, IDTracker):
     def add_species_annotations(self, sp, species):
         ''' Database links (external links, functional cluster, Arabidopsis
         genes) as annotations, and description, form, additional
-        information and MapMan bins as notes. '''
+        information, pathways and MapMan bins as notes. The species joins
+        the groups of its entity's pathways (add_pathway_groups). '''
 
         node = self.node(species)
         annotations, skipped_links = annotation_manager.process_node(node.links(self.pss_adapter.species))
@@ -217,9 +229,49 @@ class SBML(SBMLDocument, IDTracker):
         SBML.add_note(sp, 'description', node.description)
         SBML.add_note(sp, 'species form', species.form)
         SBML.add_note(sp, 'additional_information', node.additional_information)
+        SBML.add_note(sp, 'pathway', node.pathway)
+        SBML.add_note(sp, 'all pathways', '|'.join(node.all_pathways))
         SBML.add_note(sp, 'mapman', ';'.join(node.mapman))
 
+        for pathway in node.all_pathways:
+            self.pathway_members.setdefault(pathway, set()).add(sp.getId())
+
+    def add_pathway_groups(self):
+        ''' A group (Groups package, kind classification) per PSS pathway, with the species of its entities as
+        members; sorted, so the same reactions give the same file. Reactions are in no group: in PSS, pathways
+        belong to the entities. Returns the number of groups (0 without pathway_groups). '''
+
+        if not self.pathway_groups:
+            return 0
+
+        groups_plugin = self.sbml_model.getPlugin('groups')
+        check(groups_plugin, 'get the groups plugin of the model')
+
+        used_ids = set()
+        for pathway in sorted(self.pathway_members):
+            base_id = 'pathway_' + re.sub('[^0-9a-zA-Z]+', '_', pathway).strip('_')
+            group_id, n = base_id, 1
+            while group_id in used_ids:
+                n += 1
+                group_id = f"{base_id}_{n}"
+            used_ids.add(group_id)
+
+            group = groups_plugin.createGroup()
+            check(group, f'create group {group_id}')
+            check(group.setId(group_id), f'set group id {group_id}')
+            check(group.setName(pathway), f'set group name {pathway}')
+            check(group.setKind(libsbml.GROUP_KIND_CLASSIFICATION), f'set group kind of {group_id}')
+            for species_id in sorted(self.pathway_members[pathway]):
+                member = group.createMember()
+                check(member, f'create member {species_id} of group {group_id}')
+                check(member.setIdRef(species_id), f'set member {species_id} of group {group_id}')
+
+        return len(used_ids)
+
     def get_sbml_compartment(self, compartment):
+        ''' Get a compartment in the SBML model; create it if it does not exist, with the compartment it is part of
+        (pss_export_config.compartment_part_of) as a bqbiol:isPartOf annotation. SBML Level 3 has no containment
+        (Level 2's 'outside' was removed); the containing compartment is added to the model too. '''
 
         id_, status =  self.get_compartment_id(compartment)
 
@@ -228,17 +280,20 @@ class SBML(SBMLDocument, IDTracker):
 
         else:
             comp = self.sbml_model.createCompartment()
-            comp.setId(id_)
+            check(comp.setId(id_), f'set compartment id {id_}')
+            check(comp.setMetaId(f"metaid_{id_}"), f'set compartment metaid {id_}')
             comp.setName(compartment)
             comp.setSize(1)
             comp.setConstant(True)
-
-            if not (compartment in OUTSIDE_COMPARTMENTS):
-                cyto_identifier = self.get_sbml_compartment('cytoplasm')
-                m = comp.setOutside(cyto_identifier)
-                check(m, "Set 'outside' of compartment")
-
             self.set_compartment_id(compartment, id_)
+
+            parent = pss_export_config.compartment_part_of.get(compartment)
+            if parent:
+                parent_id = self.get_sbml_compartment(parent)
+                cv = CVTerm(BIOLOGICAL_QUALIFIER)
+                cv.setBiologicalQualifierType(libsbml.BQB_IS_PART_OF)
+                cv.addResource(f"#metaid_{parent_id}")
+                check(comp.addCVTerm(cv), f'add isPartOf {parent} to compartment {compartment}')
 
         # print(f"SBML: compartment id: {compartment} --> {id_}")
         return id_
@@ -382,3 +437,7 @@ class SBML(SBMLDocument, IDTracker):
         # (modifier)-[modifies]->(reaction)
         for species in reaction.modifiers:
             self.create_modifier_reference(species, role=reaction.modifier_role, reaction=rxn)
+
+        # (5) gene templates (include_genes): modifiers, as they are not consumed; after the regulators
+        for species in reaction.templates:
+            self.create_modifier_reference(species, role=participant_roles.TEMPLATE, reaction=rxn)

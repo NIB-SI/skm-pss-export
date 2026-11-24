@@ -12,7 +12,8 @@ The CLI and the SKM web app's downloads page read this. Titles and descriptions 
     adapter.export("gene-network", edges_file="edges.tsv", nodes_file="nodes.tsv")
 
 All formats are made for a species (collect_reactions(species=...), one of pss_schema_config.species, default 'ath';
-None: no species filter, not for the gene network). The models (model_fixes=True) also come "with model fixes":
+a list of codes: the reactions with genes in each, not for the gene network; None: no species filter, not for the gene
+network). The models (model_fixes=True) also come "with model fixes":
 
     adapter.export("sbml", filename="model.xml")                                    # exactly PSS
     adapter.export("sbml", filename="model-with-model-fixes.xml", model_fixes=True)  # connected
@@ -59,8 +60,8 @@ FORMATS = {f.key: f for f in [
         key='sbml',
         title='[SBML](https://sbml.org)',
         description=('Systems Biology Markup Language (Level 3 Version 2): species per compartment, reactions with '
-                     'their participants, SBO terms and annotations. The automated export has no equations or kinetic '
-                     'parameters; for work on this, see [Generating dynamic large-scale systems-biology data from a '
+                     'their participants, SBO terms and annotations, and the pathways as groups (SBML Groups '
+                     'package). The automated export has no equations or kinetic parameters; for work on this, see [Generating dynamic large-scale systems-biology data from a '
                      'knowledge graph](https://github.com/R4d0slav/ThesisRepository).'),
         method='create_sbml',
         files=(FormatFile('filename', 'model', 'xml', 'application/sbml+xml'),),

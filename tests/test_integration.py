@@ -177,11 +177,30 @@ class TestSpeciesFilter:
         unfiltered = {r: adapter.reactions[r] for r in adapter.reaction_ids}
         nodes = adapter.nodes
         collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species="stu")
-        assert adapter.species == "stu"
+        assert adapter.species == ("stu",)
         assert set(adapter.reaction_ids) < set(unfiltered)
         # the Cypher species filter and Reaction.has_genes_in agree (ignored nodes don't count in either)
         expected = {r for r, rx in unfiltered.items() if rx.has_genes_in(nodes, "stu", adapter.nodes_to_ignore)}
         assert set(adapter.reaction_ids) == expected
+
+    @pytest.mark.parametrize("match", ["any", "all"])
+    def test_several_species_filter(self, match):
+        """ several species: the Cypher filter and Reaction.has_genes_in agree; any is the union of the
+        single-species collections, all their intersection """
+        adapter = make_adapter()
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=None)
+        unfiltered = {r: adapter.reactions[r] for r in adapter.reaction_ids}
+        nodes = adapter.nodes
+        single = {}
+        for code in ("ath", "stu"):
+            collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=code)
+            single[code] = set(adapter.reaction_ids)
+        collect_or_skip(adapter, access="public", pathways=TEST_PATHWAYS, species=["ath", "stu"], species_match=match)
+        assert adapter.species == ("ath", "stu")
+        expected = {r for r, rx in unfiltered.items()
+                    if rx.has_genes_in(nodes, ["ath", "stu"], adapter.nodes_to_ignore, match=match)}
+        assert set(adapter.reaction_ids) == expected
+        assert expected == (single["ath"] | single["stu"] if match == "any" else single["ath"] & single["stu"])
 
 
 class TestModelFixesVariants:

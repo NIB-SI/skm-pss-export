@@ -100,6 +100,17 @@ named nodes in the gene network. The Arabidopsis gene annotations from the homol
 (curated TAIR links of a node are always kept); the gene network is in that species. `species=None` (`--species all`):
 no species filter, for all exports except the gene network.
 
+Several species (`collect_reactions(species=['ath', 'stu'])` / `--species ath,stu`), with `species_match` /
+`--species-match`:
+- `any` (default): the reactions of any of them, whose gene clusters all have genes in one of the species: the
+  reactions of the single-species exports together (Arabidopsis or potato).
+- `all`: the reactions of all of them, whose gene clusters all have genes in each species (Arabidopsis and potato).
+
+A reaction whose clusters only have genes in different species (one only in ath, another only in stu) is in
+neither. The node files of the networks then have a `<code>_homologues` column per species (`ath_homologues`,
+`stu_homologues`) instead of `genes`; TAIR annotations are added when ath is among them. Not for the gene network
+(one species). `PSSAdapter.species` is the tuple of codes collected for (`('ath',)`), or None.
+
 ### External links and annotations
 
 PSS external links are identifiers.org CURIEs, in the case each database requires (e.g. `CHEBI:15653`,
@@ -144,7 +155,7 @@ pss-export to-sbml output-model-fixes.sbml \
 
 The model fixes connect parts of the models that PSS leaves disconnected: translation products are made in the
 active form (when the inactive form is not used), transport reactions are added between compartments where a
-node is made and used, and an active form that is only switched off (deactivated, degraded, bound; never activated)
+node is made and used (not for genes: they are not transported), and an active form that is only switched off (deactivated, degraded, bound; never activated)
 gets an activation from its inactive form when that is in the model (else, in the Boolean models, it is never
 switched on again). They are not in PSS: the models (SBML, TabularQual) come in two variants, without (exactly
 PSS, the default) and with model fixes, both from one collection (`PSSAdapter.with_model_fixes()` makes the fixed
@@ -165,14 +176,41 @@ https://github.com/draeger-lab/SBMLsqueezer, e.g.
 java -jar  /path..to..jar/SBMLsqueezer-2.2.jar --sbml-in-file output.sbml  --sbml-out-file output-squeezed
 ```
 
+#### Genes and transcription
+
+By default the genes are left out: a transcription or translation makes its product from nothing (no reactants),
+with the regulators as modifiers. With `--include-genes` (`collect_reactions(include_genes=True)`), the gene is a
+modifier with the role *template* (SBO:0000645), after the regulators: it is needed, not consumed (SBGN PD Level 1,
+Fig. 2.42: the gene as necessary stimulation of a process from source and sink). The Boolean rules leave the gene
+out either way.
+
 #### Known limitations
 
 - **Missing equations**: The SBML file does not contain reaction equations. Add them using SBMLsqueezer as shown above. See also [ThesisRepository](https://github.com/R4d0slav/ThesisRepository).
+- **No initial values**: The species have no initial amount or concentration (PSS has none); set them for a simulation. libSBML warns once per species (80601, modeling practice).
 - **Database consistency**: Continuous updates to the PSS database mean the model may not be fully connected or consistent with modeling assumptions.
 - **Disconnected molecules**: Some molecules may be disconnected in the SBML file if:
   - They occur in multiple compartments but lack transport reactions
   - A protein is formed by translation but not activated by an activation reaction
   - A complex is formed but not activated by an activation reaction
+
+#### Pathways
+
+The PSS pathways (the entities' `pathway` and `all_pathways`, e.g. `Hormone - Jasmonate (JA)`) are SBML Level 3
+[Groups](https://sbml.org/documents/specifications/level-3/version-1/groups/): a group per pathway (kind
+`classification`, the pathway as its name, id e.g. `pathway_Hormone_Jasmonate_JA`) with the species of its entities
+as members, all forms and compartments. The package is not required (`groups:required="false"`): tools without it
+read the model without the groups. Reactions are in no group, as in PSS pathways belong to the entities. Each
+species also has the notes `pathway` (the main one) and `all pathways` (joined with `|`). Without the groups:
+`create_sbml(pathway_groups=False)` (CLI: `--no-pathway-groups`); the notes are written either way.
+
+#### Compartments
+
+SBML Level 3 has no compartment containment (Level 2's `outside` attribute was removed). The export records it as a
+`bqbiol:isPartOf` annotation pointing to the containing compartment's metaid (e.g. `#metaid_c_cyt`), set in
+`compartment_part_of` in `pss_export/pss/pss_export_config.yaml`: the organelles are part of the cytoplasm, the
+nucleolus of the nucleus, the apoplast of extracellular; cytoplasm and extracellular are part of no other. A
+containing compartment is added to the model with the one it contains.
 
 #### SBO terms
 

@@ -2,6 +2,25 @@
 
 Versions are tagged `v<version>` (e.g. `v0.2.0`); the SKM web app pins a tag.
 
+## Unreleased
+
+- SBML with `--include-genes` (`include_genes=True`): the gene of a transcription/translation is a modifier with
+  the role template (SBO:0000645), after the regulators, no longer a reactant (it was consumed by its own
+  transcription). Breaking for tools that read the gene as the reactant (e.g. rate laws with `S` = the gene).
+  `Reaction.templates` holds the genes; the default export (without genes) is unchanged.
+- Model fixes: genes are never transported between compartments (a modelling rule; a gene in two compartments is
+  a data error).
+- SBML: the PSS pathways as groups (SBML Level 3 Groups package, not required): a group per pathway with the
+  species of its entities as members; the notes `pathway` and `all pathways` on each species. Optional:
+  `create_sbml(pathway_groups=False)`, CLI `--no-pathway-groups` (the notes stay).
+- SBML: compartment containment as `bqbiol:isPartOf` annotations (config `compartment_part_of`); the apoplast is
+  part of extracellular. The Level 2 `outside` call, which Level 3 ignores, is removed.
+- Several species: `collect_reactions(species=['ath', 'stu'], species_match='any'|'all')`, CLI `--species ath,stu
+  --species-match any|all`: the reactions of any of the species (default; the single-species exports together) or of
+  all of them (gene clusters with genes in each); the network node files then have a `<code>_homologues` column per
+  species instead of `genes`. Not for the gene network. `PSSAdapter.species` is now a tuple of codes (`('ath',)`)
+  or None, instead of a code (a code is still accepted wherever a species is read).
+
 ## 0.2.1 (2026-11-09)
 
 Boolean models (TabularQual, BoolNet): corrected rules, and a new model fix.
