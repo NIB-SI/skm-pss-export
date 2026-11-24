@@ -4,7 +4,7 @@ Exports ..... formats ..... of PSS model
 # library imports
 import copy
 
-from .config import pss_export_config, pss_schema_config
+from .config import pss_export_config, pss_schema_config, species_codes
 from .collectors import PSSCollector
 
 # internal imports
@@ -104,8 +104,9 @@ class PSSAdapter():
         self.export_datetime = None
         self.access = None
         self.species = None
+        self.species_match = 'any'
 
-    def collect_reactions(self, species='ath', **kwargs):
+    def collect_reactions(self, species='ath', species_match='any', **kwargs):
         ''' Collect reactions and annotations from the database.
         Optionally limit to specific pathways OR reactions, and to a species.
 
@@ -113,11 +114,17 @@ class PSSAdapter():
 
         Parameters
         ----------
-        species : str or None
+        species : str, list of str or None
             Limit to the reactions whose functional clusters all have genes in this species (a code
-            of pss_schema_config.species, default 'ath'; reactions without functional clusters are
-            kept). The gene annotations from the homologue lists (tair: for ath) and the gene network
-            are then for this species. None: no species filter (no gene network).
+            of pss_schema_config.species, default 'ath'), or in several (a list of codes, e.g. ['ath', 'stu'],
+            see species_match); reactions without functional clusters are kept. The gene annotations from
+            the homologue lists (tair: when ath is among them) are then for these species, and the gene
+            network for the one species (not for several). None: no species filter (no gene network).
+            Kept as self.species: a tuple of codes, or None.
+        species_match : 'any' or 'all'
+            With several species: 'any' (default), the reactions of any of them (whose functional clusters
+            all have genes in one of the species: the reactions of each species together); 'all', the
+            reactions of all of them (whose functional clusters all have genes in each species).
         **kwargs : dict
             Additional keyword arguments to pass to the PSSCollector.
 
@@ -140,8 +147,9 @@ class PSSAdapter():
         # connection is only open while collecting
         with GraphDB(**self.connection_settings) as graph_db:
 
-            collector = PSSCollector(graph_db, species=species, **kwargs)
+            collector = PSSCollector(graph_db, species=species, species_match=species_match, **kwargs)
             self.species = collector.species
+            self.species_match = species_match
 
             # collect reactions
             self.reactions = collector.collect_reactions()
@@ -171,10 +179,13 @@ class PSSAdapter():
 
     @property
     def species_description(self):
-        ''' e.g. "Solanum tuberosum (stu)", or "all species" (no species filter) '''
-        if self.species is None:
+        ''' e.g. "Solanum tuberosum (stu)", "Arabidopsis thaliana (ath) or Solanum tuberosum (stu)" (several: the
+        reactions of any of them; "and": of all of them), or "all species" (no species filter) '''
+        codes = species_codes(self.species)
+        if codes is None:
             return "all species"
-        return f"{pss_schema_config.species[self.species]['name']} ({self.species})"
+        joiner = " and " if self.species_match == 'all' else " or "
+        return joiner.join(f"{pss_schema_config.species[code]['name']} ({code})" for code in codes)
 
     def model_fixes(self, interactive=False, apply_fixes=True):
         ''' Identify model fixes to the collected reactions.

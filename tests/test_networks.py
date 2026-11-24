@@ -225,14 +225,38 @@ def test_gene_autoregulation_kept(tmp_path):
 
 
 def test_gene_network_needs_a_species():
-    with pytest.raises(ValueError, match="needs a species"):
+    with pytest.raises(ValueError, match="needs one species"):
         net.create_gene_network(adapter(species=None), None, None)
+    with pytest.raises(ValueError, match="needs one species"):
+        net.create_gene_network(adapter(species=("ath", "stu")), None, None)
+
+
+def test_interaction_network_several_species(tmp_path):
+    """ several species: a <code>_homologues column for each of them, instead of 'genes' """
+    r = reaction("rx1", "catalysis", "activation",
+                 [("cZ", "metabolite", "cytoplasm", "SUBSTRATE"), ("cZ-P", "metabolite", "cytoplasm", "PRODUCT"),
+                  ("ADK", "protein_active", "cytoplasm", "ACTIVATES")])
+    ns = nodes(("ADK", CLUSTER, {"ath": ["AT1"], "stu": ["SOLTU.DM.01G000010"], "sly": ["Solyc01g000010"]}),
+               ("cZ", ["Node", "Metabolite"], {}), ("cZ-P", ["Node", "Metabolite"], {}))
+    net.create_interaction_network(adapter(r, nodes=ns, species=("ath", "stu")), None, tmp_path / "n.tsv")
+    rows = {n["id"]: n for n in read(tmp_path / "n.tsv")}
+    assert list(rows["ADK"])[-2:] == ["ath_homologues", "stu_homologues"] and "genes" not in rows["ADK"]
+    assert (rows["ADK"]["ath_homologues"], rows["ADK"]["stu_homologues"]) == ("AT1", "SOLTU.DM.01G000010")
+    net.create_interaction_network(adapter(r, nodes=ns, species=("stu",)), None, tmp_path / "n1.tsv")
+    assert read(tmp_path / "n1.tsv")[0]["genes"] == "SOLTU.DM.01G000010"     # one species: 'genes', as before
 
 
 def test_reaction_has_genes_in():
     r = reaction("rx1", "catalysis", "activation",
                  [("cZ", "metabolite", "cytoplasm", "SUBSTRATE"), ("ADK", "protein_active", "cytoplasm", "ACTIVATES")])
     assert r.has_genes_in(NODES, "ath") and not r.has_genes_in(NODES, "stu")
+    assert r.has_genes_in(NODES, ["ath"]) and r.has_genes_in(NODES, ["stu", "ath"])        # any: in one of them
+    assert not r.has_genes_in(NODES, ["ath", "stu"], match="all")                         # all: in each
+    # any is per species, not per cluster: ADK only in ath and PDT only in stu is neither species' reaction
+    ns = nodes(("ADK", CLUSTER, {"ath": ["AT1"]}), ("PDT", CLUSTER, {"stu": ["S1"]}))
+    mixed = reaction("rx3", "catalysis", "activation",
+                     [("PDT", "protein", "cytoplasm", "SUBSTRATE"), ("ADK", "protein_active", "cytoplasm", "ACTIVATES")])
+    assert not mixed.has_genes_in(ns, ["ath", "stu"]) and not mixed.has_genes_in(ns, ["ath", "stu"], match="all")
     assert reaction("rx2", "catalysis", "activation", [("cZ", "metabolite", None, "SUBSTRATE")]).has_genes_in(
         NODES, "stu")                                                        # no functional clusters
 
@@ -287,6 +311,7 @@ def test_node_label_and_links():
     assert ec.Node("PYL[fc00001]", display_label="PYL").display_label == "PYL"
     assert n.links("ath") == ["tair.name:AT5G46790", "skm:fc00001"]          # not twice
     assert n.links("stu") == ["tair.name:AT5G46790", "skm:fc00001"]        # curated TAIR link kept
+    assert n.links(("stu", "ath")) == n.links("ath") and n.links(("stu",)) == n.links("stu")   # codes: ath among them
     links = n.links("ath"); links.append("x:y")
     assert n.links("ath") == ["tair.name:AT5G46790", "skm:fc00001"]   # a new list
 

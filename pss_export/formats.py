@@ -12,7 +12,8 @@ The CLI and the SKM web app's downloads page read this. Titles and descriptions 
     adapter.export("gene-network", edges_file="edges.tsv", nodes_file="nodes.tsv")
 
 All formats are made for a species (collect_reactions(species=...), one of pss_schema_config.species, default 'ath';
-None: no species filter, not for the gene network). The models (model_fixes=True) also come "with model fixes":
+a list of codes: the reactions with genes in each, not for the gene network; None: no species filter, not for the gene
+network). The models (model_fixes=True) also come "with model fixes":
 
     adapter.export("sbml", filename="model.xml")                                    # exactly PSS
     adapter.export("sbml", filename="model-with-model-fixes.xml", model_fixes=True)  # connected

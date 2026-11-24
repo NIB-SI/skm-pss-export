@@ -16,7 +16,7 @@ import json
 from itertools import product as pairs
 
 from ..entity_classes import Node
-from ..pss.config import pss_export_config, pss_schema_config
+from ..pss.config import pss_export_config, pss_schema_config, species_codes
 from ..pss.pss_reaction_definitions import edge_types, participant_roles
 from ..utils import sbo, write_tsv
 
@@ -50,9 +50,12 @@ REACTION_GRAPH_EDGE_COLUMNS = ['source', 'role', 'target', 'directed', 'rank',
                                'organ', 'organ_putative', 'identifiers']
 
 def gene_columns(species):
-    ''' The gene columns of an entity node file: the genes in the species exported for, or with no
-    species filter, the genes of each species '''
-    return ['genes'] if species else [f'{code}_homologues' for code in pss_schema_config.species]
+    ''' The gene columns of an entity node file: the genes in the one species exported for ('genes'), or the
+    genes of each species exported for (<code>_homologues), or with no species filter of every species '''
+    species = species_codes(species)
+    if species is not None and len(species) == 1:
+        return ['genes']
+    return [f'{code}_homologues' for code in (species or pss_schema_config.species)]
 
 
 REACTION_GRAPH_NODE_COLUMNS = ENTITY_NODE_COLUMNS + [
@@ -136,7 +139,8 @@ def interaction_edges(reaction, nodes):
 
 
 def entity_node_rows(names, nodes, species):
-    ''' A row per entity, with its genes in the species (or, with no species, per species) '''
+    ''' A row per entity, with its genes in the one species, or per species (several, or none: every species) '''
+    species = species_codes(species)
     rows = []
     for name in sorted(names):
         n = node(nodes, name)
@@ -150,10 +154,10 @@ def entity_node_rows(names, nodes, species):
                'component_cluster_ids': [node(nodes, c).functional_cluster_id for c in n.components
                                          if node(nodes, c).is_gene_cluster],
                'external_links': n.external_links}
-        if species:
-            row['genes'] = n.genes(species)
+        if species is not None and len(species) == 1:
+            row['genes'] = n.genes(species[0])
         else:
-            row.update({f'{code}_homologues': n.genes(code) for code in pss_schema_config.species})
+            row.update({f'{code}_homologues': n.genes(code) for code in (species or pss_schema_config.species)})
         rows.append(row)
     return rows
 
@@ -181,13 +185,14 @@ def create_interaction_network(pss_adapter, edges_file=None, nodes_file=None):
 def create_gene_network(pss_adapter, edges_file=None, nodes_file=None):
     ''' Write the gene network: the interaction network with functional clusters expanded into
     their genes in the species collected for (pss_adapter.species; the collector keeps only the
-    reactions whose functional clusters all have genes there). Needs a species (genes of different
+    reactions whose functional clusters all have genes there). Needs one species (genes of different
     species would otherwise be paired). Returns the number of edges. '''
 
     nodes = pss_adapter.nodes
-    species = pss_adapter.species
-    if species is None:
-        raise ValueError("A gene network needs a species: collect_reactions(species=...)")
+    codes = species_codes(pss_adapter.species)
+    if codes is None or len(codes) != 1:
+        raise ValueError("A gene network needs one species: collect_reactions(species=...)")
+    species = codes[0]
 
     def genes(name, clusters):
         return node(nodes, name).genes(species) if name in clusters else [name]

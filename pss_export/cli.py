@@ -55,11 +55,27 @@ def modelfixing_common_params(func):
         return func(*args, **kwargs)
     return wrapper
 
+def parse_species(ctx, param, value):
+    ''' --species: one code, several comma-separated codes (see --species-match), or 'all' (None) '''
+    if value == 'all':
+        return None
+    codes = [code.strip() for code in value.split(',')]
+    unknown = [code for code in codes if code not in SPECIES]
+    if unknown or not all(codes):
+        raise click.BadParameter(f"unknown species {', '.join(repr(c) for c in unknown or [''])}: "
+                                 f"one or more of {', '.join(SPECIES)} (comma-separated), or 'all'")
+    if len(set(codes)) < len(codes):
+        raise click.BadParameter(f"species given more than once: {value}")
+    return codes[0] if len(codes) == 1 else codes
+
+
 def reaction_filter_common_params(func):
     @click.option("--reactions", cls=ConvertStrToList, default=None, help="Comma-separated list of reaction IDs to include in export.")
     @click.option("--access", default='public', type=click.Choice(['public', 'restricted', 'all']), help="Data access level: 'public' (default) or 'restricted' (all reactions; 'all' is an alias).")
-    @click.option("--species", default='ath', type=click.Choice(SPECIES + ['all']), callback=lambda ctx, param, value: None if value == 'all' else value,
-                  help="Limit to the reactions whose functional clusters all have genes in this species (default: ath); gene annotations (tair: for ath) and the gene network are for this species. 'all': no species filter (not for the gene network).")
+    @click.option("--species", default='ath', metavar=f"[{'|'.join(SPECIES)}|all]", callback=parse_species,
+                  help="Limit to the reactions whose functional clusters all have genes in this species (default: ath), or in several, comma-separated (e.g. ath,stu; see --species-match); gene annotations (tair: when ath is among them) are for these species and the gene network for the one species (not for several). 'all': no species filter (not for the gene network).")
+    @click.option("--species-match", default='any', show_default=True, type=click.Choice(['any', 'all']),
+                  help="With several species: 'any', the reactions of any of them (whose functional clusters all have genes in one of the species: the reactions of each species' export together); 'all', the reactions of all of them (whose functional clusters all have genes in each species).")
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -82,7 +98,7 @@ def cli():
 @click.option("--kinetic-laws", is_flag=True, help="Include kinetic laws (SBO term only) in SBML output.")
 def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
             model_id, model_name, model_description, model_version, creator,
-            access, species, reactions,
+            access, species, species_match, reactions,
             model_fixes_identify, model_fixes_apply, model_fixes_interactive,
             nodes_to_ignore,
             filename,
@@ -110,7 +126,7 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
                     model_description=model_description,
                     model_version=model_version,
                     creator=creator)
-        adapter.collect_reactions(reactions=reactions, access=access, species=species, include_genes=include_genes, nodes_to_ignore=nodes_to_ignore)
+        adapter.collect_reactions(reactions=reactions, access=access, species=species, species_match=species_match, include_genes=include_genes, nodes_to_ignore=nodes_to_ignore)
         if model_fixes_identify:
             adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
 
@@ -135,7 +151,7 @@ def to_sbml(neo4j_uri, neo4j_user, neo4j_password,
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output.")
 def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
             model_id, model_name, model_description, model_version, creator,
-            access, species, reactions,
+            access, species, species_match, reactions,
             model_fixes_identify, model_fixes_apply, model_fixes_interactive,
             nodes_to_ignore,
             filename,
@@ -160,7 +176,7 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
                     model_description=model_description,
                     model_version=model_version,
                     creator=creator)
-    adapter.collect_reactions(reactions=reactions, access=access, species=species, nodes_to_ignore=nodes_to_ignore)
+    adapter.collect_reactions(reactions=reactions, access=access, species=species, species_match=species_match, nodes_to_ignore=nodes_to_ignore)
     if model_fixes_identify:
         adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
 
@@ -177,7 +193,7 @@ def to_tabularqual(neo4j_uri, neo4j_user, neo4j_password,
 @click.option("--newt", is_flag=True, help="The Newt variant: with Newt's custom properties and colours.")
 def to_sbgn(neo4j_uri, neo4j_user, neo4j_password,
             model_id, model_name, model_description, model_version, creator,
-            access, species, reactions,
+            access, species, species_match, reactions,
             model_fixes_identify, model_fixes_apply, model_fixes_interactive,
             nodes_to_ignore,
             filename, newt):
@@ -187,17 +203,17 @@ def to_sbgn(neo4j_uri, neo4j_user, neo4j_password,
     adapter = PSSAdapter(neo4j_uri=neo4j_uri, neo4j_user=neo4j_user, neo4j_password=neo4j_password,
                          model_id=model_id, model_name=model_name, model_description=model_description,
                          model_version=model_version, creator=creator)
-    adapter.collect_reactions(reactions=reactions, access=access, species=species, nodes_to_ignore=nodes_to_ignore)
+    adapter.collect_reactions(reactions=reactions, access=access, species=species, species_match=species_match, nodes_to_ignore=nodes_to_ignore)
     if model_fixes_identify:
         adapter.model_fixes(apply_fixes=model_fixes_apply, interactive=model_fixes_interactive)
     n = adapter.create_sbgn_newt(filename) if newt else adapter.create_sbgn(filename)
     click.echo(f"Wrote {n} reactions to {filename}")
 
 
-def _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions):
+def _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions):
     # the networks keep every node: nodes_to_ignore is for the models only
     adapter = PSSAdapter(neo4j_uri=neo4j_uri, neo4j_user=neo4j_user, neo4j_password=neo4j_password)
-    adapter.collect_reactions(reactions=reactions, access=access, species=species, nodes_to_ignore=None)
+    adapter.collect_reactions(reactions=reactions, access=access, species=species, species_match=species_match, nodes_to_ignore=None)
     return adapter
 
 
@@ -214,11 +230,11 @@ def network_params(func):
 
 @cli.command()
 @network_params
-def to_reaction_graph(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, edges_file, nodes_file):
+def to_reaction_graph(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions, edges_file, nodes_file):
     """
     Export the reaction graph (extended SIF edges and nodes): entities and reactions.
     """
-    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions)
+    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions)
     n = adapter.create_reaction_graph(edges_file, nodes_file)
     click.echo(f"Wrote {n} edges to {edges_file}, nodes to {nodes_file}")
 
@@ -227,37 +243,37 @@ def to_reaction_graph(neo4j_uri, neo4j_user, neo4j_password, access, species, re
 @neo4j_common_params
 @reaction_filter_common_params
 @click.argument("filename", type=click.Path())
-def to_reaction_graph_json(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, filename):
+def to_reaction_graph_json(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions, filename):
     """
     Export the reaction graph as one JSON file (nodes and edges): the data of the PSS Explorer
     (use --species all).
     """
-    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions)
+    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions)
     n = adapter.create_reaction_graph_json(filename)
     click.echo(f"Wrote {n} edges to {filename}")
 
 
 @cli.command()
 @network_params
-def to_interaction_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, edges_file, nodes_file):
+def to_interaction_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions, edges_file, nodes_file):
     """
     Export the interaction network (extended SIF edges and nodes): entity -> entity influences.
     """
-    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions)
+    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions)
     n = adapter.create_interaction_network(edges_file, nodes_file)
     click.echo(f"Wrote {n} edges to {edges_file}, nodes to {nodes_file}")
 
 
 @cli.command()
 @network_params
-def to_gene_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions, edges_file, nodes_file):
+def to_gene_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions, edges_file, nodes_file):
     """
     Export the gene network (extended SIF edges and nodes): the interaction network with functional
-    clusters expanded into their genes in --species (not 'all').
+    clusters expanded into their genes in --species (one species, not 'all' or several).
     """
-    if species is None:
-        raise click.UsageError("A gene network needs a species (--species), not 'all'.")
-    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, reactions)
+    if species is None or not isinstance(species, str):
+        raise click.UsageError("A gene network needs one species (--species), not 'all' or several.")
+    adapter = _collect_for_network(neo4j_uri, neo4j_user, neo4j_password, access, species, species_match, reactions)
     n = adapter.create_gene_network(edges_file, nodes_file)
     click.echo(f"Wrote {n} edges to {edges_file}, nodes to {nodes_file}")
 

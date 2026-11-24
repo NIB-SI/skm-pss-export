@@ -163,15 +163,17 @@ class Reaction:
         ''' The names of its participants that are gene clusters (Node.is_gene_cluster; nodes: {name: Node}) '''
         return {p.name for p in self.participants if p.name in nodes and nodes[p.name].is_gene_cluster}
 
-    def has_genes_in(self, nodes, species, ignore=()):
+    def has_genes_in(self, nodes, species, ignore=(), match='any'):
         ''' Whether all its gene clusters, and those among the components of its complexes, have genes in the
-        species (abstract clusters, like metabolites, don't decide a reaction's species; nor do the nodes to
+        species (a code), or with several (a list of codes) in one of them (match 'any') or in each ('all') (abstract clusters, like metabolites, don't decide a reaction's species; nor do the nodes to
         ignore, as if they weren't there) '''
         participants = [p.name for p in self.participants if p.name in nodes and p.name not in ignore]
         clusters = {name for name in participants if nodes[name].is_gene_cluster} | {
             c for name in participants for c in nodes[name].components
             if c in nodes and c not in ignore and nodes[c].is_gene_cluster}
-        return all(nodes[name].genes(species) for name in clusters)
+        codes = [species] if isinstance(species, str) else species
+        quantifier = {'any': any, 'all': all}[match]
+        return quantifier(all(nodes[name].genes(code) for name in clusters) for code in codes)
 
     def __repr__(self):
         return (f"Reaction(id={self.id}, "
@@ -269,11 +271,12 @@ class Node:
     def links(self, species):
         """ Its database links, as a new list of identifiers.org CURIEs (as PSS stores them, #42): its
         external links (curated, whatever the species), its functional cluster (skm:) and, for Arabidopsis
-        (species 'ath'), its genes from the homologue list (tair.name:), without duplicates. """
+        (species: the codes exported for, with 'ath' among them), its genes from the homologue list
+        (tair.name:), without duplicates. """
         links = list(self.external_links)
         if self.functional_cluster_id:
             links.append(f"skm:{self.functional_cluster_id}")
-        if species == 'ath':
+        if species is not None and 'ath' in ([species] if isinstance(species, str) else species):
             links += [f"tair.name:{gene}" for gene in self.genes('ath')]
         return list(dict.fromkeys(links))
 

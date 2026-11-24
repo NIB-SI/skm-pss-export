@@ -100,6 +100,17 @@ named nodes in the gene network. The Arabidopsis gene annotations from the homol
 (curated TAIR links of a node are always kept); the gene network is in that species. `species=None` (`--species all`):
 no species filter, for all exports except the gene network.
 
+Several species (`collect_reactions(species=['ath', 'stu'])` / `--species ath,stu`), with `species_match` /
+`--species-match`:
+- `any` (default): the reactions of any of them, whose gene clusters all have genes in one of the species: the
+  reactions of the single-species exports together (Arabidopsis or potato).
+- `all`: the reactions of all of them, whose gene clusters all have genes in each species (Arabidopsis and potato).
+
+A reaction whose clusters only have genes in different species (one only in ath, another only in stu) is in
+neither. The node files of the networks then have a `<code>_homologues` column per species (`ath_homologues`,
+`stu_homologues`) instead of `genes`; TAIR annotations are added when ath is among them. Not for the gene network
+(one species). `PSSAdapter.species` is the tuple of codes collected for (`('ath',)`), or None.
+
 ### External links and annotations
 
 PSS external links are identifiers.org CURIEs, in the case each database requires (e.g. `CHEBI:15653`,

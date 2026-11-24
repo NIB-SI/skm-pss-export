@@ -1,7 +1,10 @@
 from ..entity_classes import Reaction, Node
-from .config import pss_export_config, pss_schema_config
+from .config import pss_export_config, pss_schema_config, species_codes
 
 INVENTED_REASON_ALLOWLIST = ["invented:harmonise-location"]
+
+# with several species: the reactions of any of them, or of all of them
+SPECIES_MATCH = ('any', 'all')
 
 # accepted access values -> internal access level
 # ('all' is kept as a legacy alias for 'restricted')
@@ -21,17 +24,20 @@ class PSSCollector:
                  access='public',
                  pathways=None,
                  species=None,
+                 species_match='any',
                  include_genes=False,
                  nodes_to_ignore='default'):
 
         self.graph_db = graph_db
 
-        # species: only the reactions whose functional clusters all have genes in it (their
-        # <species>_homologues lists); None: no species filter
-        if species is not None and species not in pss_schema_config.species:
-            raise ValueError(
-                f"Unknown species '{species}', one of: {', '.join(pss_schema_config.species)} (or None)")
-        self.species = species
+        # species: only the reactions whose functional clusters all have genes in the species (their
+        # <species>_homologues lists); a code or a list of codes, kept as a tuple; None: no species filter.
+        # species_match, with several: 'any', the reactions of any of them (each species' reactions together),
+        # or 'all', the reactions of all of them (clusters with genes in each)
+        self.species = species_codes(species)
+        if species_match not in SPECIES_MATCH:
+            raise ValueError(f"Invalid species_match '{species_match}', must be one of: {', '.join(SPECIES_MATCH)}")
+        self.species_match = species_match
 
         if access not in ACCESS_LEVELS:
             raise ValueError(
@@ -102,15 +108,16 @@ class PSSCollector:
                 ''')
         if self.species is not None:
             # all gene clusters of the reaction, and those among the components of its complexes, have
-            # genes in the species (reactions without them are kept; abstract clusters (PlantAbstract)
-            # have no genes and, like metabolites, don't decide)
-            arguments['homologues_key'] = f"{self.species}_homologues"
-            cy_filters.append('''
-                all(fc IN [(r)--(n:FunctionalCluster) WHERE NOT n:PlantAbstract AND NOT n.name IN $ignore | n]
-                          + apoc.coll.flatten([(r)--(c:Complex) WHERE NOT c.name IN $ignore |
-                              [(x:FunctionalCluster)-[:COMPONENT_OF]->(c)
-                               WHERE NOT x:PlantAbstract AND NOT x.name IN $ignore | x]])
-                    WHERE size(coalesce(fc[$homologues_key], [])) > 0)
+            # genes in the species: in one of them (any) or in each (all) (reactions without them are kept;
+            # abstract clusters (PlantAbstract) have no genes and, like metabolites, don't decide)
+            arguments['homologues_keys'] = [f"{code}_homologues" for code in self.species]
+            cy_filters.append(f'''
+                {self.species_match}(key IN $homologues_keys WHERE
+                    all(fc IN [(r)--(n:FunctionalCluster) WHERE NOT n:PlantAbstract AND NOT n.name IN $ignore | n]
+                              + apoc.coll.flatten([(r)--(c:Complex) WHERE NOT c.name IN $ignore |
+                                  [(x:FunctionalCluster)-[:COMPONENT_OF]->(c)
+                                   WHERE NOT x:PlantAbstract AND NOT x.name IN $ignore | x]])
+                        WHERE size(coalesce(fc[key], [])) > 0))
                 ''')
         # (nodes_to_ignore only applies to the models, see _build_reaction)
         if self.access == 'public':

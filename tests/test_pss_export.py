@@ -368,12 +368,32 @@ class TestCollectorAccess:
         assert args["pathways"] == ["Hormone - Abscisic acid (ABA)"]
 
     def test_species_filter(self):
-        where, args = PSSCollector(None, species="stu", nodes_to_ignore=None)._build_where_clause()
-        assert "FunctionalCluster" in where and args["homologues_key"] == "stu_homologues"
+        collector = PSSCollector(None, species="stu", nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert "FunctionalCluster" in where and args["homologues_keys"] == ["stu_homologues"]
+        assert collector.species == ("stu",)
+
+    @pytest.mark.parametrize("match", ["any", "all"])
+    def test_several_species_filter(self, match):
+        collector = PSSCollector(None, species=["ath", "stu"], species_match=match, nodes_to_ignore=None)
+        where, args = collector._build_where_clause()
+        assert args["homologues_keys"] == ["ath_homologues", "stu_homologues"]
+        assert f"{match}(key IN $homologues_keys" in where
+        assert collector.species == ("ath", "stu")
+
+    def test_species_match_defaults_to_any_and_is_checked(self):
+        assert PSSCollector(None, species=["ath", "stu"], nodes_to_ignore=None).species_match == "any"
+        with pytest.raises(ValueError, match="species_match"):
+            PSSCollector(None, species=["ath", "stu"], species_match="some")
+
+    @pytest.mark.parametrize("species", [[], ["ath", "ath"], ["ath", "xyz"]])
+    def test_bad_species_lists_raise(self, species):
+        with pytest.raises(ValueError):
+            PSSCollector(None, species=species)
 
     def test_no_species_filter(self):
         where, args = PSSCollector(None, species=None, access="restricted", nodes_to_ignore=None)._build_where_clause()
-        assert "homologues_key" not in args and where == ""
+        assert "homologues_keys" not in args and where == ""
 
     def test_unknown_species_raises(self):
         with pytest.raises(ValueError, match="Unknown species"):
@@ -683,6 +703,15 @@ class TestSBMLExport:
     def test_species_note(self, model):
         assert "species:Arabidopsis thaliana (ath)" in model.getNotesString()
 
+    @pytest.mark.parametrize("match, joiner", [("any", "or"), ("all", "and")])
+    def test_several_species(self, adapter, match, joiner):
+        """ several species: both in the note (any: or, all: and), TAIR links as ath is among them """
+        import libsbml
+        adapter.species, adapter.species_match = ("ath", "stu"), match
+        model = libsbml.readSBMLFromString(adapter.create_sbml(filename=None)).getModel()
+        assert f"species:Arabidopsis thaliana (ath) {joiner} Solanum tuberosum (stu)" in model.getNotesString()
+        assert "tair.name:AT5G46790" in libsbml.XMLNode.convertXMLNodeToString(model.getSpecies("s_PYL_cyt_p").getAnnotation())
+
     def test_species_notes_escaped(self, model):
         notes = model.getSpecies("s_ABA_cyt_m").getNotesString()
         assert "description:Abscisic acid &lt;hormone&gt;" in notes
@@ -789,9 +818,10 @@ class TestCLI:
     def test_gene_network_needs_a_species(self, tmp_path):
         from click.testing import CliRunner
         from pss_export.cli import cli
-        result = CliRunner().invoke(cli, ["to-gene-network", str(tmp_path / "e.tsv"), str(tmp_path / "n.tsv"), "--species", "all",
-                                          "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
-        assert result.exit_code != 0 and "needs a species" in result.output
+        for species in ("all", "ath,stu"):
+            result = CliRunner().invoke(cli, ["to-gene-network", str(tmp_path / "e.tsv"), str(tmp_path / "n.tsv"), "--species", species,
+                                              "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u", "--neo4j-password", "p"])
+            assert result.exit_code != 0 and "needs one species" in result.output
 
     @pytest.mark.parametrize("command, options", [("to-reaction-graph", []), ("to-interaction-network", []),
                                                   ("to-gene-network", ["--species", "stu"]),
@@ -990,3 +1020,35 @@ class TestFormats:
         from pss_export.cli import cli
         result = CliRunner().invoke(cli, ["formats"])
         assert result.exit_code == 0 and "gene-network" in result.output
+
+
+class TestSpeciesOption:
+    """ --species: one code, several comma-separated (see --species-match), or 'all' """
+
+    @pytest.mark.parametrize("value, expected", [("ath", "ath"), ("ath,stu", ["ath", "stu"]),
+                                                 ("stu, ath", ["stu", "ath"]), ("all", None)])
+    def test_parse(self, value, expected):
+        from pss_export.cli import parse_species
+        assert parse_species(None, None, value) == expected
+
+    @pytest.mark.parametrize("value", ["xyz", "ath,xyz", "ath,,stu", "ath,ath", "ath,all"])
+    def test_bad_values(self, value):
+        import click
+        from pss_export.cli import parse_species
+        with pytest.raises(click.BadParameter):
+            parse_species(None, None, value)
+
+    @pytest.mark.parametrize("value", ["any", "all"])
+    def test_species_match_option(self, value, monkeypatch):
+        """ --species-match reaches collect_reactions """
+        from click.testing import CliRunner
+        from pss_export import cli as cli_module
+        seen = {}
+        def collect(self, **kwargs):
+            seen.update(kwargs)
+            raise SystemExit(0)
+        monkeypatch.setattr(cli_module.PSSAdapter, "collect_reactions", collect)
+        CliRunner().invoke(cli_module.cli, ["to-interaction-network", "--species", "ath,stu", "--species-match", value,
+                                            "e.tsv", "n.tsv", "--neo4j-uri", "bolt://x:7687", "--neo4j-user", "u",
+                                            "--neo4j-password", "p"])
+        assert (seen["species"], seen["species_match"]) == (["ath", "stu"], value)
