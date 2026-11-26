@@ -2,7 +2,9 @@
 
 Versions are tagged `v<version>` (e.g. `v0.2.0`); the SKM web app pins a tag.
 
-## Unreleased
+## 0.3.0 (2026-11-26)
+
+SBML genes as templates, pathways as groups, compartment containment; several species at once (two breaking changes).
 
 - SBML with `--include-genes` (`include_genes=True`): the gene of a transcription/translation is a modifier with
   the role template (SBO:0000645), after the regulators, no longer a reactant (it was consumed by its own
